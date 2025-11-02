@@ -33,7 +33,7 @@ class AppTheme {
     inputDecorationTheme: InputDecorationTheme(
       labelStyle: HomifyTypography.label1,
       hintStyle: HomifyTypography.body3.copyWith(color: Colors.grey),
-      helperStyle: HomifyTypography.caption1,
+      helperStyle: HomifyTypography.label3,
       // keep your border colors
       enabledBorder: const OutlineInputBorder(
         borderSide: BorderSide(color: Color(0xFF32190D), width: 1),
