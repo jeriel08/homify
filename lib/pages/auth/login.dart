@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homify/pages/auth/registration/registration.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class LoginPage extends StatefulWidget {
@@ -76,6 +77,10 @@ class _LoginPageState extends State<LoginPage> {
           borderRadius: BorderRadius.circular(15),
           borderSide: const BorderSide(color: Color(0xFF32190D), width: 2),
         ),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 16,
+        ),
       ),
     );
   }
@@ -125,14 +130,14 @@ class _LoginPageState extends State<LoginPage> {
                     // Handle login
                   },
                   style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 48),
+                    minimumSize: const Size(double.infinity, 44),
                     backgroundColor: const Color(0xFF32190D),
                     foregroundColor: Colors.white,
                   ),
                   icon: const Icon(LucideIcons.logIn),
                   label: const Text(
                     'Log in',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -143,14 +148,14 @@ class _LoginPageState extends State<LoginPage> {
                     // Handle Google sign-in
                   },
                   style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 48),
+                    minimumSize: const Size(double.infinity, 44),
                     backgroundColor: const Color(0xFFFFEDD4),
                     foregroundColor: const Color(0xFF32190D),
                   ),
                   icon: const Icon(LucideIcons.chromium),
                   label: const Text(
                     'Sign in with Google',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
                 const SizedBox(height: 48),
@@ -161,16 +166,21 @@ class _LoginPageState extends State<LoginPage> {
                 // Create Account Button
                 OutlinedButton(
                   onPressed: () {
-                    // Navigate to signup
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const RegistrationPage(), // ← open registration
+                      ),
+                    );
                   },
                   style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 48),
+                    minimumSize: const Size(double.infinity, 44),
                     side: const BorderSide(color: Color(0xFF32190D)),
                     foregroundColor: const Color(0xFF32190D),
                   ),
                   child: const Text(
                     'Create New Account',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
               ],

@@ -31,7 +31,9 @@ class AppTheme {
 
     // ---- InputDecoration (TextField labels, hints, helpers) ---------------
     inputDecorationTheme: InputDecorationTheme(
-      labelStyle: HomifyTypography.label1,
+      labelStyle: HomifyTypography.label1.copyWith(
+        color: const Color(0xFF32190D),
+      ),
       hintStyle: HomifyTypography.body3.copyWith(color: Colors.grey),
       helperStyle: HomifyTypography.label3,
       // keep your border colors
@@ -43,7 +45,7 @@ class AppTheme {
         borderSide: BorderSide(color: Color(0xFF32190D), width: 2),
         borderRadius: BorderRadius.all(Radius.circular(15)),
       ),
-      // cursorColor: const Color(0xFF32190D),
+      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
     ),
 
     // ---- Buttons -----------------------------------------------------------
