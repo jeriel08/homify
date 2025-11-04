@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../registration_controller.dart';
 
 RegistrationStep stepBirthday() {
@@ -113,7 +114,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
               labelText: 'Birthday',
               hintText: 'Select your birthday',
               suffixIcon: const Icon(
-                Icons.calendar_today,
+                LucideIcons.calendar,
                 color: Color(0xFF32190D),
               ),
               contentPadding: const EdgeInsets.symmetric(
@@ -151,26 +152,15 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
                 registrationControllerProvider.notifier,
               );
 
-              return Row(
+              return Column(
                 children: [
-                  if (state.currentStep > 0)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: controller.back,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF32190D),
-                          side: const BorderSide(color: Color(0xFF32190D)),
-                          minimumSize: const Size.fromHeight(48),
-                        ),
-                        child: const Text('Back'),
-                      ),
-                    ),
-                  if (state.currentStep > 0) const SizedBox(width: 12),
-                  Expanded(
+                  // Next / Submit Button
+                  SizedBox(
+                    width: double.infinity, // Full width
                     child: ElevatedButton(
                       onPressed: () async {
                         final ok = await controller.next();
-                        if (!ok) {
+                        if (!ok && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('You must be 18 or older'),
@@ -187,9 +177,31 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
                         state.currentStep == state.steps.length - 1
                             ? 'Submit'
                             : 'Next',
+                        style: TextStyle(fontWeight: FontWeight.w500),
                       ),
                     ),
                   ),
+
+                  // Space between buttons
+                  if (state.currentStep > 0) const SizedBox(height: 12),
+
+                  // Back Button (only if not first step)
+                  if (state.currentStep > 0)
+                    SizedBox(
+                      width: double.infinity, // Full width
+                      child: OutlinedButton(
+                        onPressed: controller.back,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF32190D),
+                          side: const BorderSide(color: Color(0xFF32190D)),
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        child: const Text(
+                          'Back',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
                 ],
               );
             },

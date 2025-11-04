@@ -34,7 +34,9 @@ class ProgressBar extends ConsumerWidget {
           LinearProgressIndicator(
             value: progress,
             color: const Color(0xFF32190D), // Active fill
-            backgroundColor: Colors.grey.shade200, // Inactive track
+            backgroundColor: Color(
+              0xFF32190D,
+            ).withValues(alpha: 0.2), // Inactive track
             minHeight: 4, // Thicker bar
             borderRadius: BorderRadius.circular(4),
           ),

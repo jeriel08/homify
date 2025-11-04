@@ -102,29 +102,20 @@ class _NameStepState extends ConsumerState<_NameStep> {
                 registrationControllerProvider.notifier,
               );
 
-              return Row(
+              return Column(
                 children: [
-                  if (state.currentStep > 0)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: controller.back,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF32190D),
-                          side: const BorderSide(color: Color(0xFF32190D)),
-                          minimumSize: const Size.fromHeight(48),
-                        ),
-                        child: const Text('Back'),
-                      ),
-                    ),
-                  if (state.currentStep > 0) const SizedBox(width: 12),
-                  Expanded(
+                  // Next / Submit Button
+                  SizedBox(
+                    width: double.infinity, // Full width
                     child: ElevatedButton(
                       onPressed: () async {
                         final ok = await controller.next();
-                        if (!ok) {
+                        if (!ok && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('You must be 18 or older'),
+                              content: Text(
+                                'Please fill out all required fields.',
+                              ),
                             ),
                           );
                         }
@@ -138,9 +129,31 @@ class _NameStepState extends ConsumerState<_NameStep> {
                         state.currentStep == state.steps.length - 1
                             ? 'Submit'
                             : 'Next',
+                        style: TextStyle(fontWeight: FontWeight.w500),
                       ),
                     ),
                   ),
+
+                  // Space between buttons
+                  if (state.currentStep > 0) const SizedBox(height: 12),
+
+                  // Back Button (only if not first step)
+                  if (state.currentStep > 0)
+                    SizedBox(
+                      width: double.infinity, // Full width
+                      child: OutlinedButton(
+                        onPressed: controller.back,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF32190D),
+                          side: const BorderSide(color: Color(0xFF32190D)),
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        child: const Text(
+                          'Back',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
                 ],
               );
             },

@@ -57,17 +57,15 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
           const SizedBox(height: 32),
 
           Card(
-            elevation: 0,
+            elevation: 3,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
               side: BorderSide(
-                color: _selected != null
-                    ? const Color(0xFF32190D)
-                    : Colors.grey.shade300,
+                color: const Color(0xFF32190D),
                 width: _selected != null ? 2 : 1,
               ),
             ),
-            color: _selected != null ? const Color(0xFFFFEDD4) : Colors.white,
+            color: const Color(0xFFFFEDD4),
             child: Column(
               children: [
                 RadioGroup<AccountType>(
@@ -126,29 +124,18 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
                 registrationControllerProvider.notifier,
               );
 
-              return Row(
+              return Column(
                 children: [
-                  if (state.currentStep > 0)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: controller.back,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF32190D),
-                          side: const BorderSide(color: Color(0xFF32190D)),
-                          minimumSize: const Size.fromHeight(48),
-                        ),
-                        child: const Text('Back'),
-                      ),
-                    ),
-                  if (state.currentStep > 0) const SizedBox(width: 12),
-                  Expanded(
+                  // Next / Submit Button
+                  SizedBox(
+                    width: double.infinity, // Full width
                     child: ElevatedButton(
                       onPressed: () async {
                         final ok = await controller.next();
-                        if (!ok) {
+                        if (!ok && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('You must be 18 or older'),
+                              content: Text('Please select an account type.'),
                             ),
                           );
                         }
@@ -156,15 +143,37 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF32190D),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(44),
                       ),
                       child: Text(
                         state.currentStep == state.steps.length - 1
                             ? 'Submit'
                             : 'Next',
+                        style: TextStyle(fontWeight: FontWeight.w500),
                       ),
                     ),
                   ),
+
+                  // Space between buttons
+                  if (state.currentStep > 0) const SizedBox(height: 12),
+
+                  // Back Button (only if not first step)
+                  if (state.currentStep > 0)
+                    SizedBox(
+                      width: double.infinity, // Full width
+                      child: OutlinedButton(
+                        onPressed: controller.back,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF32190D),
+                          side: const BorderSide(color: Color(0xFF32190D)),
+                          minimumSize: const Size.fromHeight(44),
+                        ),
+                        child: const Text(
+                          'Back',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
                 ],
               );
             },
