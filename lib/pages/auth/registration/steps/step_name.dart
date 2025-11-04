@@ -67,80 +67,83 @@ class _NameStepState extends ConsumerState<_NameStep> {
               color: const Color(0xFF32190D),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Enter your full name as it appears on your ID.',
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: Colors.grey.shade700),
-          ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
 
-          // First Name
-          TextField(
-            controller: _firstCtrl,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: 'First Name',
-              hintText: 'Juan',
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 14,
-                horizontal: 16,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
-                  width: 1,
+          // Inside build() → after the header text
+          Row(
+            children: [
+              Expanded(
+                child: _buildField(
+                  _firstCtrl,
+                  'First Name',
+                  'Juan',
+                  controller,
                 ),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
-                  width: 2,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildField(
+                  _lastCtrl,
+                  'Last Name',
+                  'Dela Cruz',
+                  controller,
                 ),
               ),
-            ),
-            cursorColor: const Color(0xFF32190D),
-            onChanged: (v) => controller.updateData('first_name', v.trim()),
+            ],
           ),
-          const SizedBox(height: 20),
 
-          // Last Name
-          TextField(
-            controller: _lastCtrl,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: 'Last Name',
-              hintText: 'Dela Cruz',
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 14,
-                horizontal: 16,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
-                  width: 1,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
-                  width: 2,
-                ),
-              ),
-            ),
-            cursorColor: const Color(0xFF32190D),
-            onChanged: (v) => controller.updateData('last_name', v.trim()),
+          const SizedBox(height: 24),
+
+          // Buttons moved here (from registration.dart)
+          Consumer(
+            builder: (context, ref, child) {
+              final state = ref.watch(registrationControllerProvider);
+              final controller = ref.read(
+                registrationControllerProvider.notifier,
+              );
+
+              return Row(
+                children: [
+                  if (state.currentStep > 0)
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: controller.back,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF32190D),
+                          side: const BorderSide(color: Color(0xFF32190D)),
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        child: const Text('Back'),
+                      ),
+                    ),
+                  if (state.currentStep > 0) const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final ok = await controller.next();
+                        if (!ok) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('You must be 18 or older'),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF32190D),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                      child: Text(
+                        state.currentStep == state.steps.length - 1
+                            ? 'Submit'
+                            : 'Next',
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
 
           const Spacer(),
@@ -148,4 +151,35 @@ class _NameStepState extends ConsumerState<_NameStep> {
       ),
     );
   }
+}
+
+Widget _buildField(
+  TextEditingController ctrl,
+  String label,
+  String hint,
+  RegistrationController controller,
+) {
+  return TextField(
+    controller: ctrl,
+    textCapitalization: TextCapitalization.words,
+    decoration: InputDecoration(
+      labelText: label,
+      hintText: hint,
+      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFF32190D), width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFF32190D), width: 2),
+      ),
+    ),
+    cursorColor: const Color(0xFF32190D),
+    onChanged: (v) {
+      final key = label == 'First Name' ? 'first_name' : 'last_name';
+      controller.updateData(key, v.trim());
+    },
+  );
 }

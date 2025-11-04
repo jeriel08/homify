@@ -10,7 +10,7 @@ class RegistrationPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(registrationControllerProvider);
-    final controller = ref.read(registrationControllerProvider.notifier);
+    // final controller = ref.read(registrationControllerProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
@@ -33,47 +33,6 @@ class RegistrationPage extends ConsumerWidget {
             child: state.steps.isEmpty
                 ? const SizedBox.shrink()
                 : state.steps[state.currentStep].builder(context),
-          ),
-
-          // 3. Navigation Buttons
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                // Back Button
-                if (state.currentStep > 0)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: controller.back,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF32190D),
-                        side: const BorderSide(color: Color(0xFF32190D)),
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                      child: const Text('Back'),
-                    ),
-                  ),
-
-                if (state.currentStep > 0) const SizedBox(width: 12),
-
-                // Next / Submit Button
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: controller.next,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF32190D),
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(48),
-                    ),
-                    child: Text(
-                      state.currentStep == state.steps.length - 1
-                          ? 'Submit'
-                          : 'Next',
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

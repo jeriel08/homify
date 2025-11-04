@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:homify/pages/auth/registration/steps/step_account_type.dart';
+import 'package:homify/pages/auth/registration/steps/step_birthday.dart';
 import 'package:homify/pages/auth/registration/steps/step_name.dart';
 
 enum AccountType { tenant, owner }
@@ -47,13 +48,20 @@ class RegistrationState {
 }
 
 class RegistrationController extends StateNotifier<RegistrationState> {
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
   RegistrationController() : super(RegistrationState()) {
     _buildSteps();
   }
 
   void _buildSteps() {
     // Placeholder – real steps added later
-    final baseSteps = <RegistrationStep>[stepAccountType(), stepName()];
+    final baseSteps = <RegistrationStep>[
+      stepAccountType(),
+      stepName(),
+      stepBirthday(),
+    ];
 
     final ownerSteps = state.accountType == AccountType.owner
         ? <RegistrationStep>[] // Add later
@@ -63,12 +71,16 @@ class RegistrationController extends StateNotifier<RegistrationState> {
   }
 
   void selectAccountType(AccountType type) {
-    state = state.copyWith(accountType: type, formData: {}, currentStep: 1);
+    state = state.copyWith(
+      accountType: type,
+      formData: {'account_type': type.name},
+    );
     _buildSteps();
   }
 
   Future<bool> next() async {
-    if (state.steps.isEmpty) return false;
+    _isLoading = true;
+    state = state.copyWith();
     final step = state.steps[state.currentStep];
     final valid = await step.validate(state.formData);
     if (!valid) return false;
