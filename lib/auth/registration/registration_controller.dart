@@ -29,6 +29,7 @@ class RegistrationState {
   final AccountType? accountType;
   final Map<String, dynamic> formData;
   final List<RegistrationStep> steps;
+  final bool isSubmitting;
   final bool submitSuccess;
   final String? submitError;
 
@@ -37,6 +38,7 @@ class RegistrationState {
     this.accountType,
     this.formData = const {},
     this.steps = const [],
+    this.isSubmitting = false,
     this.submitSuccess = false,
     this.submitError,
   });
@@ -46,6 +48,7 @@ class RegistrationState {
     AccountType? accountType,
     Map<String, dynamic>? formData,
     List<RegistrationStep>? steps,
+    bool? isSubmitting,
     bool? submitSuccess,
     String? submitError,
   }) {
@@ -54,6 +57,7 @@ class RegistrationState {
       accountType: accountType ?? this.accountType,
       formData: formData ?? this.formData,
       steps: steps ?? this.steps,
+      isSubmitting: isSubmitting ?? this.isSubmitting,
       submitSuccess: submitSuccess ?? this.submitSuccess,
       submitError: submitError ?? this.submitError,
     );
@@ -122,14 +126,33 @@ class RegistrationController extends StateNotifier<RegistrationState> {
     state = state.copyWith(formData: newData);
   }
 
+  void clearSubmitError() {
+    state = state.copyWith(submitError: null);
+  }
+
+  Future<void> submit() async {
+    // Validate final step
+    final isValid = await state.steps.last.validate.call(state.formData);
+    if (!isValid) return;
+
+    // Trigger the actual Firebase submission
+    await _submit();
+  }
+
   Future<void> _submit() async {
     debugPrint('Submitting registration data...');
     debugPrint(state.formData.toString());
+
+    state = state.copyWith(isSubmitting: true, submitError: null);
+
     final data = state.formData;
     final password = data['password'] as String?;
     final email = data['email'] as String?;
 
-    if (password == null || email == null) return;
+    if (password == null || email == null) {
+      state = state.copyWith(isSubmitting: false);
+      return;
+    }
 
     try {
       // 1. Auth (Firebase hashes password automatically)
@@ -158,9 +181,9 @@ class RegistrationController extends StateNotifier<RegistrationState> {
           .doc(cred.user!.uid)
           .set(user.toFirestore());
 
-      state = state.copyWith(submitSuccess: true);
+      state = state.copyWith(submitSuccess: true, isSubmitting: false);
     } catch (e) {
-      state = state.copyWith(submitError: e.toString());
+      state = state.copyWith(submitError: e.toString(), isSubmitting: false);
     }
   }
 

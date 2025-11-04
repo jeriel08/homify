@@ -191,34 +191,49 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
               final controller = ref.read(
                 registrationControllerProvider.notifier,
               );
+              final isLastStep = state.currentStep == state.steps.length - 1;
+              final isSubmitting = state.isSubmitting;
 
               return Column(
                 children: [
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        final ok = await controller.next();
-                        if (!ok && context.mounted) {
-                          final msg =
-                              _getErrorMessage() ??
-                              "Please fix password issues";
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(msg)));
-                        }
-                      },
+                      onPressed: isSubmitting
+                          ? null // disables the button while submitting
+                          : () async {
+                              final ok = await controller.next();
+                              if (!ok && context.mounted) {
+                                final msg =
+                                    _getErrorMessage() ??
+                                    "Please fix password issues";
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(SnackBar(content: Text(msg)));
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF32190D),
                         foregroundColor: Colors.white,
                         minimumSize: const Size.fromHeight(48),
                       ),
-                      child: Text(
-                        state.currentStep == state.steps.length - 1
-                            ? 'Submit'
-                            : 'Next',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
+                      child: isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              isLastStep ? 'Submit' : 'Next',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                     ),
                   ),
 
@@ -228,7 +243,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
-                        onPressed: controller.back,
+                        onPressed: isSubmitting ? null : controller.back,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF32190D),
                           side: const BorderSide(color: Color(0xFF32190D)),
