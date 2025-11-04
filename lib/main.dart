@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:homify/pages/auth/login.dart';
+import 'package:homify/auth/login.dart';
 import 'package:homify/theme/theme_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

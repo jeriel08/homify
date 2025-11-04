@@ -1,13 +1,13 @@
 // lib/auth/registration/registration_controller.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:homify/pages/auth/registration/steps/step_account_type.dart';
-import 'package:homify/pages/auth/registration/steps/step_birthday.dart';
-import 'package:homify/pages/auth/registration/steps/step_email.dart';
-import 'package:homify/pages/auth/registration/steps/step_gender.dart';
-import 'package:homify/pages/auth/registration/steps/step_mobile.dart';
-import 'package:homify/pages/auth/registration/steps/step_name.dart';
-import 'package:homify/pages/auth/registration/steps/step_password.dart';
+import 'package:homify/auth/registration/steps/step_account_type.dart';
+import 'package:homify/auth/registration/steps/step_birthday.dart';
+import 'package:homify/auth/registration/steps/step_email.dart';
+import 'package:homify/auth/registration/steps/step_gender.dart';
+import 'package:homify/auth/registration/steps/step_mobile.dart';
+import 'package:homify/auth/registration/steps/step_name.dart';
+import 'package:homify/auth/registration/steps/step_password.dart';
 
 enum AccountType { tenant, owner }
 

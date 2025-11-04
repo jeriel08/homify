@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:homify/pages/auth/registration/registration.dart';
+import 'package:homify/auth/registration/registration.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class LoginPage extends StatefulWidget {
