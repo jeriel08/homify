@@ -61,8 +61,9 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
     if (pass.isEmpty || confirm.isEmpty) return null;
     if (pass != confirm) return "Passwords don’t match";
     if (pass.length < 8) return "Use at least 8 characters";
-    if (!RegExp(r'[A-Za-z]').hasMatch(pass))
+    if (!RegExp(r'[A-Za-z]').hasMatch(pass)) {
       return "Include at least one letter";
+    }
     if (!RegExp(r'\d').hasMatch(pass)) return "Include at least one number";
     return null;
   }

@@ -1,6 +1,8 @@
 // lib/auth/registration/registration_controller.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:homify/auth/registration/steps/step_account_type.dart';
 import 'package:homify/auth/registration/steps/step_birthday.dart';
 import 'package:homify/auth/registration/steps/step_email.dart';
@@ -8,8 +10,7 @@ import 'package:homify/auth/registration/steps/step_gender.dart';
 import 'package:homify/auth/registration/steps/step_mobile.dart';
 import 'package:homify/auth/registration/steps/step_name.dart';
 import 'package:homify/auth/registration/steps/step_password.dart';
-
-enum AccountType { tenant, owner }
+import 'package:homify/models/user_model.dart';
 
 class RegistrationStep {
   final String title;
@@ -28,12 +29,16 @@ class RegistrationState {
   final AccountType? accountType;
   final Map<String, dynamic> formData;
   final List<RegistrationStep> steps;
+  final bool submitSuccess;
+  final String? submitError;
 
   RegistrationState({
     this.currentStep = 0,
     this.accountType,
     this.formData = const {},
     this.steps = const [],
+    this.submitSuccess = false,
+    this.submitError,
   });
 
   RegistrationState copyWith({
@@ -41,12 +46,16 @@ class RegistrationState {
     AccountType? accountType,
     Map<String, dynamic>? formData,
     List<RegistrationStep>? steps,
+    bool? submitSuccess,
+    String? submitError,
   }) {
     return RegistrationState(
       currentStep: currentStep ?? this.currentStep,
       accountType: accountType ?? this.accountType,
       formData: formData ?? this.formData,
       steps: steps ?? this.steps,
+      submitSuccess: submitSuccess ?? this.submitSuccess,
+      submitError: submitError ?? this.submitError,
     );
   }
 }
@@ -114,8 +123,52 @@ class RegistrationController extends StateNotifier<RegistrationState> {
   }
 
   Future<void> _submit() async {
-    debugPrint('Final Data: ${state.formData}');
-    // TODO: Call backend
+    debugPrint('Submitting registration data...');
+    debugPrint(state.formData.toString());
+    final data = state.formData;
+    final password = data['password'] as String?;
+    final email = data['email'] as String?;
+
+    if (password == null || email == null) return;
+
+    try {
+      // 1. Auth (Firebase hashes password automatically)
+      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // 2. Build strongly‑typed user object
+      final user = AppUser(
+        uid: cred.user!.uid,
+        accountType: _accountTypeFromString(data['account_type'] as String),
+        firstName: data['first_name'] as String,
+        lastName: data['last_name'] as String,
+        birthday: data['birthday'] as String,
+        gender: data['gender'] as String,
+        mobile: data['mobile'] as String,
+        email: email,
+        createdAt:
+            DateTime.now(), // placeholder – server timestamp will overwrite
+      );
+
+      // 3. Save to **users** collection
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(cred.user!.uid)
+          .set(user.toFirestore());
+
+      state = state.copyWith(submitSuccess: true);
+    } catch (e) {
+      state = state.copyWith(submitError: e.toString());
+    }
+  }
+
+  AccountType _accountTypeFromString(String raw) {
+    return AccountType.values.firstWhere(
+      (e) => e.name == raw,
+      orElse: () => AccountType.tenant,
+    );
   }
 }
 

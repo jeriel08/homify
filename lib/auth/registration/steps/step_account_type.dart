@@ -1,6 +1,7 @@
 // lib/auth/registration/steps/step_account_type.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/models/user_model.dart';
 import '../registration_controller.dart';
 
 /// The very first registration step – choose Tenant or Owner.
