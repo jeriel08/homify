@@ -102,7 +102,7 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
               context,
             ).textTheme.labelMedium?.copyWith(color: Colors.grey.shade700),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
 
           // ---- Radio Card ---------------------------------------------
           Card(

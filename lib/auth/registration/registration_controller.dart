@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:homify/auth/registration/steps/owner/step_amenities.dart';
 import 'package:homify/auth/registration/steps/owner/step_property_info.dart';
 import 'package:homify/auth/registration/steps/owner/step_property_type.dart';
+import 'package:homify/auth/registration/steps/owner/step_rent_amount.dart';
 import 'package:homify/auth/registration/steps/owner/step_rent_method.dart';
 import 'package:homify/auth/registration/steps/step_account_type.dart';
 import 'package:homify/auth/registration/steps/step_birthday.dart';
@@ -92,6 +94,8 @@ class RegistrationController extends StateNotifier<RegistrationState> {
             stepPropertyInfo(),
             stepPropertyType(),
             stepRentMethod(),
+            stepRentAmount(),
+            stepAmenities(),
           ] // Add later
         : <RegistrationStep>[];
 

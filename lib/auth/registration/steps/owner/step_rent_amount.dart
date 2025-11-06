@@ -1,69 +1,61 @@
-// lib/auth/registration/steps/step_rent_method.dart
+// lib/auth/registration/steps/step_rent_amount.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homify/models/property_model.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../registration_controller.dart';
 
-RegistrationStep stepRentMethod() {
+RegistrationStep stepRentAmount() {
   return RegistrationStep(
-    title: 'Rent Charge Method',
-    builder: (context) => const _RentMethodStep(),
-    validate: (data) async => data['rent_charge_method'] != null,
+    title: 'Rent Amount',
+    builder: (context) => const _RentAmountStep(),
+    validate: (data) async {
+      final amount = data['rent_amount'] as num?;
+      return amount != null && amount > 0;
+    },
   );
 }
 
-class _RentMethodStep extends ConsumerStatefulWidget {
-  const _RentMethodStep();
+class _RentAmountStep extends ConsumerStatefulWidget {
+  const _RentAmountStep();
 
   @override
-  ConsumerState<_RentMethodStep> createState() => _RentMethodStepState();
+  ConsumerState<_RentAmountStep> createState() => _RentAmountStepState();
 }
 
-class _RentMethodStepState extends ConsumerState<_RentMethodStep> {
-  RentChargeMethod? _selected;
+class _RentAmountStepState extends ConsumerState<_RentAmountStep> {
+  final TextEditingController _ctrl = TextEditingController();
   bool _triedNext = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSaved();
-  }
-
-  void _loadSaved() {
     final saved =
-        ref.read(registrationControllerProvider).formData['rent_charge_method']
-            as String?;
+        ref.read(registrationControllerProvider).formData['rent_amount']
+            as num?;
     if (saved != null) {
-      _selected = RentChargeMethod.values.firstWhere(
-        (e) => e.name == saved,
-        orElse: () => RentChargeMethod.values.first,
-      );
+      _ctrl.text = saved.toStringAsFixed(0);
     }
   }
 
-  void _select(RentChargeMethod? value) {
-    if (value == null) return;
-    setState(() {
-      _selected = value;
-      _triedNext = false;
-    });
-    ref
-        .read(registrationControllerProvider.notifier)
-        .updateData('rent_charge_method', value.name);
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
   }
 
-  Widget buildRadioTiles(String title, RentChargeMethod rentChargeMethod) {
-    return ListTile(
-      title: Text(
-        title,
-        style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF32190D)),
-      ),
-      trailing: Radio<RentChargeMethod>(
-        value: rentChargeMethod,
-        activeColor: Color(0xFF32190D),
-      ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-    );
+  void _update(String value) {
+    final num? parsed = num.tryParse(value);
+    ref
+        .read(registrationControllerProvider.notifier)
+        .updateData('rent_amount', parsed);
+    if (_triedNext) setState(() => _triedNext = false);
+  }
+
+  String? _error() {
+    if (!_triedNext) return null;
+    final value = num.tryParse(_ctrl.text);
+    if (value == null || value <= 0) return 'Enter a valid amount';
+    return null;
   }
 
   @override
@@ -73,12 +65,6 @@ class _RentMethodStepState extends ConsumerState<_RentMethodStep> {
     final isLastStep = state.currentStep == state.steps.length - 1;
     final isSubmitting = state.isSubmitting;
 
-    // Sync if user navigates back
-    final saved = state.formData['rent_charge_method'] as String?;
-    if (saved != null && _selected?.name != saved) {
-      _selected = RentChargeMethod.values.firstWhere((e) => e.name == saved);
-    }
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -87,60 +73,46 @@ class _RentMethodStepState extends ConsumerState<_RentMethodStep> {
           const SizedBox(height: 24),
 
           Text(
-            'How do you charge rent?',
+            'How much is the rent?',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: const Color(0xFF32190D),
             ),
           ),
-          const SizedBox(height: 4),
-
-          Text(
-            'Choose the method that best fits your boarding house.',
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: Colors.grey.shade700),
-          ),
           const SizedBox(height: 24),
 
-          // ---- Radio Card ----
-          Card(
-            elevation: 3,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-              side: BorderSide(
-                color: const Color(0xFF32190D),
-                width: _selected != null && !_triedNext ? 2 : 1,
+          // ---- Amount Input ----
+          TextField(
+            controller: _ctrl,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Rent amount',
+              hintText: '1500',
+              prefixIcon: Icon(LucideIcons.philippinePeso, size: 20),
+              errorText: _error(),
+              errorStyle: const TextStyle(color: Colors.red),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 12,
+                horizontal: 16,
               ),
-            ),
-            color: const Color(0xFFFFEDD4),
-            child: Column(
-              children: [
-                RadioGroup<RentChargeMethod>(
-                  onChanged: (v) => _select(v),
-                  groupValue: _selected,
-                  child: Column(
-                    children: <Widget>[
-                      buildRadioTiles('Per Person', RentChargeMethod.perPerson),
-                      buildRadioTiles('Per Bed', RentChargeMethod.perBed),
-                      buildRadioTiles('Per Room', RentChargeMethod.perRoom),
-                      buildRadioTiles('Per Unit', RentChargeMethod.perUnit),
-                    ],
-                  ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: const BorderSide(color: Color(0xFF32190D)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: const BorderSide(
+                  color: Color(0xFF32190D),
+                  width: 2,
                 ),
-              ],
-            ),
-          ),
-
-          // Error only after trying to go forward
-          if (_triedNext && _selected == null)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text(
-                'Please select a rent charge method.',
-                style: TextStyle(color: Colors.red, fontSize: 12),
               ),
             ),
+            cursorColor: const Color(0xFF32190D),
+            onChanged: _update,
+          ),
 
           const SizedBox(height: 24),
 
@@ -156,13 +128,15 @@ class _RentMethodStepState extends ConsumerState<_RentMethodStep> {
                           ? null
                           : () async {
                               setState(() => _triedNext = true);
-                              if (_selected == null) return;
+                              if (_error() != null) return;
 
                               final ok = await controller.next();
                               if (!ok && context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Please select a method'),
+                                    content: Text(
+                                      'Please enter a valid amount',
+                                    ),
                                   ),
                                 );
                               }
