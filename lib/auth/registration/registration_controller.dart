@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:homify/auth/registration/steps/owner/step_property_info.dart';
+import 'package:homify/auth/registration/steps/owner/step_property_type.dart';
 import 'package:homify/auth/registration/steps/step_account_type.dart';
 import 'package:homify/auth/registration/steps/step_birthday.dart';
 import 'package:homify/auth/registration/steps/step_email.dart';
@@ -85,7 +87,10 @@ class RegistrationController extends StateNotifier<RegistrationState> {
     ];
 
     final ownerSteps = state.accountType == AccountType.owner
-        ? <RegistrationStep>[] // Add later
+        ? <RegistrationStep>[
+            stepPropertyInfo(),
+            stepPropertyType(),
+          ] // Add later
         : <RegistrationStep>[];
 
     state = state.copyWith(steps: [...baseSteps, ...ownerSteps]);
