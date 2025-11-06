@@ -118,7 +118,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
                 color: Color(0xFF32190D),
               ),
               contentPadding: const EdgeInsets.symmetric(
-                vertical: 14,
+                vertical: 12,
                 horizontal: 16,
               ),
               border: OutlineInputBorder(
@@ -171,7 +171,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF32190D),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(44),
                       ),
                       child: Text(
                         state.currentStep == state.steps.length - 1
@@ -183,7 +183,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
                   ),
 
                   // Space between buttons
-                  if (state.currentStep > 0) const SizedBox(height: 12),
+                  if (state.currentStep > 0) const SizedBox(height: 8),
 
                   // Back Button (only if not first step)
                   if (state.currentStep > 0)
@@ -194,7 +194,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF32190D),
                           side: const BorderSide(color: Color(0xFF32190D)),
-                          minimumSize: const Size.fromHeight(48),
+                          minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text(
                           'Back',

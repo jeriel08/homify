@@ -123,7 +123,7 @@ class _NameStepState extends ConsumerState<_NameStep> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF32190D),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(44),
                       ),
                       child: Text(
                         state.currentStep == state.steps.length - 1
@@ -135,7 +135,7 @@ class _NameStepState extends ConsumerState<_NameStep> {
                   ),
 
                   // Space between buttons
-                  if (state.currentStep > 0) const SizedBox(height: 12),
+                  if (state.currentStep > 0) const SizedBox(height: 8),
 
                   // Back Button (only if not first step)
                   if (state.currentStep > 0)
@@ -146,7 +146,7 @@ class _NameStepState extends ConsumerState<_NameStep> {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF32190D),
                           side: const BorderSide(color: Color(0xFF32190D)),
-                          minimumSize: const Size.fromHeight(48),
+                          minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text(
                           'Back',
@@ -178,7 +178,7 @@ Widget _buildField(
     decoration: InputDecoration(
       labelText: label,
       hintText: hint,
-      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),

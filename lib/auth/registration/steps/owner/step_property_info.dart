@@ -103,7 +103,7 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
               errorText: nameError,
               errorStyle: const TextStyle(color: Colors.red),
               contentPadding: const EdgeInsets.symmetric(
-                vertical: 14,
+                vertical: 12,
                 horizontal: 16,
               ),
               border: OutlineInputBorder(
@@ -140,7 +140,7 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
               errorText: descError,
               errorStyle: const TextStyle(color: Colors.red),
               contentPadding: const EdgeInsets.symmetric(
-                vertical: 14,
+                vertical: 12,
                 horizontal: 16,
               ),
               border: OutlineInputBorder(
@@ -211,7 +211,7 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF32190D),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(44),
                       ),
                       child: isSubmitting
                           ? const SizedBox(
@@ -233,7 +233,7 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
                     ),
                   ),
 
-                  if (state.currentStep > 0) const SizedBox(height: 12),
+                  if (state.currentStep > 0) const SizedBox(height: 8),
 
                   // BACK
                   if (state.currentStep > 0)
@@ -244,7 +244,7 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF32190D),
                           side: const BorderSide(color: Color(0xFF32190D)),
-                          minimumSize: const Size.fromHeight(48),
+                          minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text(
                           'Back',

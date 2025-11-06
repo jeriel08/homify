@@ -186,7 +186,7 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF32190D),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(44),
                       ),
                       child: isSubmitting
                           ? const SizedBox(
@@ -208,7 +208,7 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
                     ),
                   ),
 
-                  if (state.currentStep > 0) const SizedBox(height: 12),
+                  if (state.currentStep > 0) const SizedBox(height: 8),
 
                   // BACK
                   if (state.currentStep > 0)
@@ -219,7 +219,7 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF32190D),
                           side: const BorderSide(color: Color(0xFF32190D)),
-                          minimumSize: const Size.fromHeight(48),
+                          minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text(
                           'Back',
