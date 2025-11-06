@@ -1,67 +1,65 @@
-// lib/auth/registration/steps/step_property_type.dart
+// lib/auth/registration/steps/step_rent_method.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/models/property_model.dart';
 import '../../registration_controller.dart';
 
-/// Registration step – Owner chooses the type of property they are listing.
-RegistrationStep stepPropertyType() {
+RegistrationStep stepRentMethod() {
   return RegistrationStep(
-    title: 'Property Type',
-    builder: (context) => const _PropertyTypeStep(),
-    // Must pick one → Next disabled until chosen
-    validate: (data) async => data['property_type'] != null,
+    title: 'Rent Charge Method',
+    builder: (context) => const _RentMethodStep(),
+    validate: (data) async => data['rent_charge_method'] != null,
   );
 }
 
-class _PropertyTypeStep extends ConsumerStatefulWidget {
-  const _PropertyTypeStep();
+class _RentMethodStep extends ConsumerStatefulWidget {
+  const _RentMethodStep();
 
   @override
-  ConsumerState<_PropertyTypeStep> createState() => _PropertyTypeStepState();
+  ConsumerState<_RentMethodStep> createState() => _RentMethodStepState();
 }
 
-class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
-  PropertyType? _selected;
-  bool _triedNext = false; // <-- NEW: show error only after tapping Next
+class _RentMethodStepState extends ConsumerState<_RentMethodStep> {
+  RentChargeMethod? _selected;
+  bool _triedNext = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedSelection();
+    _loadSaved();
   }
 
-  void _loadSavedSelection() {
+  void _loadSaved() {
     final saved =
-        ref.read(registrationControllerProvider).formData['property_type']
+        ref.read(registrationControllerProvider).formData['rent_charge_method']
             as String?;
     if (saved != null) {
-      _selected = PropertyType.values.firstWhere(
+      _selected = RentChargeMethod.values.firstWhere(
         (e) => e.name == saved,
-        orElse: () => _selected ?? PropertyType.values.first,
+        orElse: () => RentChargeMethod.values.first,
       );
     }
   }
 
-  void _select(PropertyType? value) {
+  void _select(RentChargeMethod? value) {
     if (value == null) return;
     setState(() {
       _selected = value;
-      _triedNext = false; // hide error when user picks something
+      _triedNext = false;
     });
     ref
         .read(registrationControllerProvider.notifier)
-        .updateData('property_type', value.name);
+        .updateData('rent_charge_method', value.name);
   }
 
-  Widget buildPropertyType(String title, PropertyType propertyType) {
+  Widget buildRadioTiles(String title, RentChargeMethod rentChargeMethod) {
     return ListTile(
       title: Text(
         title,
         style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF32190D)),
       ),
-      trailing: Radio<PropertyType>(
-        value: propertyType,
+      trailing: Radio<RentChargeMethod>(
+        value: rentChargeMethod,
         activeColor: Color(0xFF32190D),
       ),
       contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
@@ -70,12 +68,15 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = ref.read(registrationControllerProvider.notifier);
     final state = ref.watch(registrationControllerProvider);
+    final isLastStep = state.currentStep == state.steps.length - 1;
+    final isSubmitting = state.isSubmitting;
 
-    // Keep UI in sync when navigating back
-    final saved = state.formData['property_type'] as String?;
+    // Sync if user navigates back
+    final saved = state.formData['rent_charge_method'] as String?;
     if (saved != null && _selected?.name != saved) {
-      _selected = PropertyType.values.firstWhere((e) => e.name == saved);
+      _selected = RentChargeMethod.values.firstWhere((e) => e.name == saved);
     }
 
     return Padding(
@@ -85,9 +86,8 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
         children: [
           const SizedBox(height: 24),
 
-          // ---- Header -------------------------------------------------
           Text(
-            'What type of property are you listing?',
+            'How do you charge rent?',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: const Color(0xFF32190D),
@@ -95,16 +95,15 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
           ),
           const SizedBox(height: 4),
 
-          // ---- Sub-header ---------------------------------------------
           Text(
-            'Choose the option that best describes your boarding house — like a room, bedspace, or whole house for rent.',
+            'Choose the method that best fits your boarding house.',
             style: Theme.of(
               context,
             ).textTheme.labelMedium?.copyWith(color: Colors.grey.shade700),
           ),
           const SizedBox(height: 32),
 
-          // ---- Radio Card ---------------------------------------------
+          // ---- Radio Card ----
           Card(
             elevation: 3,
             shape: RoundedRectangleBorder(
@@ -117,19 +116,15 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
             color: const Color(0xFFFFEDD4),
             child: Column(
               children: [
-                RadioGroup<PropertyType>(
-                  groupValue: _selected,
+                RadioGroup<RentChargeMethod>(
                   onChanged: (v) => _select(v),
+                  groupValue: _selected,
                   child: Column(
                     children: <Widget>[
-                      buildPropertyType('Bedspacer', PropertyType.bedspacer),
-                      buildPropertyType('Room For Rent', PropertyType.room),
-                      buildPropertyType('House For Rent', PropertyType.house),
-                      buildPropertyType(
-                        'Apartment Unit',
-                        PropertyType.apartment,
-                      ),
-                      buildPropertyType('Dormitory', PropertyType.dormitory),
+                      buildRadioTiles('Per Person', RentChargeMethod.perPerson),
+                      buildRadioTiles('Per Bed', RentChargeMethod.perBed),
+                      buildRadioTiles('Per Room', RentChargeMethod.perRoom),
+                      buildRadioTiles('Per Unit', RentChargeMethod.perUnit),
                     ],
                   ),
                 ),
@@ -137,31 +132,23 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
             ),
           ),
 
-          // ---- Error message (only after trying to go forward) ----
+          // Error only after trying to go forward
           if (_triedNext && _selected == null)
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text(
-                'Please select a property type.',
+                'Please select a rent charge method.',
                 style: TextStyle(color: Colors.red, fontSize: 12),
               ),
             ),
 
           const SizedBox(height: 24),
 
-          // ---- Buttons ------------------------------------------------
+          // ---- Buttons ----
           Consumer(
             builder: (context, ref, child) {
-              final state = ref.watch(registrationControllerProvider);
-              final controller = ref.read(
-                registrationControllerProvider.notifier,
-              );
-              final isLastStep = state.currentStep == state.steps.length - 1;
-              final isSubmitting = state.isSubmitting;
-
               return Column(
                 children: [
-                  // NEXT / SUBMIT
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -169,16 +156,13 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
                           ? null
                           : () async {
                               setState(() => _triedNext = true);
-                              if (_selected == null) {
-                                return; // error already shown
-                              }
+                              if (_selected == null) return;
+
                               final ok = await controller.next();
                               if (!ok && context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text(
-                                      'Please select a property type.',
-                                    ),
+                                    content: Text('Please select a method'),
                                   ),
                                 );
                               }
@@ -199,18 +183,11 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
                                 ),
                               ),
                             )
-                          : Text(
-                              isLastStep ? 'Submit' : 'Next',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                          : Text(isLastStep ? 'Submit' : 'Next'),
                     ),
                   ),
 
                   if (state.currentStep > 0) const SizedBox(height: 12),
-
-                  // BACK
                   if (state.currentStep > 0)
                     SizedBox(
                       width: double.infinity,
@@ -221,10 +198,7 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
                           side: const BorderSide(color: Color(0xFF32190D)),
                           minimumSize: const Size.fromHeight(48),
                         ),
-                        child: const Text(
-                          'Back',
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
+                        child: const Text('Back'),
                       ),
                     ),
                 ],

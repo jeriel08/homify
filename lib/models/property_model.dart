@@ -7,15 +7,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// How the owner charges rent
 enum RentChargeMethod {
-  perHead, // e.g. ₱1,500 per person
-  perUnit, // e.g. ₱8,000 per room / bedspace
-  perMonth; // flat monthly rent (used for whole-house/apartment)
+  perPerson, // e.g. ₱1,500 per person
+  perBed, // e.g. ₱8,000 per room / bedspace
+  perRoom,
+  perUnit; // flat monthly rent (used for whole-house/apartment)
 
   String get displayName {
     return switch (this) {
-      RentChargeMethod.perHead => 'Per Head',
+      RentChargeMethod.perPerson => 'Per Person',
+      RentChargeMethod.perBed => 'Per Bed',
+      RentChargeMethod.perRoom => 'Per Room',
       RentChargeMethod.perUnit => 'Per Unit',
-      RentChargeMethod.perMonth => 'Per Month',
     };
   }
 

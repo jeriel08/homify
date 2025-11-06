@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:homify/auth/registration/steps/owner/step_property_info.dart';
 import 'package:homify/auth/registration/steps/owner/step_property_type.dart';
+import 'package:homify/auth/registration/steps/owner/step_rent_method.dart';
 import 'package:homify/auth/registration/steps/step_account_type.dart';
 import 'package:homify/auth/registration/steps/step_birthday.dart';
 import 'package:homify/auth/registration/steps/step_email.dart';
@@ -90,6 +91,7 @@ class RegistrationController extends StateNotifier<RegistrationState> {
         ? <RegistrationStep>[
             stepPropertyInfo(),
             stepPropertyType(),
+            stepRentMethod(),
           ] // Add later
         : <RegistrationStep>[];
 
