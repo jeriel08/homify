@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homify/auth/registration/registration.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:homify/services/location_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,6 +23,10 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initLocation();
+    });
+
     // Listen to focus changes
     _emailFocus.addListener(() {
       setState(() {
@@ -40,6 +45,33 @@ class _LoginPageState extends State<LoginPage> {
             : const Color(0xFF32190D).withValues(alpha: 0.6);
       });
     });
+  }
+
+  Future<void> _initLocation() async {
+    final granted = await LocationService.requestAndSaveLocation();
+
+    // The "mounted" check is still important!
+    if (!mounted) return;
+
+    // This "context" now belongs to LoginPage, which is *inside* the MaterialApp
+    // so this will work!
+    if (granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Location access granted! Ready to find homes near you.',
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Location access needed for nearby searches. Enable in settings?',
+          ),
+        ),
+      );
+    }
   }
 
   @override

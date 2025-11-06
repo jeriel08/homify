@@ -49,5 +49,11 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>We need your location to show you nearby homes for sale.</string>
+
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>We need your location to show you nearby homes for sale.</string>
 	</dict>
 </plist>

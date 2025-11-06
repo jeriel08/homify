@@ -10,17 +10,17 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
+// MyApp can now be a StatelessWidget
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Homify',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: LoginPage(),
+      home: const LoginPage(),
     );
   }
 }
