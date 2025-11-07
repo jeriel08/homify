@@ -47,6 +47,8 @@ dependencies:
   geolocator: ^14.0.2
   google_maps_flutter: ^2.14.0
   shared_preferences: ^2.5.3
+  cloudinary_public: ^0.23.1
+  image_picker: ^1.2.0
 
 dev_dependencies:
   flutter_test:
