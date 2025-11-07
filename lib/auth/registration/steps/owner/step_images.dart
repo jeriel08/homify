@@ -349,7 +349,10 @@ class _ImagesStepState extends ConsumerState<_ImagesStep> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove Photo?'),
+        title: const Text(
+          'Remove Photo?',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+        ),
         content: const Text('This photo will be deleted permanently.'),
         actions: [
           TextButton(

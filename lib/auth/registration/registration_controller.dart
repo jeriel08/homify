@@ -145,6 +145,11 @@ class RegistrationController extends StateNotifier<RegistrationState> {
     state = state.copyWith(submitError: null);
   }
 
+  void reset() {
+    state = RegistrationState(); // Creates a fresh, default state
+    _buildSteps(); // Re-populates the initial steps
+  }
+
   Future<void> submit() async {
     // Validate final step
     final isValid = await state.steps.last.validate.call(state.formData);
