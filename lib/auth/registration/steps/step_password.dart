@@ -1,8 +1,8 @@
 // lib/auth/registration/steps/step_password.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/auth/registration/registration_controller.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../registration_controller.dart';
 
 RegistrationStep stepPassword() {
   return RegistrationStep(
@@ -32,6 +32,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
   late final TextEditingController _confirmCtrl;
   bool _showPass = false;
   bool _showConfirm = false;
+  bool _triedNext = false;
 
   @override
   void initState() {
@@ -52,14 +53,20 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
 
   void _update(String key, String value) {
     ref.read(registrationControllerProvider.notifier).updateData(key, value);
+
+    if (_triedNext) {
+      setState(() => _triedNext = false);
+    } else {
+      setState(() {});
+    }
   }
 
-  String? _getErrorMessage() {
+  String? _getPasswordError() {
     final pass = _passCtrl.text;
-    final confirm = _confirmCtrl.text;
 
-    if (pass.isEmpty || confirm.isEmpty) return null;
-    if (pass != confirm) return "Passwords don’t match";
+    if (!_triedNext && pass.isEmpty) return null;
+
+    if (pass.isEmpty) return "Password is required";
     if (pass.length < 8) return "Use at least 8 characters";
     if (!RegExp(r'[A-Za-z]').hasMatch(pass)) {
       return "Include at least one letter";
@@ -68,200 +75,229 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
     return null;
   }
 
+  String? _getConfirmError() {
+    final pass = _passCtrl.text;
+    final confirm = _confirmCtrl.text;
+
+    if (_getPasswordError() != null) return null;
+
+    if (!_triedNext && confirm.isEmpty) return null;
+
+    if (confirm.isEmpty) return "Please confirm your password";
+    if (pass != confirm) return "Passwords don’t match";
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final error = _getErrorMessage();
+    final passError = _getPasswordError();
+    final confirmError = _getConfirmError();
+    final hasPassError = passError != null;
+    final hasConfirmError = confirmError != null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 24),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
 
-          Text(
-            "Create a password",
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF32190D),
-            ),
-          ),
-          const SizedBox(height: 4),
-
-          Text(
-            "Use at least 8 characters with a mix of letters and numbers.",
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: Colors.grey.shade700),
-          ),
-          const SizedBox(height: 24),
-
-          // Password
-          TextField(
-            controller: _passCtrl,
-            obscureText: !_showPass,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              hintText: '••••••••',
-              suffixIcon: IconButton(
-                icon: Icon(_showPass ? LucideIcons.eye : LucideIcons.eyeOff),
-                onPressed: () => setState(() => _showPass = !_showPass),
+            Text(
+              "Create a password",
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
                 color: const Color(0xFF32190D),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 12,
-                horizontal: 16,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
-                  width: 1,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
-                  width: 2,
-                ),
-              ),
-              errorText: error,
-              errorStyle: const TextStyle(color: Colors.red),
             ),
-            cursorColor: const Color(0xFF32190D),
-            onChanged: (v) {
-              _update('password', v);
-              setState(() {}); // trigger error update
-            },
-          ),
+            const SizedBox(height: 4),
 
-          const SizedBox(height: 16),
-
-          // Confirm Password
-          TextField(
-            controller: _confirmCtrl,
-            obscureText: !_showConfirm,
-            decoration: InputDecoration(
-              labelText: 'Confirm Password',
-              hintText: '••••••••',
-              suffixIcon: IconButton(
-                icon: Icon(_showConfirm ? LucideIcons.eye : LucideIcons.eyeOff),
-                onPressed: () => setState(() => _showConfirm = !_showConfirm),
-                color: const Color(0xFF32190D),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 12,
-                horizontal: 16,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
-                  width: 1,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
-                  width: 2,
-                ),
-              ),
+            Text(
+              "Use at least 8 characters with a mix of letters and numbers.",
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: Colors.grey.shade700),
             ),
-            cursorColor: const Color(0xFF32190D),
-            onChanged: (v) {
-              _update('confirm_password', v);
-              setState(() {});
-            },
-          ),
+            const SizedBox(height: 24),
 
-          const SizedBox(height: 20),
-
-          // Buttons
-          Consumer(
-            builder: (context, ref, child) {
-              final state = ref.watch(registrationControllerProvider);
-              final controller = ref.read(
-                registrationControllerProvider.notifier,
-              );
-              final isLastStep = state.currentStep == state.steps.length - 1;
-              final isSubmitting = state.isSubmitting;
-
-              return Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isSubmitting
-                          ? null // disables the button while submitting
-                          : () async {
-                              final ok = await controller.next();
-                              if (!ok && context.mounted) {
-                                final msg =
-                                    _getErrorMessage() ??
-                                    "Please fix password issues";
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showSnackBar(SnackBar(content: Text(msg)));
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF32190D),
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(44),
-                      ),
-                      child: isSubmitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : Text(
-                              isLastStep ? 'Submit' : 'Next',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                    ),
+            // Password
+            TextField(
+              controller: _passCtrl,
+              obscureText: !_showPass,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                hintText: '••••••••',
+                suffixIcon: IconButton(
+                  icon: Icon(_showPass ? LucideIcons.eye : LucideIcons.eyeOff),
+                  onPressed: () => setState(() => _showPass = !_showPass),
+                  color: const Color(0xFF32190D),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(
+                    color: hasPassError ? Colors.red : const Color(0xFF32190D),
+                    width: hasPassError ? 2 : 1,
                   ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(
+                    color: hasPassError ? Colors.red : const Color(0xFF32190D),
+                    width: 2,
+                  ),
+                ),
+                errorText: passError,
+                errorStyle: const TextStyle(color: Colors.red),
+              ),
+              cursorColor: const Color(0xFF32190D),
+              onChanged: (v) {
+                _update('password', v);
+                setState(() {}); // trigger error update
+              },
+            ),
 
-                  if (state.currentStep > 0) const SizedBox(height: 8),
+            const SizedBox(height: 16),
 
-                  if (state.currentStep > 0)
+            // Confirm Password
+            TextField(
+              controller: _confirmCtrl,
+              obscureText: !_showConfirm,
+              decoration: InputDecoration(
+                labelText: 'Confirm Password',
+                hintText: '••••••••',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _showConfirm ? LucideIcons.eye : LucideIcons.eyeOff,
+                  ),
+                  onPressed: () => setState(() => _showConfirm = !_showConfirm),
+                  color: const Color(0xFF32190D),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(
+                    color: hasConfirmError
+                        ? Colors.red
+                        : const Color(0xFF32190D),
+                    width: hasConfirmError ? 2 : 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(
+                    color: hasConfirmError
+                        ? Colors.red
+                        : const Color(0xFF32190D),
+                    width: 2,
+                  ),
+                ),
+                errorText: confirmError,
+                errorStyle: const TextStyle(color: Colors.red),
+              ),
+              cursorColor: const Color(0xFF32190D),
+              onChanged: (v) {
+                _update('confirm_password', v);
+                setState(() {});
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            // Buttons
+            Consumer(
+              builder: (context, ref, child) {
+                final state = ref.watch(registrationControllerProvider);
+                final controller = ref.read(
+                  registrationControllerProvider.notifier,
+                );
+                final isLastStep = state.currentStep == state.steps.length - 1;
+                final isSubmitting = state.isSubmitting;
+
+                return Column(
+                  children: [
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: isSubmitting ? null : controller.back,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF32190D),
-                          side: const BorderSide(color: Color(0xFF32190D)),
+                      child: ElevatedButton(
+                        onPressed: isSubmitting
+                            ? null // disables the button while submitting
+                            : () async {
+                                setState(() => _triedNext = true);
+
+                                final ok = await controller.next();
+                                if (!ok && context.mounted) {
+                                  final msg =
+                                      _getPasswordError() ??
+                                      _getConfirmError() ??
+                                      "Please fix password issues";
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(SnackBar(content: Text(msg)));
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF32190D),
+                          foregroundColor: Colors.white,
                           minimumSize: const Size.fromHeight(44),
                         ),
-                        child: const Text(
-                          'Back',
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
+                        child: isSubmitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                isLastStep ? 'Submit' : 'Next',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                       ),
                     ),
-                ],
-              );
-            },
-          ),
 
-          const Spacer(),
-        ],
+                    if (state.currentStep > 0) const SizedBox(height: 8),
+
+                    if (state.currentStep > 0)
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: isSubmitting ? null : controller.back,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF32190D),
+                            side: const BorderSide(color: Color(0xFF32190D)),
+                            minimumSize: const Size.fromHeight(44),
+                          ),
+                          child: const Text(
+                            'Back',
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }

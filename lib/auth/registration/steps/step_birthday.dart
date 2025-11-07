@@ -1,9 +1,10 @@
 // lib/auth/registration/steps/step_birthday.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/auth/registration/registration_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../registration_controller.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 RegistrationStep stepBirthday() {
   return RegistrationStep(
@@ -33,11 +34,21 @@ class _BirthdayStep extends ConsumerStatefulWidget {
 class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
   late TextEditingController _dateCtrl;
   DateTime? _selectedDate;
+  bool _triedNext = false;
 
   @override
   void initState() {
     super.initState();
     _dateCtrl = TextEditingController();
+    _loadSaved();
+
+    // Auto-open calendar on step enter
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showDatePicker();
+    });
+  }
+
+  void _loadSaved() {
     final data = ref.read(registrationControllerProvider).formData;
     final saved = data['birthday'] as String?;
     if (saved != null) {
@@ -47,11 +58,6 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
       _selectedDate = DateTime.now();
       _dateCtrl.text = DateFormat('MMMM d, yyyy').format(_selectedDate!);
     }
-
-    // Auto-open calendar on step enter
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showDatePicker();
-    });
   }
 
   @override
@@ -70,6 +76,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(primary: Color(0xFF32190D)),
+            textTheme: GoogleFonts.poppinsTextTheme(),
           ),
           child: child!,
         );
@@ -79,12 +86,27 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
       setState(() {
         _selectedDate = picked;
         _dateCtrl.text = DateFormat('MMMM d, yyyy').format(picked);
+        _triedNext = false;
       });
       final formatted = DateFormat('yyyy-MM-dd').format(picked);
       ref
           .read(registrationControllerProvider.notifier)
           .updateData('birthday', formatted);
     }
+  }
+
+  // --- Error logic ---
+  bool get _hasError {
+    if (!_triedNext) return false;
+    if (_selectedDate == null) return true;
+    final age = DateTime.now().difference(_selectedDate!).inDays ~/ 365;
+    return age < 18;
+  }
+
+  String get _errorMessage {
+    if (_selectedDate == null) return 'Please select your birthday.';
+    final age = DateTime.now().difference(_selectedDate!).inDays ~/ 365;
+    return age < 18 ? 'You must be 18 or older.' : '';
   }
 
   @override
@@ -126,21 +148,39 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
-                  width: 1,
+                borderSide: BorderSide(
+                  color: _hasError ? Colors.red : const Color(0xFF32190D),
+                  width: _hasError ? 2 : 1,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(
-                  color: Color(0xFF32190D),
+                borderSide: BorderSide(
+                  color: _hasError ? Colors.red : const Color(0xFF32190D),
                   width: 2,
                 ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: const BorderSide(color: Colors.red, width: 2),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: const BorderSide(color: Colors.red, width: 2),
               ),
             ),
             cursorColor: const Color(0xFF32190D),
           ),
+
+          // Inline error
+          if (_hasError)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _errorMessage,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
 
           const SizedBox(height: 24),
 

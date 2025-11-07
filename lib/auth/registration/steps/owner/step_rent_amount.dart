@@ -1,8 +1,8 @@
 // lib/auth/registration/steps/step_rent_amount.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/auth/registration/registration_controller.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../../registration_controller.dart';
 
 RegistrationStep stepRentAmount() {
   return RegistrationStep(

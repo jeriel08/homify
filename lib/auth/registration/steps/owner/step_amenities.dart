@@ -1,7 +1,7 @@
 // lib/auth/registration/steps/step_amenities.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../registration_controller.dart';
+import 'package:homify/auth/registration/registration_controller.dart';
 
 /// All possible amenities – grouped by category
 final Map<String, List<String>> _amenityGroups = {

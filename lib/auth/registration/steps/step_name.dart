@@ -29,6 +29,7 @@ class _NameStep extends ConsumerStatefulWidget {
 class _NameStepState extends ConsumerState<_NameStep> {
   late TextEditingController _firstCtrl;
   late TextEditingController _lastCtrl;
+  bool _triedNext = false;
 
   @override
   void initState() {
@@ -36,7 +37,10 @@ class _NameStepState extends ConsumerState<_NameStep> {
     _firstCtrl = TextEditingController();
     _lastCtrl = TextEditingController();
 
-    // Pre-fill if data exists (e.g., coming back)
+    _loadSaved();
+  }
+
+  void _loadSaved() {
     final data = ref.read(registrationControllerProvider).formData;
     _firstCtrl.text = data['first_name'] ?? '';
     _lastCtrl.text = data['last_name'] ?? '';
@@ -49,9 +53,22 @@ class _NameStepState extends ConsumerState<_NameStep> {
     super.dispose();
   }
 
+  void _update(String key, String value) {
+    ref
+        .read(registrationControllerProvider.notifier)
+        .updateData(key, value.trim());
+    if (_triedNext) setState(() => _triedNext = false);
+  }
+
+  bool get _hasFirstError => _triedNext && (_firstCtrl.text.trim().isEmpty);
+  bool get _hasLastError => _triedNext && (_lastCtrl.text.trim().isEmpty);
+
   @override
   Widget build(BuildContext context) {
-    final controller = ref.read(registrationControllerProvider.notifier);
+    // final controller = ref.read(registrationControllerProvider.notifier);
+    final state = ref.watch(registrationControllerProvider);
+    final isLastStep = state.currentStep == state.steps.length - 1;
+    final isSubmitting = state.isSubmitting;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -77,7 +94,8 @@ class _NameStepState extends ConsumerState<_NameStep> {
                   _firstCtrl,
                   'First Name',
                   'Juan',
-                  controller,
+                  hasError: _hasFirstError,
+                  onChanged: (v) => _update('first_name', v),
                 ),
               ),
               const SizedBox(width: 12),
@@ -86,11 +104,22 @@ class _NameStepState extends ConsumerState<_NameStep> {
                   _lastCtrl,
                   'Last Name',
                   'Dela Cruz',
-                  controller,
+                  hasError: _hasLastError,
+                  onChanged: (v) => _update('last_name', v),
                 ),
               ),
             ],
           ),
+
+          // Inline errors (only after Next)
+          if (_triedNext && (_hasFirstError || _hasLastError))
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Both first and last name are required.',
+                style: TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
 
           const SizedBox(height: 24),
 
@@ -108,27 +137,28 @@ class _NameStepState extends ConsumerState<_NameStep> {
                   SizedBox(
                     width: double.infinity, // Full width
                     child: ElevatedButton(
-                      onPressed: () async {
-                        final ok = await controller.next();
-                        if (!ok && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Please fill out all required fields.',
-                              ),
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              setState(() => _triedNext = true);
+                              final ok = await controller.next();
+                              if (!ok && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please fill out all required fields.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF32190D),
                         foregroundColor: Colors.white,
                         minimumSize: const Size.fromHeight(44),
                       ),
                       child: Text(
-                        state.currentStep == state.steps.length - 1
-                            ? 'Submit'
-                            : 'Next',
+                        isLastStep ? 'Submit' : 'Next',
                         style: TextStyle(fontWeight: FontWeight.w500),
                       ),
                     ),
@@ -169,9 +199,10 @@ class _NameStepState extends ConsumerState<_NameStep> {
 Widget _buildField(
   TextEditingController ctrl,
   String label,
-  String hint,
-  RegistrationController controller,
-) {
+  String hint, {
+  required bool hasError,
+  required ValueChanged<String> onChanged,
+}) {
   return TextField(
     controller: ctrl,
     textCapitalization: TextCapitalization.words,
@@ -182,17 +213,28 @@ Widget _buildField(
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Color(0xFF32190D), width: 1),
+        borderSide: BorderSide(
+          color: hasError ? Colors.red : const Color(0xFF32190D),
+          width: hasError ? 2 : 1,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Color(0xFF32190D), width: 2),
+        borderSide: BorderSide(
+          color: hasError ? Colors.red : const Color(0xFF32190D),
+          width: 2,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
       ),
     ),
     cursorColor: const Color(0xFF32190D),
-    onChanged: (v) {
-      final key = label == 'First Name' ? 'first_name' : 'last_name';
-      controller.updateData(key, v.trim());
-    },
+    onChanged: onChanged,
   );
 }

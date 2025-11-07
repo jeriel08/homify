@@ -1,7 +1,7 @@
 // lib/auth/registration/steps/step_gender.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../registration_controller.dart';
+import 'package:homify/auth/registration/registration_controller.dart';
 
 enum Gender { male, female }
 
@@ -22,11 +22,15 @@ class _GenderStep extends ConsumerStatefulWidget {
 
 class _GenderStepState extends ConsumerState<_GenderStep> {
   Gender? _selected;
+  bool _triedNext = false;
 
   @override
   void initState() {
     super.initState();
-    // Restore saved value when the user comes back
+    _loadSaved();
+  }
+
+  void _loadSaved() {
     final saved =
         ref.read(registrationControllerProvider).formData['gender'] as String?;
     if (saved != null) {
@@ -36,14 +40,27 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
 
   void _select(Gender? value, RegistrationController controller) {
     if (value == null) return;
-    setState(() => _selected = value);
+    setState(() {
+      _selected = value;
+      _triedNext = false;
+    });
     controller.updateData('gender', value.name); // 'male' | 'female'
   }
+
+  bool get _hasError => _triedNext && _selected == null;
 
   @override
   Widget build(BuildContext context) {
     final controller = ref.read(registrationControllerProvider.notifier);
-    // final state = ref.watch(registrationControllerProvider);
+    final state = ref.watch(registrationControllerProvider);
+    final isLastStep = state.currentStep == state.steps.length - 1;
+    final isSubmitting = state.isSubmitting;
+
+    // Sync if user navigates back
+    final saved = state.formData['gender'] as String?;
+    if (saved != null && _selected?.name != saved) {
+      _selected = Gender.values.firstWhere((g) => g.name == saved);
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -64,12 +81,12 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
 
           // ONE CARD – ALL OPTIONS
           Card(
-            elevation: 0,
+            elevation: 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
               side: BorderSide(
-                color: const Color(0xFF32190D),
-                width: _selected != null ? 2 : 1,
+                color: _hasError ? Colors.red : const Color(0xFF32190D),
+                width: _hasError ? 2 : (_selected != null ? 2 : 1),
               ),
             ),
             color: const Color(0xFFFFEDD4),
@@ -121,6 +138,16 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
             ),
           ),
 
+          // Inline error
+          if (_hasError)
+            const Padding(
+              padding: EdgeInsets.only(top: 4, left: 12),
+              child: Text(
+                'Please select a gender.',
+                style: TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
+
           const SizedBox(height: 24),
 
           // Buttons moved here (from registration.dart)
@@ -137,25 +164,28 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
                   SizedBox(
                     width: double.infinity, // Full width
                     child: ElevatedButton(
-                      onPressed: () async {
-                        final ok = await controller.next();
-                        if (!ok && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please select a gender.'),
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              setState(() => _triedNext = true);
+                              if (_hasError) return;
+
+                              final ok = await controller.next();
+                              if (!ok && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please select a gender.'),
+                                  ),
+                                );
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF32190D),
                         foregroundColor: Colors.white,
                         minimumSize: const Size.fromHeight(44),
                       ),
                       child: Text(
-                        state.currentStep == state.steps.length - 1
-                            ? 'Submit'
-                            : 'Next',
+                        isLastStep ? 'Submit' : 'Next',
                         style: TextStyle(fontWeight: FontWeight.w500),
                       ),
                     ),

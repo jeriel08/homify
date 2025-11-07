@@ -140,7 +140,7 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
           // ---- Error message (only after trying to go forward) ----
           if (_triedNext && _selected == null)
             const Padding(
-              padding: EdgeInsets.only(top: 8),
+              padding: EdgeInsets.only(top: 8, left: 20),
               child: Text(
                 'Please select a property type.',
                 style: TextStyle(color: Colors.red, fontSize: 12),

@@ -1,8 +1,8 @@
 // lib/auth/registration/steps/step_rent_method.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/auth/registration/registration_controller.dart';
 import 'package:homify/models/property_model.dart';
-import '../../registration_controller.dart';
 
 RegistrationStep stepRentMethod() {
   return RegistrationStep(
@@ -135,7 +135,7 @@ class _RentMethodStepState extends ConsumerState<_RentMethodStep> {
           // Error only after trying to go forward
           if (_triedNext && _selected == null)
             const Padding(
-              padding: EdgeInsets.only(top: 8),
+              padding: EdgeInsets.only(top: 8, left: 20),
               child: Text(
                 'Please select a rent charge method.',
                 style: TextStyle(color: Colors.red, fontSize: 12),
