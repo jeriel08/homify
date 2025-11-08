@@ -1,3 +1,5 @@
+import 'package:homify/features/properties/data/models/property_model.dart';
+
 enum RentChargeMethod { perPerson, perBed, perRoom, perUnit }
 
 enum PropertyType { bedspacer, room, house, apartment, dormitory }
@@ -32,4 +34,36 @@ class PropertyEntity {
     required this.createdAt,
     this.updatedAt,
   });
+
+  PropertyModel copyWith({
+    String? id,
+    String? ownerUid,
+    String? name,
+    String? description,
+    PropertyType? type,
+    RentChargeMethod? rentChargeMethod,
+    double? rentAmount,
+    List<String>? amenities,
+    double? latitude,
+    double? longitude,
+    List<String>? imageUrls,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return PropertyModel(
+      id: id ?? this.id,
+      ownerUid: ownerUid ?? this.ownerUid,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      rentChargeMethod: rentChargeMethod ?? this.rentChargeMethod,
+      rentAmount: rentAmount ?? this.rentAmount,
+      amenities: amenities ?? this.amenities,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      imageUrls: imageUrls ?? this.imageUrls,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }

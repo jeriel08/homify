@@ -9,8 +9,8 @@ RegistrationStep stepImages() {
     title: 'Property Photos',
     builder: (context) => const _ImagesStep(),
     validate: (data) async {
-      final urls = data['imageUrls'] as List<String>?;
-      return urls != null && urls.isNotEmpty;
+      final files = data['images'] as List<File>?;
+      return files != null && files.isNotEmpty;
     },
   );
 }
@@ -31,7 +31,7 @@ class _ImagesStepState extends ConsumerState<_ImagesStep> {
   void initState() {
     super.initState();
     final savedFiles =
-        ref.read(registrationControllerProvider).formData['imageUrls']
+        ref.read(registrationControllerProvider).formData['images']
             as List<File>?;
     if (savedFiles != null) {
       _localFiles.addAll(savedFiles.map((file) => XFile(file.path)));
@@ -220,6 +220,7 @@ class _ImagesStepState extends ConsumerState<_ImagesStep> {
       child: Stack(
         fit: StackFit.expand,
         children: [
+          Image.file(File(file.path), fit: BoxFit.cover),
           Positioned(
             top: 4,
             right: 4,

@@ -3,6 +3,7 @@ import 'package:homify/features/auth/presentation/pages/login_page.dart';
 import 'package:homify/core/theme/theme_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:homify/features/auth/presentation/pages/owner_success_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
       title: 'Homify',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const LoginPage(),
+      home: const OwnerRegistrationSuccess(),
     );
   }
 }

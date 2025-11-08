@@ -1,9 +1,9 @@
-// lib/auth/registration/steps/step_location.dart
+// lib/features/properties/presentation/pages/steps/step_location.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
-import 'package:homify/core/services/location_service.dart';
+import 'package:homify/core/services/location_service.dart'; // We need this again
 
 RegistrationStep stepLocation() {
   return RegistrationStep(
@@ -25,6 +25,7 @@ class _LocationStep extends ConsumerStatefulWidget {
 }
 
 class _LocationStepState extends ConsumerState<_LocationStep> {
+  // --- ALL STATE IS BACK IN THIS WIDGET ---
   GoogleMapController? _mapController;
   LatLng? _selectedPosition;
   bool _triedNext = false;
@@ -33,26 +34,38 @@ class _LocationStepState extends ConsumerState<_LocationStep> {
   @override
   void initState() {
     super.initState();
-    _loadSavedOrDefault();
+    // We load the saved position from the controller's data
+    final data = ref.read(registrationControllerProvider).formData;
+    final lat = data['latitude'] as double?;
+    final lng = data['longitude'] as double?;
+    if (lat != null && lng != null) {
+      _selectedPosition = LatLng(lat, lng);
+    }
   }
 
-  Future<void> _loadSavedOrDefault() async {
+  Future<void> _moveCameraToInitialPos() async {
+    // 1. Check for a pin
+    if (_selectedPosition != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(_selectedPosition!, 16),
+      );
+      return;
+    }
+    // 2. Check for user's saved location
     final saved = await LocationService.getSavedLocation();
-
-    LatLng initialPos = _defaultCenter;
-
-    if (saved != null) {
-      initialPos = LatLng(saved.latitude, saved.longitude);
+    if (saved != null && mounted) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(LatLng(saved.latitude, saved.longitude), 14),
+      );
+      return;
     }
-
-    if (mounted && _mapController != null) {
-      _mapController!.animateCamera(CameraUpdate.newLatLng(initialPos));
-    }
+    // 3. Fallback to default center
+    _mapController!.animateCamera(CameraUpdate.newLatLng(_defaultCenter));
   }
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
-    _loadSavedOrDefault();
+    _moveCameraToInitialPos(); // Move camera once map is ready
   }
 
   void _onTap(LatLng position) {
@@ -100,66 +113,45 @@ class _LocationStepState extends ConsumerState<_LocationStep> {
           ),
           const SizedBox(height: 24),
 
-          // Map (full height minus buttons)
+          // ---- YOUR NEW MAP CONTAINER ----
           Expanded(
             child: Container(
+              // 1. Border Radius
+              clipBehavior: Clip.antiAlias, // Clips the GoogleMap to the border
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
+                // 2. Elevation Shadow
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 12,
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              clipBehavior: Clip.hardEdge,
-              child: Stack(
-                children: [
-                  GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: _defaultCenter,
-                      zoom: 12,
-                    ),
-                    onMapCreated: _onMapCreated,
-                    onTap: _onTap,
-                    markers: _selectedPosition != null
-                        ? {
-                            Marker(
-                              markerId: const MarkerId('property_pin'),
-                              position: _selectedPosition!,
-                              infoWindow: const InfoWindow(
-                                title: 'Your Property',
-                              ),
-                            ),
-                          }
-                        : {},
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
-                  ),
-                  // Instructions overlay
-                  if (_selectedPosition == null)
-                    Positioned(
-                      bottom: 20,
-                      left: 20,
-                      right: 20,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(8),
+              // 3. The Map
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: _selectedPosition ?? _defaultCenter,
+                  zoom: _selectedPosition != null ? 16 : 12,
+                ),
+                onMapCreated: _onMapCreated,
+                onTap: _onTap,
+                markers: _selectedPosition != null
+                    ? {
+                        Marker(
+                          markerId: const MarkerId('property_pin'),
+                          position: _selectedPosition!,
                         ),
-                        child: Text(
-                          'Tap anywhere to place your property pin',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelMedium,
-                        ),
-                      ),
-                    ),
-                ],
+                      }
+                    : {},
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
+                zoomControlsEnabled: false, // Cleaner look
               ),
             ),
           ),
+          // ---- END OF MAP CONTAINER ----
 
           // Error
           if (_triedNext && _selectedPosition == null)
@@ -174,67 +166,61 @@ class _LocationStepState extends ConsumerState<_LocationStep> {
           const SizedBox(height: 24),
 
           // Buttons
-          Consumer(
-            builder: (context, ref, child) {
-              return Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isSubmitting
-                          ? null
-                          : () async {
-                              setState(() => _triedNext = true);
-                              if (_selectedPosition == null) return;
+          Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          setState(() => _triedNext = true);
+                          if (_selectedPosition == null) return;
 
-                              final ok = await controller.next();
-                              if (!ok && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please select a location'),
-                                  ),
-                                );
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF32190D),
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                      child: isSubmitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
+                          final ok = await controller.next();
+                          if (!ok && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please select a location'),
                               ),
-                            )
-                          : Text(isLastStep ? 'Submit' : 'Next'),
-                    ),
+                            );
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF32190D),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(48),
                   ),
-
-                  if (state.currentStep > 0) const SizedBox(height: 12),
-                  if (state.currentStep > 0)
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: isSubmitting ? null : controller.back,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF32190D),
-                          side: const BorderSide(color: Color(0xFF32190D)),
-                          minimumSize: const Size.fromHeight(48),
-                        ),
-                        child: const Text('Back'),
-                      ),
+                  child: isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Text(isLastStep ? 'Submit' : 'Next'),
+                ),
+              ),
+              if (state.currentStep > 0) const SizedBox(height: 12),
+              if (state.currentStep > 0)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: isSubmitting ? null : controller.back,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF32190D),
+                      side: const BorderSide(color: Color(0xFF32190D)),
+                      minimumSize: const Size.fromHeight(48),
                     ),
-                ],
-              );
-            },
+                    child: const Text('Back'),
+                  ),
+                ),
+            ],
           ),
-
           const SizedBox(height: 20),
         ],
       ),

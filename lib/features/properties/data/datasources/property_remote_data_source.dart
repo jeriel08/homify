@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// IMPORT THE CORRECT PACKAGE
 import 'package:cloudinary_public/cloudinary_public.dart';
 import 'package:flutter/material.dart';
 import 'package:homify/features/properties/data/models/property_model.dart';
@@ -32,20 +31,23 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
     List<File> images,
   ) async {
     try {
-      // 1. Upload Images to Cloudinary
-      final imageUrls = await _uploadImages(images, propertyData.ownerUid);
-
-      // 2. Create a new PropertyModel with the final image URLs
       final newDocRef = _firestore.collection('properties').doc();
-      final finalProperty = propertyData.copyWith(
+
+      final tempProperty = propertyData.copyWith(
         id: newDocRef.id,
-        imageUrls: imageUrls,
+        imageUrls: [], // Start with empty images
       );
 
-      // 3. Save the complete model to Firestore
-      await newDocRef.set(finalProperty.toFirestore());
+      await newDocRef.set(tempProperty.toFirestore());
 
-      return finalProperty;
+      final imageUrls = await _uploadImages(images, propertyData.ownerUid);
+
+      await newDocRef.update({
+        'image_urls': imageUrls,
+        'updated_at': FieldValue.serverTimestamp(), // Good to update this
+      });
+
+      return tempProperty.copyWith(imageUrls: imageUrls);
     } catch (e) {
       throw Exception('Failed to add property: ${e.toString()}');
     }
@@ -76,8 +78,4 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
       throw Exception('Image upload failed');
     }
   }
-}
-
-extension on PropertyModel {
-  copyWith({required String id, required List<String> imageUrls}) {}
 }

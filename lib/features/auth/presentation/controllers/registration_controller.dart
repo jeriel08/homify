@@ -1,6 +1,5 @@
 // lib/auth/registration/registration_controller.dart
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -82,6 +81,10 @@ class RegistrationController extends StateNotifier<RegistrationState> {
 
   RegistrationController(this._ref) : super(RegistrationState()) {
     _buildSteps();
+  }
+
+  int _findStepIndexByTitle(String title) {
+    return state.steps.indexWhere((step) => step.title == title);
   }
 
   void _buildSteps() {
@@ -231,8 +234,30 @@ class RegistrationController extends StateNotifier<RegistrationState> {
       // 5. Success for everyone
       state = state.copyWith(submitSuccess: true, isSubmitting: false);
     } catch (e) {
-      // 6. Handle failure
-      state = state.copyWith(submitError: e.toString(), isSubmitting: false);
+      // --- THIS IS THE NEW CATCH BLOCK ---
+      final error = e.toString();
+      int errorStep = state.currentStep; // Default to current (last) step
+
+      // Check the error message and find the matching step
+      if (error.contains('email')) {
+        errorStep = _findStepIndexByTitle('Email Address');
+      } else if (error.contains('mobile number')) {
+        errorStep = _findStepIndexByTitle('Mobile Number');
+      } else if (error.contains('property name')) {
+        errorStep = _findStepIndexByTitle('Property Info');
+      }
+
+      // If we couldn't find the step, -1 is returned. Stay on the current step.
+      if (errorStep == -1) {
+        errorStep = state.currentStep;
+      }
+
+      // Update the state
+      state = state.copyWith(
+        submitError: error,
+        isSubmitting: false,
+        currentStep: errorStep,
+      );
     }
   }
 }

@@ -1,12 +1,12 @@
 // lib/auth/registration/registration.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
+import 'package:homify/features/auth/presentation/pages/owner_success_page.dart';
 import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
-import 'package:homify/features/properties/presentation/pages/step_location.dart';
 import 'tenant_success_page.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class RegistrationPage extends ConsumerWidget {
   const RegistrationPage({super.key});
@@ -72,31 +72,40 @@ class RegistrationPage extends ConsumerWidget {
     final state = ref.watch(registrationControllerProvider);
     final controller = ref.read(registrationControllerProvider.notifier);
 
-    if (state.submitSuccess) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const TenantRegistrationSuccess()),
-        );
-      });
-    }
-
-    if (state.submitError != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    ref.listen<RegistrationState>(registrationControllerProvider, (
+      previous,
+      next,
+    ) {
+      // --- 1. FIX FOR SNACKBAR LOOP ---
+      // This only runs if a *new* error appears (previous error was null)
+      if (next.submitError != null && previous?.submitError == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(state.submitError!),
+            content: Text(next.submitError!),
             backgroundColor: Colors.red.shade700,
           ),
         );
-        controller.clearSubmitError(); // clear so it doesn’t repeat
-      });
-    }
+        // We clear the error immediately
+        controller.clearSubmitError();
+      }
 
-    final String locationStepTitle = stepLocation().title;
-
-    final bool isLocationStep = state.steps.isEmpty
-        ? false
-        : state.steps[state.currentStep].title == locationStepTitle;
+      // --- 2. FIX FOR WRONG SUCCESS PAGE ---
+      // This only runs if we *just* became successful
+      if (next.submitSuccess && previous?.submitSuccess == false) {
+        // This is the check you were missing
+        if (next.accountType == AccountType.owner) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const OwnerRegistrationSuccess()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => const TenantRegistrationSuccess(),
+            ),
+          );
+        }
+      }
+    });
 
     return PopScope(
       canPop: false,
@@ -116,29 +125,16 @@ class RegistrationPage extends ConsumerWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
-        body: Stack(
+        body: Column(
           children: [
-            Offstage(
-              offstage: !isLocationStep,
-              child: const GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(14.5995, 120.9842),
-                  zoom: 12,
-                ),
-              ),
-            ),
-            Column(
-              children: [
-                // 1. Progress Bar
-                const ProgressBar(),
+            // 1. Progress Bar
+            const ProgressBar(),
 
-                // 2. Current Step Content
-                Expanded(
-                  child: state.steps.isEmpty
-                      ? const SizedBox.shrink()
-                      : state.steps[state.currentStep].builder(context),
-                ),
-              ],
+            // 2. Current Step Content
+            Expanded(
+              child: state.steps.isEmpty
+                  ? const SizedBox.shrink()
+                  : state.steps[state.currentStep].builder(context),
             ),
           ],
         ),
