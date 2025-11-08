@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:homify/features/auth/presentation/pages/registration_page.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:homify/core/services/location_service.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -120,6 +120,11 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        foregroundColor: Color(0xFF32190D),
+        backgroundColor: Color(0xFFFFF8F0),
+        toolbarHeight: 28,
+      ),
       backgroundColor: const Color(
         0xFFFFF8F0,
       ), // Light creamy background for Homify
@@ -135,7 +140,6 @@ class _LoginPageState extends State<LoginPage> {
                   height: 240,
                   width: 240,
                 ),
-                const SizedBox(height: 4),
 
                 // Email / Phone Field
                 _buildTextField(
@@ -154,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
                   helperText: 'Forgot Password? Tap Here.',
                 ),
 
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
 
                 // Log in Button
                 ElevatedButton.icon(
@@ -190,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
 
                 const Text('Don\'t have an account yet?'),
                 const SizedBox(height: 4),
@@ -198,12 +202,7 @@ class _LoginPageState extends State<LoginPage> {
                 // Create Account Button
                 OutlinedButton(
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const RegistrationPage(), // ← open registration
-                      ),
-                    );
+                    context.push('/register');
                   },
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 44),

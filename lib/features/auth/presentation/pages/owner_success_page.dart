@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 
 class OwnerRegistrationSuccess extends StatelessWidget {
   const OwnerRegistrationSuccess({super.key});
@@ -14,8 +15,12 @@ class OwnerRegistrationSuccess extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Icon to show success
-            const Icon(Icons.check_circle, size: 100, color: Color(0xFF32190D)),
-            const SizedBox(height: 24),
+            Lottie.asset(
+              'assets/animations/Success.json',
+              repeat: false,
+              height: 250,
+              width: 250,
+            ),
 
             // 1. Your requested Header
             Text(

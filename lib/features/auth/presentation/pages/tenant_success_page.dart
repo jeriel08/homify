@@ -1,6 +1,7 @@
 // lib/auth/registration/tenant_success.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 
 class TenantRegistrationSuccess extends StatelessWidget {
   const TenantRegistrationSuccess({super.key});
@@ -14,11 +15,16 @@ class TenantRegistrationSuccess extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check_circle, size: 100, color: Color(0xFF32190D)),
-            const SizedBox(height: 24),
+            Lottie.asset(
+              'assets/animations/Success.json',
+              repeat: false,
+              height: 250,
+              width: 250,
+            ),
+
             Text(
               'Welcome to Homify!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF32190D),
               ),
@@ -29,10 +35,10 @@ class TenantRegistrationSuccess extends StatelessWidget {
               'Your tenant account has been created successfully.',
               style: Theme.of(
                 context,
-              ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade700),
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -40,7 +46,7 @@ class TenantRegistrationSuccess extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF32190D),
                   foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
+                  minimumSize: const Size.fromHeight(44),
                 ),
                 child: const Text('Go to Dashboard'),
               ),
