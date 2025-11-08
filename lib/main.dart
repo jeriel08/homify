@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:homify/auth/login.dart';
-import 'package:homify/theme/theme_data.dart';
+import 'package:homify/features/auth/presentation/pages/login_page.dart';
+import 'package:homify/core/theme/theme_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 
