@@ -1,9 +1,7 @@
 // lib/auth/registration/registration_controller.dart
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:homify/core/entities/property_entity.dart';
 import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/auth/auth_providers.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_account_type.dart';
@@ -13,14 +11,6 @@ import 'package:homify/features/auth/presentation/pages/steps/step_gender.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_mobile.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_name.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_password.dart';
-import 'package:homify/features/properties/presentation/pages/step_amenities.dart';
-import 'package:homify/features/properties/presentation/pages/step_images.dart';
-import 'package:homify/features/properties/presentation/pages/step_location.dart';
-import 'package:homify/features/properties/presentation/pages/step_property_info.dart';
-import 'package:homify/features/properties/presentation/pages/step_property_type.dart';
-import 'package:homify/features/properties/presentation/pages/step_rent_amount.dart';
-import 'package:homify/features/properties/presentation/pages/step_rent_method.dart';
-import 'package:homify/features/properties/properties_providers.dart';
 
 class RegistrationStep {
   final String title;
@@ -99,20 +89,7 @@ class RegistrationController extends StateNotifier<RegistrationState> {
       stepPassword(),
     ];
 
-    // 2. Add owner steps ONLY if that type is selected
-    final ownerSteps = state.accountType == AccountType.owner
-        ? <RegistrationStep>[
-            stepPropertyInfo(),
-            stepPropertyType(),
-            stepRentMethod(),
-            stepRentAmount(),
-            stepAmenities(),
-            stepLocation(),
-            stepImages(),
-          ]
-        : <RegistrationStep>[];
-
-    state = state.copyWith(steps: [...baseSteps, ...ownerSteps]);
+    state = state.copyWith(steps: [...baseSteps]);
   }
 
   void selectAccountType(AccountType type) {
@@ -171,8 +148,7 @@ class RegistrationController extends StateNotifier<RegistrationState> {
   }
 
   Future<void> _submit() async {
-    debugPrint("${state.formData}");
-    debugPrint('Submitting registration data...');
+    debugPrint('Submitting user registration data...');
     state = state.copyWith(isSubmitting: true, submitError: null);
 
     final data = state.formData;
@@ -191,47 +167,8 @@ class RegistrationController extends StateNotifier<RegistrationState> {
       // --- PART 1: ALWAYS REGISTER THE USER ---
       final registerUser = _ref.read(registerUserUseCaseProvider);
 
-      final newUser = await registerUser(
-        email: email,
-        password: password,
-        userData: data, // Pass all form data
-      );
+      await registerUser(email: email, password: password, userData: data);
 
-      // --- PART 2: IF OWNER, REGISTER THE PROPERTY ---
-      if (newUser.accountType == AccountType.owner) {
-        debugPrint('User is owner, now adding property...');
-
-        // 1. Build the PropertyEntity
-        final propertyEntity = PropertyEntity(
-          id: '', // Will be set by the data layer
-          ownerUid: newUser.uid, // <-- USE THE NEW USER'S ID
-          name: data['property_name'] as String,
-          description: data['property_description'] as String,
-          type: PropertyType.values.firstWhere(
-            (e) => e.name == (data['property_type'] as String),
-          ),
-          rentChargeMethod: RentChargeMethod.values.firstWhere(
-            (e) => e.name == (data['rent_charge_method'] as String),
-          ),
-          rentAmount: (data['rent_amount'] as num).toDouble(),
-          amenities: List<String>.from(data['amenities'] ?? []),
-          latitude: (data['latitude'] as num).toDouble(),
-          longitude: (data['longitude'] as num).toDouble(),
-          imageUrls: [], // Will be set by the data layer
-          createdAt: DateTime.now(),
-        );
-
-        // 2. Get the image files (from your *fixed* step_images.dart)
-        final images = List<File>.from(data['images'] ?? []);
-
-        // 3. Get the use case
-        final addPropertyUseCase = _ref.read(addPropertyUseCaseProvider);
-
-        // 4. Call the use case!
-        await addPropertyUseCase(propertyData: propertyEntity, images: images);
-      }
-
-      // 5. Success for everyone
       state = state.copyWith(submitSuccess: true, isSubmitting: false);
     } catch (e) {
       // --- THIS IS THE NEW CATCH BLOCK ---
@@ -243,8 +180,6 @@ class RegistrationController extends StateNotifier<RegistrationState> {
         errorStep = _findStepIndexByTitle('Email Address');
       } else if (error.contains('mobile number')) {
         errorStep = _findStepIndexByTitle('Mobile Number');
-      } else if (error.contains('property name')) {
-        errorStep = _findStepIndexByTitle('Property Info');
       }
 
       // If we couldn't find the step, -1 is returned. Stay on the current step.

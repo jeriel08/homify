@@ -1,11 +1,12 @@
 // lib/auth/registration/steps/step_property_info.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 
 /// Returns the RegistrationStep for the Owner property-info screen.
-RegistrationStep stepPropertyInfo() {
-  return RegistrationStep(
+PropertyStep stepPropertyInfo() {
+  return PropertyStep(
     title: 'Property Info',
     builder: (context) => const _PropertyInfoStep(),
     validate: (data) async {
@@ -36,7 +37,7 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
     _nameCtrl = TextEditingController();
     _descCtrl = TextEditingController();
 
-    final data = ref.read(registrationControllerProvider).formData;
+    final data = ref.read(addPropertyControllerProvider).formData;
     _nameCtrl.text = data['property_name'] ?? '';
     _descCtrl.text = data['property_description'] ?? '';
   }
@@ -49,7 +50,7 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
   }
 
   void _update(String key, String value) {
-    ref.read(registrationControllerProvider.notifier).updateData(key, value);
+    ref.read(addPropertyControllerProvider.notifier).updateData(key, value);
   }
 
   String? _nameError() {
@@ -172,9 +173,9 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
             // ---- Buttons (identical to step_password) -----------------
             Consumer(
               builder: (context, ref, child) {
-                final state = ref.watch(registrationControllerProvider);
+                final state = ref.watch(addPropertyControllerProvider);
                 final controller = ref.read(
-                  registrationControllerProvider.notifier,
+                  addPropertyControllerProvider.notifier,
                 );
                 final isLastStep = state.currentStep == state.steps.length - 1;
                 final isSubmitting = state.isSubmitting;

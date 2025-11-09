@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 import 'package:image_picker/image_picker.dart';
 
-RegistrationStep stepImages() {
-  return RegistrationStep(
+PropertyStep stepImages() {
+  return PropertyStep(
     title: 'Property Photos',
     builder: (context) => const _ImagesStep(),
     validate: (data) async {
@@ -31,7 +32,7 @@ class _ImagesStepState extends ConsumerState<_ImagesStep> {
   void initState() {
     super.initState();
     final savedFiles =
-        ref.read(registrationControllerProvider).formData['images']
+        ref.read(addPropertyControllerProvider).formData['images']
             as List<File>?;
     if (savedFiles != null) {
       _localFiles.addAll(savedFiles.map((file) => XFile(file.path)));
@@ -55,7 +56,7 @@ class _ImagesStepState extends ConsumerState<_ImagesStep> {
   void _saveToFormData() {
     final fileList = _localFiles.map((xfile) => File(xfile.path)).toList();
     ref
-        .read(registrationControllerProvider.notifier)
+        .read(addPropertyControllerProvider.notifier)
         .updateData('images', fileList);
   }
 
@@ -69,8 +70,8 @@ class _ImagesStepState extends ConsumerState<_ImagesStep> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = ref.read(registrationControllerProvider.notifier);
-    final state = ref.watch(registrationControllerProvider);
+    final controller = ref.read(addPropertyControllerProvider.notifier);
+    final state = ref.watch(addPropertyControllerProvider);
     final isLastStep = state.currentStep == state.steps.length - 1;
     final isSubmitting = state.isSubmitting;
     final totalImages = _localFiles.length;

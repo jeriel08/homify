@@ -18,6 +18,7 @@ class PropertyEntity {
   final List<String> imageUrls;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final bool isVerified;
 
   const PropertyEntity({
     required this.id,
@@ -32,6 +33,7 @@ class PropertyEntity {
     required this.longitude,
     required this.imageUrls,
     required this.createdAt,
+    required this.isVerified,
     this.updatedAt,
   });
 
@@ -49,6 +51,7 @@ class PropertyEntity {
     List<String>? imageUrls,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isVerified,
   }) {
     return PropertyModel(
       id: id ?? this.id,
@@ -64,6 +67,7 @@ class PropertyEntity {
       imageUrls: imageUrls ?? this.imageUrls,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isVerified: isVerified ?? this.isVerified,
     );
   }
 }

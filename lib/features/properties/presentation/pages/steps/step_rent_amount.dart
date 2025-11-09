@@ -1,11 +1,12 @@
 // lib/auth/registration/steps/step_rent_amount.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-RegistrationStep stepRentAmount() {
-  return RegistrationStep(
+PropertyStep stepRentAmount() {
+  return PropertyStep(
     title: 'Rent Amount',
     builder: (context) => const _RentAmountStep(),
     validate: (data) async {
@@ -30,8 +31,7 @@ class _RentAmountStepState extends ConsumerState<_RentAmountStep> {
   void initState() {
     super.initState();
     final saved =
-        ref.read(registrationControllerProvider).formData['rent_amount']
-            as num?;
+        ref.read(addPropertyControllerProvider).formData['rent_amount'] as num?;
     if (saved != null) {
       _ctrl.text = saved.toStringAsFixed(0);
     }
@@ -46,7 +46,7 @@ class _RentAmountStepState extends ConsumerState<_RentAmountStep> {
   void _update(String value) {
     final num? parsed = num.tryParse(value);
     ref
-        .read(registrationControllerProvider.notifier)
+        .read(addPropertyControllerProvider.notifier)
         .updateData('rent_amount', parsed);
     if (_triedNext) setState(() => _triedNext = false);
   }
@@ -60,8 +60,8 @@ class _RentAmountStepState extends ConsumerState<_RentAmountStep> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = ref.read(registrationControllerProvider.notifier);
-    final state = ref.watch(registrationControllerProvider);
+    final controller = ref.read(addPropertyControllerProvider.notifier);
+    final state = ref.watch(addPropertyControllerProvider);
     final isLastStep = state.currentStep == state.steps.length - 1;
     final isSubmitting = state.isSubmitting;
 

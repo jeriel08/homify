@@ -30,6 +30,7 @@ class PropertyRepositoryImpl implements PropertyRepository {
         longitude: propertyData.longitude,
         imageUrls: [], // Will be filled by data source
         createdAt: propertyData.createdAt,
+        isVerified: propertyData.isVerified,
       );
 
       // 2. Call the data source

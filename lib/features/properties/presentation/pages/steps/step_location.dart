@@ -2,11 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
-import 'package:homify/core/services/location_service.dart'; // We need this again
+import 'package:homify/core/services/location_service.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 
-RegistrationStep stepLocation() {
-  return RegistrationStep(
+PropertyStep stepLocation() {
+  return PropertyStep(
     title: 'Property Location',
     builder: (context) => const _LocationStep(),
     validate: (data) async {
@@ -35,7 +36,7 @@ class _LocationStepState extends ConsumerState<_LocationStep> {
   void initState() {
     super.initState();
     // We load the saved position from the controller's data
-    final data = ref.read(registrationControllerProvider).formData;
+    final data = ref.read(addPropertyControllerProvider).formData;
     final lat = data['latitude'] as double?;
     final lng = data['longitude'] as double?;
     if (lat != null && lng != null) {
@@ -75,17 +76,17 @@ class _LocationStepState extends ConsumerState<_LocationStep> {
     });
     // Save to formData
     ref
-        .read(registrationControllerProvider.notifier)
+        .read(addPropertyControllerProvider.notifier)
         .updateData('latitude', position.latitude);
     ref
-        .read(registrationControllerProvider.notifier)
+        .read(addPropertyControllerProvider.notifier)
         .updateData('longitude', position.longitude);
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = ref.read(registrationControllerProvider.notifier);
-    final state = ref.watch(registrationControllerProvider);
+    final controller = ref.read(addPropertyControllerProvider.notifier);
+    final state = ref.watch(addPropertyControllerProvider);
     final isLastStep = state.currentStep == state.steps.length - 1;
     final isSubmitting = state.isSubmitting;
 

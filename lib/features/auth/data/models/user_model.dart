@@ -15,7 +15,7 @@ class UserModel extends UserEntity {
   });
 
   /// Convert Firestore document → UserModel
-  factory UserModel.fromFirestore(DocumentSnapshot doc) {
+  factory UserModel.fromSnapshot(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
     return UserModel(

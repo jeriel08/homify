@@ -1,21 +1,18 @@
-// lib/auth/registration/registration.dart
+// lib/features/properties/presentation/pages/add_property_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:homify/core/entities/user_entity.dart';
-import 'package:homify/core/widgets/step_progress_bar.dart';
-import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
-// import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:homify/core/widgets/step_progress_bar.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
+// import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
 
-class RegistrationPage extends ConsumerWidget {
-  const RegistrationPage({super.key});
+class AddPropertyPage extends ConsumerWidget {
+  const AddPropertyPage({super.key});
 
-  Future<void> _showExitConfirmDialog(
-    BuildContext context,
-    RegistrationController controller,
-  ) async {
-    final bool? shouldDiscard = await showDialog<bool>(
+  // This dialog prevents the owner from skipping this step
+  Future<void> _showExitConfirmDialog(BuildContext context) async {
+    final bool? shouldExit = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
         return Theme(
@@ -26,32 +23,21 @@ class RegistrationPage extends ConsumerWidget {
           ),
           child: AlertDialog(
             title: const Text(
-              'Discard Registration?',
+              'Property Required',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
             ),
             content: const Text(
-              'If you go back, all your progress will be lost.',
+              'You must add a property to continue using the app as an owner. Do you want to exit setup?',
               style: TextStyle(fontSize: 16),
             ),
             actions: <Widget>[
-              // "Cancel" button
               TextButton(
-                onPressed: () {
-                  // Pop the dialog, return 'false' (don't discard)
-                  Navigator.of(dialogContext).pop(false);
-                },
+                onPressed: () => Navigator.of(dialogContext).pop(false),
                 child: const Text('Cancel'),
               ),
-              // "Discard" button
               TextButton(
-                onPressed: () {
-                  // Pop the dialog, return 'true' (do discard)
-                  Navigator.of(dialogContext).pop(true);
-                },
-                child: const Text(
-                  'Discard',
-                  style: TextStyle(color: Colors.red),
-                ),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Exit', style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -59,23 +45,20 @@ class RegistrationPage extends ConsumerWidget {
       },
     );
 
-    // If user tapped "Discard" (shouldDiscard is true)
-    if (shouldDiscard == true && context.mounted) {
-      controller.reset(); // Reset the state
-      Navigator.of(context).pop(); // Manually pop the page
+    // If user tapped "Exit", navigate them back to the landing page
+    if (shouldExit == true && context.mounted) {
+      context.go('/');
     }
-    // Otherwise, user tapped "Cancel", so we do nothing.
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(registrationControllerProvider);
-    final controller = ref.read(registrationControllerProvider.notifier);
+    // 1. Watch our NEW controller
+    final state = ref.watch(addPropertyControllerProvider);
+    final controller = ref.read(addPropertyControllerProvider.notifier);
 
-    ref.listen<RegistrationState>(registrationControllerProvider, (
-      previous,
-      next,
-    ) {
+    // 2. Listen for navigation and errors
+    ref.listen(addPropertyControllerProvider, (previous, next) {
       if (next.submitError != null && previous?.submitError == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -83,17 +66,13 @@ class RegistrationPage extends ConsumerWidget {
             backgroundColor: Colors.red.shade700,
           ),
         );
-
         controller.clearSubmitError();
       }
 
-      if (next.submitSuccess &&
-          (previous?.submitSuccess == false || previous == null)) {
-        if (next.accountType == AccountType.owner) {
-          context.go('/owner-success');
-        } else {
-          context.go('/tenant-success');
-        }
+      // 3. On success, go to the Owner Success Page
+      if (next.submitSuccess && previous?.submitSuccess == false) {
+        // This is where we send them to the final success page
+        context.go('/property-success');
       }
     });
 
@@ -102,12 +81,18 @@ class RegistrationPage extends ConsumerWidget {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
-        _showExitConfirmDialog(context, controller);
+        if (state.currentStep == 0) {
+          // If on the first step, show the exit dialog
+          _showExitConfirmDialog(context);
+        } else {
+          // Otherwise, just go back one step
+          controller.back();
+        }
       },
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Register',
+            'Add Your Property', // New title
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -117,7 +102,8 @@ class RegistrationPage extends ConsumerWidget {
         ),
         body: Column(
           children: [
-            // 1. Progress Bar
+            // 1. Progress Bar (You'll need to adapt this)
+            // You can pass the current step and total steps
             if (state.steps.isNotEmpty)
               StepProgressBar(
                 totalSteps: state.steps.length,
@@ -128,7 +114,7 @@ class RegistrationPage extends ConsumerWidget {
             // 2. Current Step Content
             Expanded(
               child: state.steps.isEmpty
-                  ? const SizedBox.shrink()
+                  ? const Center(child: CircularProgressIndicator())
                   : state.steps[state.currentStep].builder(context),
             ),
           ],

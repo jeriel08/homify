@@ -11,8 +11,7 @@ abstract class AuthRepository {
     Map<String, dynamic> userData,
   );
 
-  // You would also add:
-  // Future<UserEntity> loginUser(String email, String password);
-  // Future<UserEntity?> getCurrentUser();
-  // Future<void> logout();
+  Future<UserEntity> loginUser(String email, String password);
+  Future<UserEntity?> getCurrentUser();
+  Future<void> logout();
 }

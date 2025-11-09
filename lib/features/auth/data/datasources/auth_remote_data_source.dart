@@ -14,10 +14,9 @@ abstract class AuthRemoteDataSource {
     Map<String, dynamic> userData,
   );
 
-  // You would also add:
-  // Future<UserModel> loginUser(String email, String password);
-  // Future<User?> getCurrentUser();
-  // Future<void> logout();
+  Future<UserModel> loginUser(String email, String password);
+  Future<UserModel?> getCurrentUser();
+  Future<void> logout();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -69,5 +68,67 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     // 4. Return the full user model
     return userModel;
+  }
+
+  @override
+  Future<UserModel> loginUser(String email, String password) async {
+    // 1. Sign in the user
+    final cred = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    if (cred.user == null) {
+      throw Exception('Login failed.');
+    }
+
+    // 2. Get their data from Firestore
+    try {
+      final userDoc = await _firestore
+          .collection('users')
+          .doc(cred.user!.uid)
+          .get();
+      if (!userDoc.exists) {
+        throw Exception('User data not found in Firestore.');
+      }
+      // 3. Convert to UserModel using our newly renamed method
+      return UserModel.fromSnapshot(userDoc);
+    } catch (e) {
+      throw Exception('Failed to fetch user data: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<UserModel?> getCurrentUser() async {
+    // 1. Get the current auth user
+    final authUser = _auth.currentUser;
+
+    // 2. If no one is logged in, return null
+    if (authUser == null) {
+      return null;
+    }
+
+    // 3. If they are logged in, get their details from Firestore
+    try {
+      final userDoc = await _firestore
+          .collection('users')
+          .doc(authUser.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        throw Exception('User data not found in Firestore.');
+      }
+
+      // 4. Convert Firestore data to a UserModel and return it
+      return UserModel.fromSnapshot(userDoc);
+    } catch (e) {
+      // Handle error (e.g., user exists in Auth but not in Firestore)
+      return null;
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    await _auth.signOut();
   }
 }

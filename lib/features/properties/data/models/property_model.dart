@@ -15,6 +15,7 @@ class PropertyModel extends PropertyEntity {
     required super.longitude,
     required super.imageUrls,
     required super.createdAt,
+    required super.isVerified,
     super.updatedAt,
   });
 
@@ -48,6 +49,7 @@ class PropertyModel extends PropertyEntity {
       updatedAt: data['updated_at'] != null
           ? (data['updated_at'] as Timestamp).toDate()
           : null,
+      isVerified: false,
     );
   }
 
@@ -63,6 +65,7 @@ class PropertyModel extends PropertyEntity {
       'location': geoPoint, // Use the getter here
       'image_urls': imageUrls,
       'created_at': FieldValue.serverTimestamp(),
+      'is_verified': isVerified,
       if (updatedAt != null) 'updated_at': Timestamp.fromDate(updatedAt!),
     };
   }

@@ -1,7 +1,8 @@
 // lib/auth/registration/steps/step_amenities.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
+import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 
 /// All possible amenities – grouped by category
 final Map<String, List<String>> _amenityGroups = {
@@ -44,8 +45,8 @@ final Map<String, List<String>> _amenityGroups = {
   ],
 };
 
-RegistrationStep stepAmenities() {
-  return RegistrationStep(
+PropertyStep stepAmenities() {
+  return PropertyStep(
     title: 'Amenities',
     builder: (context) => const _AmenitiesStep(),
     validate: (data) async {
@@ -70,7 +71,7 @@ class _AmenitiesStepState extends ConsumerState<_AmenitiesStep> {
   void initState() {
     super.initState();
     final saved =
-        ref.read(registrationControllerProvider).formData['amenities']
+        ref.read(addPropertyControllerProvider).formData['amenities']
             as List<dynamic>?;
     if (saved != null) {
       _selected.addAll(saved.cast<String>());
@@ -87,14 +88,14 @@ class _AmenitiesStepState extends ConsumerState<_AmenitiesStep> {
       _triedNext = false;
     });
     ref
-        .read(registrationControllerProvider.notifier)
+        .read(addPropertyControllerProvider.notifier)
         .updateData('amenities', _selected.toList());
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = ref.read(registrationControllerProvider.notifier);
-    final state = ref.watch(registrationControllerProvider);
+    final controller = ref.read(addPropertyControllerProvider.notifier);
+    final state = ref.watch(addPropertyControllerProvider);
     final isLastStep = state.currentStep == state.steps.length - 1;
     final isSubmitting = state.isSubmitting;
 

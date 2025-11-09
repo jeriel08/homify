@@ -5,13 +5,12 @@ import 'package:flutter/material.dart';
 class PropertyStep {
   final String title;
   final Widget Function(BuildContext context) builder;
-  // Validation can be simplified for now
-  // final Future<bool> Function(Map<String, dynamic> data) validate;
+  final Future<bool> Function(Map<String, dynamic> data) validate;
 
   PropertyStep({
     required this.title,
     required this.builder,
-    // required this.validate,
+    required this.validate,
   });
 }
 

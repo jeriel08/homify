@@ -1,7 +1,7 @@
 // lib/auth/registration/widgets/progress_bar.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../controllers/registration_controller.dart';
+import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 
 class ProgressBar extends ConsumerWidget {
   const ProgressBar({super.key});
