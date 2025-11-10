@@ -8,6 +8,16 @@
 		<string>Homify</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
+		<string>915621689789-1uf1oan03ka3tlg0vpba6dncjhfkijja.apps.googleusercontent.com</string>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<string>com.googleusercontent.apps.915621689789-1uf1oan03ka3tlg0vpba6dncjhfkijja</string>
+			</dict>
+		</array>
 		<key>CFBundleIdentifier</key>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 		<key>CFBundleInfoDictionaryVersion</key>

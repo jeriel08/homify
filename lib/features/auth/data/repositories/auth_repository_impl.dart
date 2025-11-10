@@ -40,7 +40,27 @@ class AuthRepositoryImpl implements AuthRepository {
       final userModel = await remoteDataSource.loginUser(email, password);
       return userModel;
     } on FirebaseAuthException catch (e) {
-      throw Exception('Auth Error: ${e.message}');
+      String msg;
+      switch (e.code) {
+        case 'user-not-found':
+          msg = 'No account found with this email.';
+          break;
+        case 'wrong-password':
+          msg = 'Incorrect password.';
+          break;
+        case 'invalid-email':
+          msg = 'Please enter a valid email address.';
+          break;
+        case 'user-disabled':
+          msg = 'This account has been disabled.';
+          break;
+        case 'too-many-requests':
+          msg = 'Too many attempts. Try again later.';
+          break;
+        default:
+          msg = e.message ?? 'Authentication failed.';
+      }
+      throw Exception('Auth Error: $msg');
     } catch (e) {
       throw Exception('An unknown error occurred.');
     }

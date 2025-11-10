@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:homify/core/services/location_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/features/auth/presentation/controllers/login_controller.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  // Focus nodes for text fields
-  final FocusNode _emailFocus = FocusNode();
-  final FocusNode _passwordFocus = FocusNode();
-
-  // Track focus state to update label color
-  Color _emailLabelColor = const Color(0xFF32190D);
-  Color _passwordLabelColor = const Color(0xFF32190D);
+class _LoginPageState extends ConsumerState<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isPasswordObscure = true;
 
   @override
   void initState() {
@@ -25,25 +25,6 @@ class _LoginPageState extends State<LoginPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initLocation();
-    });
-
-    // Listen to focus changes
-    _emailFocus.addListener(() {
-      setState(() {
-        _emailLabelColor = _emailFocus.hasFocus
-            ? const Color(0xFF32190D) // Active color (darker)
-            : const Color(
-                0xFF32190D,
-              ).withValues(alpha: 0.6); // Inactive (faded)
-      });
-    });
-
-    _passwordFocus.addListener(() {
-      setState(() {
-        _passwordLabelColor = _passwordFocus.hasFocus
-            ? const Color(0xFF32190D)
-            : const Color(0xFF32190D).withValues(alpha: 0.6);
-      });
     });
   }
 
@@ -74,32 +55,45 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _submitLogin() {
+    // First, validate the form
+    if (_formKey.currentState?.validate() ?? false) {
+      // If valid, get the values
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      // Call the controller's login method
+      ref.read(loginControllerProvider.notifier).login(email, password);
+    }
+  }
+
   @override
   void dispose() {
-    _emailFocus.dispose();
-    _passwordFocus.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   // Helper to build consistent TextField
   Widget _buildTextField({
     required String label,
-    required FocusNode focusNode,
-    required Color labelColor,
+    required TextEditingController controller,
     bool obscureText = false,
     String? helperText,
+    String? Function(String?)? validator,
+    Widget? suffixIcon,
   }) {
-    return TextField(
-      focusNode: focusNode,
+    return TextFormField(
       obscureText: obscureText,
+      controller: controller,
+      validator: validator,
       cursorColor: const Color(0xFF32190D),
       decoration: InputDecoration(
         labelText: label,
+        suffixIcon: suffixIcon,
         helperText: helperText,
         helperStyle: Theme.of(context).inputDecorationTheme.helperStyle,
-        labelStyle: Theme.of(
-          context,
-        ).inputDecorationTheme.labelStyle?.copyWith(color: labelColor),
+        labelStyle: Theme.of(context).inputDecorationTheme.labelStyle,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
@@ -119,6 +113,26 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final loginState = ref.watch(loginControllerProvider);
+    final loginController = ref.read(loginControllerProvider.notifier);
+
+    ref.listen<LoginState>(loginControllerProvider, (previous, next) {
+      if (next.errorMessage != null) {
+        // Show an error snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
+        loginController.clearError(); // Clear error after showing
+      }
+      if (next.loginSuccess) {
+        // Navigate to home on success
+        context.go('/home');
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Color(0xFF32190D),
@@ -132,89 +146,127 @@ class _LoginPageState extends State<LoginPage> {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Center(
           child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/Homify_Logo_Transparent.png',
-                  height: 240,
-                  width: 240,
-                ),
-
-                // Email / Phone Field
-                _buildTextField(
-                  label: 'Email or Phone Number',
-                  focusNode: _emailFocus,
-                  labelColor: _emailLabelColor,
-                ),
-                const SizedBox(height: 20),
-
-                // Password Field
-                _buildTextField(
-                  label: 'Password',
-                  focusNode: _passwordFocus,
-                  labelColor: _passwordLabelColor,
-                  obscureText: true,
-                  helperText: 'Forgot Password? Tap Here.',
-                ),
-
-                const SizedBox(height: 32),
-
-                // Log in Button
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Handle login
-                  },
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 44),
-                    backgroundColor: const Color(0xFF32190D),
-                    foregroundColor: Colors.white,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/Homify_Logo_Transparent.png',
+                    height: 240,
+                    width: 240,
                   ),
-                  icon: const Icon(LucideIcons.logIn),
-                  label: const Text(
-                    'Log in',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ),
-                const SizedBox(height: 12),
 
-                // Google Sign-In
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Handle Google sign-in
-                  },
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 44),
-                    backgroundColor: const Color(0xFFFFEDD4),
-                    foregroundColor: const Color(0xFF32190D),
+                  // Email / Phone Field
+                  _buildTextField(
+                    label: 'Email or Phone Number',
+                    controller: _emailController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
                   ),
-                  icon: const Icon(LucideIcons.chromium),
-                  label: const Text(
-                    'Sign in with Google',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ),
-                const SizedBox(height: 32),
+                  const SizedBox(height: 20),
 
-                const Text('Don\'t have an account yet?'),
-                const SizedBox(height: 4),
+                  // Password Field
+                  _buildTextField(
+                    label: 'Password',
+                    controller: _passwordController,
+                    obscureText: _isPasswordObscure,
+                    helperText: 'Forgot Password? Tap Here.',
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordObscure
+                            ? LucideIcons.eyeOff
+                            : LucideIcons.eye,
+                        color: const Color(0xFF32190D).withValues(alpha: 0.6),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordObscure = !_isPasswordObscure;
+                        });
+                      },
+                    ),
+                  ),
 
-                // Create Account Button
-                OutlinedButton(
-                  onPressed: () {
-                    context.push('/register');
-                  },
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 44),
-                    side: const BorderSide(color: Color(0xFF32190D)),
-                    foregroundColor: const Color(0xFF32190D),
+                  const SizedBox(height: 32),
+
+                  // Log in Button
+                  ElevatedButton.icon(
+                    onPressed: loginState.isLoading ? null : _submitLogin,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 44),
+                      backgroundColor: const Color(0xFF32190D),
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: loginState.isLoading
+                        ? Container(
+                            // Show loading spinner
+                            width: 24,
+                            height: 24,
+                            padding: const EdgeInsets.all(2.0),
+                            child: const CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Icon(LucideIcons.logIn),
+                    label: const Text(
+                      'Log in',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
                   ),
-                  child: const Text(
-                    'Create New Account',
-                    style: TextStyle(fontWeight: FontWeight.w500),
+                  const SizedBox(height: 12),
+
+                  // Google Sign-In
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // Handle Google sign-in
+                    },
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 44),
+                      backgroundColor: const Color(0xFFFFEDD4),
+                      foregroundColor: const Color(0xFF32190D),
+                    ),
+                    icon: const FaIcon(FontAwesomeIcons.google),
+                    label: const Text(
+                      'Sign in with Google',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 32),
+
+                  const Text('Don\'t have an account yet?'),
+                  const SizedBox(height: 4),
+
+                  // Create Account Button
+                  OutlinedButton(
+                    onPressed: () {
+                      context.push('/register');
+                    },
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 44),
+                      side: const BorderSide(color: Color(0xFF32190D)),
+                      foregroundColor: const Color(0xFF32190D),
+                    ),
+                    child: const Text(
+                      'Create New Account',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

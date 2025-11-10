@@ -4,6 +4,7 @@ import 'package:homify/features/auth/data/repositories/auth_repository_impl.dart
 import 'package:homify/features/auth/domain/repositories/auth_repository.dart';
 import 'package:homify/features/auth/domain/usecases/register_user.dart';
 import 'package:homify/features/auth/domain/usecases/get_current_user.dart';
+import 'package:homify/features/auth/domain/usecases/login_user.dart';
 
 // --- DATA LAYER ---
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
@@ -24,4 +25,9 @@ final registerUserUseCaseProvider = Provider<RegisterUser>((ref) {
 final getCurrentUserUseCaseProvider = Provider<GetCurrentUser>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   return GetCurrentUser(repository: repository);
+});
+
+final loginUserUseCaseProvider = Provider<LoginUser>((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return LoginUser(repository: repository);
 });

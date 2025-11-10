@@ -6,7 +6,7 @@ import 'package:homify/features/auth/presentation/pages/login_page.dart';
 import 'package:homify/features/auth/presentation/pages/registration_page.dart';
 import 'package:homify/features/auth/presentation/pages/owner_success_page.dart';
 import 'package:homify/features/auth/presentation/pages/tenant_success_page.dart';
-import 'package:homify/features/home/presentation/home.dart';
+import 'package:homify/features/home/presentation/pages/home.dart';
 import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
 import 'package:homify/features/properties/presentation/pages/property_success_page.dart';
 
