@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:homify/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:homify/features/auth/domain/repositories/auth_repository.dart';
+import 'package:homify/features/auth/domain/usecases/logout_user.dart';
 import 'package:homify/features/auth/domain/usecases/register_user.dart';
 import 'package:homify/features/auth/domain/usecases/get_current_user.dart';
 import 'package:homify/features/auth/domain/usecases/login_user.dart';
@@ -30,4 +31,9 @@ final getCurrentUserUseCaseProvider = Provider<GetCurrentUser>((ref) {
 final loginUserUseCaseProvider = Provider<LoginUser>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   return LoginUser(repository: repository);
+});
+
+final logoutUserUseCaseProvider = Provider<LogoutUser>((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return LogoutUser(repository: repository);
 });

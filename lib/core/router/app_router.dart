@@ -6,7 +6,8 @@ import 'package:homify/features/auth/presentation/pages/login_page.dart';
 import 'package:homify/features/auth/presentation/pages/registration_page.dart';
 import 'package:homify/features/auth/presentation/pages/owner_success_page.dart';
 import 'package:homify/features/auth/presentation/pages/tenant_success_page.dart';
-import 'package:homify/features/home/presentation/pages/home.dart';
+import 'package:homify/features/home/presentation/pages/account_page.dart';
+import 'package:homify/features/home/presentation/pages/home_page.dart';
 import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
 import 'package:homify/features/properties/presentation/pages/property_success_page.dart';
 
@@ -38,6 +39,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       path: '/property-success',
       builder: (context, state) => const PropertySuccessPage(),
     ),
+    GoRoute(path: '/account', builder: (context, state) => const AccountPage()),
   ];
 
   // 3. Create the router

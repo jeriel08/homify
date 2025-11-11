@@ -31,20 +31,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _initLocation() async {
     final granted = await LocationService.requestAndSaveLocation();
 
-    // The "mounted" check is still important!
     if (!mounted) return;
 
-    // This "context" now belongs to LoginPage, which is *inside* the MaterialApp
-    // so this will work!
-    if (granted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Location access granted! Ready to find homes near you.',
-          ),
-        ),
-      );
-    } else {
+    if (!granted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(

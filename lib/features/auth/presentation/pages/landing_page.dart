@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -64,17 +65,19 @@ class LandingPage extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // 5. Create Account Button (Secondary Action)
-                OutlinedButton(
+                // Google Sign-In
+                ElevatedButton.icon(
                   onPressed: () {
-                    context.push('/register');
+                    // Handle Google sign-in
                   },
-                  style: OutlinedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 44),
-                    side: const BorderSide(color: Color(0xFF32190D)),
+                    backgroundColor: const Color(0xFFFFEDD4),
                     foregroundColor: const Color(0xFF32190D),
                   ),
-                  child: const Text(
-                    'Create New Account',
+                  icon: const FaIcon(FontAwesomeIcons.google),
+                  label: const Text(
+                    'Sign in with Google',
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
