@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:homify/features/auth/data/models/user_model.dart';
 import 'package:homify/core/entities/user_entity.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 abstract class AuthRemoteDataSource {
   /// Creates a new user with email/password and saves their data.
@@ -14,6 +15,7 @@ abstract class AuthRemoteDataSource {
     Map<String, dynamic> userData,
   );
 
+  Future<UserModel> signInWithGoogle();
   Future<UserModel> loginUser(String email, String password);
   Future<UserModel?> getCurrentUser();
   Future<void> logout();
@@ -22,10 +24,15 @@ abstract class AuthRemoteDataSource {
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final GoogleSignIn _googleSignIn;
 
-  AuthRemoteDataSourceImpl({FirebaseAuth? auth, FirebaseFirestore? firestore})
-    : _auth = auth ?? FirebaseAuth.instance,
-      _firestore = firestore ?? FirebaseFirestore.instance;
+  AuthRemoteDataSourceImpl({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    GoogleSignIn? googleSignIn,
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance,
+       _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
 
   @override
   Future<UserModel> registerUser(
@@ -129,6 +136,95 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> logout() async {
+    await _googleSignIn.signOut();
     await _auth.signOut();
+  }
+
+  @override
+  Future<UserModel> signInWithGoogle() async {
+    try {
+      await _googleSignIn.initialize(
+        clientId:
+            "915621689789-g8j7kpre8ldjdbs4c4a2mmqevdncci1c.apps.googleusercontent.com",
+      );
+
+      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+      final idToken = googleUser.authentication.idToken;
+      final authorizationClient = googleUser.authorizationClient;
+
+      GoogleSignInClientAuthorization? authorization = await authorizationClient
+          .authorizationForScopes(['email', 'profile']);
+
+      final accessToken = authorization?.accessToken;
+
+      // 3. Create a new credential for Firebase
+      final credential = GoogleAuthProvider.credential(
+        accessToken: accessToken,
+        idToken: idToken,
+      );
+
+      // 4. Sign in to Firebase with the credential
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
+      if (userCredential.user == null) {
+        throw Exception('Sign-in failed, but no exception was thrown.');
+      }
+
+      final user = userCredential.user!;
+      final additionalInfo = userCredential.additionalUserInfo;
+
+      // 5. Check if this is a new user
+      if (additionalInfo?.isNewUser == true) {
+        // --- This is a NEW user ---
+        // Create the UserModel
+        final userModel = UserModel(
+          uid: user.uid,
+          // Extract data from Google profile
+          firstName: user.displayName?.split(' ').first ?? '',
+          lastName: user.displayName?.split(' ').last ?? '',
+          email: user.email!,
+          // Set sensible defaults for new Google users
+          accountType: AccountType.tenant, // Default to tenant
+          birthday: '', // User must fill this in later
+          gender: '', // User must fill this in later
+          mobile: user.phoneNumber ?? '', // May be null
+          createdAt: DateTime.now(),
+        );
+
+        // Save to Firestore
+        await _firestore
+            .collection('users')
+            .doc(userModel.uid)
+            .set(userModel.toFirestore());
+
+        return userModel;
+      } else {
+        // --- This is a RETURNING user ---
+        // Get their existing data from Firestore
+        final userDoc = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        if (!userDoc.exists) {
+          // This is a rare edge case: they exist in Auth but not Firestore
+          throw Exception('User data not found in Firestore.');
+        }
+        return UserModel.fromSnapshot(userDoc);
+      }
+    } on FirebaseAuthException catch (e) {
+      // Handle specific auth errors (like 'account-exists-with-different-credential')
+      throw Exception('Auth Error: ${e.message}');
+    } on GoogleSignInException catch (e) {
+      if (e.code.toString() == "GoogleSignInExceptionCode.canceled") {
+        throw Exception('Google sign-in was cancelled.');
+      } else {
+        throw Exception('Google Sign-In Error: $e');
+      }
+    } catch (e) {
+      // Handle other errors (like cancelling the sign-in)
+      throw Exception(e.toString());
+    }
   }
 }

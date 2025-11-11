@@ -10,8 +10,8 @@ class AccountPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen<AsyncValue<void>>(logoutControllerProvider, (previous, next) {
-      if (next.hasError) {
-        // Show an error snackbar
+      // Check if the state *transitioned* from loading to having an error
+      if (previous is AsyncLoading && next.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error.toString()),
@@ -19,9 +19,10 @@ class AccountPage extends ConsumerWidget {
           ),
         );
       }
-      if (next.hasValue) {
-        // Success! Navigate the user out
-        // Use context.go() to clear the navigation stack and go to login
+
+      // Check if the state *transitioned* from loading to having a value
+      if (previous is AsyncLoading && next.hasValue) {
+        // Success! Now we navigate.
         context.go('/login');
       }
     });

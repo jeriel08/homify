@@ -11,6 +11,7 @@ abstract class AuthRepository {
     Map<String, dynamic> userData,
   );
 
+  Future<UserEntity> signInWithGoogle();
   Future<UserEntity> loginUser(String email, String password);
   Future<UserEntity?> getCurrentUser();
   Future<void> logout();

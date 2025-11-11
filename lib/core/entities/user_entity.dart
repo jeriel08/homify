@@ -1,4 +1,4 @@
-enum AccountType { tenant, owner }
+enum AccountType { tenant, owner, admin }
 
 class UserEntity {
   final String uid;

@@ -88,4 +88,17 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('An unknown error occurred.');
     }
   }
+
+  @override
+  Future<UserEntity> signInWithGoogle() async {
+    try {
+      // The remoteDataSource returns a UserModel, which *is* a UserEntity
+      final userModel = await remoteDataSource.signInWithGoogle();
+      return userModel;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Auth Error: ${e.message}');
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }

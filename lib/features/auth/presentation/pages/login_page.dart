@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:homify/core/services/location_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/controllers/login_controller.dart';
+import 'package:homify/features/auth/presentation/controllers/google_sign_in_controller.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -56,6 +57,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  void _submitGoogleLogin() {
+    ref.read(googleSignInControllerProvider.notifier).signInWithGoogle();
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -103,7 +108,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final loginState = ref.watch(loginControllerProvider);
+    final googleSignInState = ref.watch(googleSignInControllerProvider);
+
     final loginController = ref.read(loginControllerProvider.notifier);
+
+    final isEitherLoading = loginState.isLoading || googleSignInState.isLoading;
 
     ref.listen<LoginState>(loginControllerProvider, (previous, next) {
       if (next.errorMessage != null) {
@@ -117,6 +126,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         loginController.clearError(); // Clear error after showing
       }
       if (next.loginSuccess) {
+        // Navigate to home on success
+        context.go('/home');
+      }
+    });
+
+    ref.listen<GoogleSignInState>(googleSignInControllerProvider, (
+      previous,
+      next,
+    ) {
+      if (next.errorMessage != null) {
+        // Show the error message (e.g., "account-exists-with-different-credential")
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // Clear the error after showing
+        ref.read(googleSignInControllerProvider.notifier).clearError();
+      }
+      if (next.signInSuccess) {
         // Navigate to home on success
         context.go('/home');
       }
@@ -220,17 +250,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                   // Google Sign-In
                   ElevatedButton.icon(
-                    onPressed: () {
-                      // Handle Google sign-in
-                    },
+                    onPressed: isEitherLoading ? null : _submitGoogleLogin,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 44),
                       backgroundColor: const Color(0xFFFFEDD4),
                       foregroundColor: const Color(0xFF32190D),
                     ),
-                    icon: const FaIcon(FontAwesomeIcons.google),
+                    icon:
+                        googleSignInState
+                            .isLoading // <-- Specific to this button
+                        ? Container(
+                            width: 24,
+                            height: 24,
+                            padding: const EdgeInsets.all(2.0),
+                            child: const CircularProgressIndicator(
+                              color: Color(0xFF32190D),
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const FaIcon(FontAwesomeIcons.google),
                     label: const Text(
-                      'Sign in with Google',
+                      'Continue with Google',
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
