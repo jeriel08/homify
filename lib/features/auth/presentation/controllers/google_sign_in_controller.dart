@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:homify/features/auth/auth_providers.dart';
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 
 // 1. Define the state for the Google sign-in process
 class GoogleSignInState {

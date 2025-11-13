@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:homify/core/entities/user_entity.dart';
-import 'package:homify/features/auth/auth_providers.dart';
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_account_type.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_birthday.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_email.dart';

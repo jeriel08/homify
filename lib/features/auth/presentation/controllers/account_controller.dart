@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homify/features/auth/auth_providers.dart';
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 
 // 1. Define the Notifier
 class LogoutController extends AsyncNotifier<void> {

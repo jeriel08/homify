@@ -125,10 +125,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         );
         loginController.clearError(); // Clear error after showing
       }
-      if (next.loginSuccess) {
-        // Navigate to home on success
-        context.go('/home');
-      }
+      if (next.loginSuccess) {}
     });
 
     ref.listen<GoogleSignInState>(googleSignInControllerProvider, (
@@ -146,10 +143,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         // Clear the error after showing
         ref.read(googleSignInControllerProvider.notifier).clearError();
       }
-      if (next.signInSuccess) {
-        // Navigate to home on success
-        context.go('/home');
-      }
+      if (next.signInSuccess) {}
     });
 
     return Scaffold(
@@ -175,6 +169,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     height: 240,
                     width: 240,
                   ),
+                  const SizedBox(height: 20),
 
                   // Email / Phone Field
                   _buildTextField(

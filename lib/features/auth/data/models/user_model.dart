@@ -31,6 +31,20 @@ class UserModel extends UserEntity {
     );
   }
 
+  factory UserModel.fromEntity(UserEntity entity) {
+    return UserModel(
+      uid: entity.uid,
+      accountType: entity.accountType,
+      firstName: entity.firstName,
+      lastName: entity.lastName,
+      birthday: entity.birthday,
+      gender: entity.gender,
+      mobile: entity.mobile,
+      email: entity.email,
+      createdAt: entity.createdAt,
+    );
+  }
+
   /// Convert UserModel → Map for Firestore
   Map<String, dynamic> toFirestore() {
     return {
