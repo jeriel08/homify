@@ -1,13 +1,15 @@
-// lib/auth/registration/tenant_success.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
+import 'package:homify/features/auth/presentation/providers/registration_flow_provider.dart';
 import 'package:lottie/lottie.dart';
 
-class TenantRegistrationSuccess extends StatelessWidget {
+class TenantRegistrationSuccess extends ConsumerWidget {
   const TenantRegistrationSuccess({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F0),
       body: Padding(
@@ -21,7 +23,6 @@ class TenantRegistrationSuccess extends StatelessWidget {
               height: 250,
               width: 250,
             ),
-
             Text(
               'Welcome to Homify!',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -42,7 +43,11 @@ class TenantRegistrationSuccess extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => context.go('/home'),
+                onPressed: () {
+                  ref.invalidate(authStateProvider);
+                  ref.read(justRegisteredProvider.notifier).state = false;
+                  context.go('/home');
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF32190D),
                   foregroundColor: Colors.white,

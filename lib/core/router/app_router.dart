@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/auth/presentation/pages/landing_page.dart';
 import 'package:homify/features/auth/presentation/pages/login_page.dart';
 import 'package:homify/features/auth/presentation/pages/registration_page.dart';
 import 'package:homify/features/auth/presentation/pages/owner_success_page.dart';
 import 'package:homify/features/auth/presentation/pages/tenant_success_page.dart';
+import 'package:homify/features/auth/presentation/providers/registration_flow_provider.dart';
 import 'package:homify/features/home/presentation/pages/account_page.dart';
 import 'package:homify/features/home/presentation/pages/home_page.dart';
 import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
@@ -14,12 +16,25 @@ import 'package:homify/features/auth/presentation/providers/auth_state_provider.
 import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authInit = ref.watch(authStateProvider);
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
-      if (authInit.isLoading) {
-        return null; // Don't redirect yet
+      final authInit = ref.watch(authStateProvider);
+
+      if (authInit.isLoading) return null;
+
+      final justRegistered = ref.read(justRegisteredProvider);
+      final justRegisteredAs = ref.read(justRegisteredAsProvider);
+
+      if (justRegistered) {
+        ref.read(justRegisteredProvider.notifier).state = false; // consume
+        ref.read(justRegisteredAsProvider.notifier).state = null;
+
+        if (justRegisteredAs == AccountType.owner) {
+          return '/owner-success';
+        } else {
+          return '/tenant-success';
+        }
       }
 
       final authState = ref.read(authStateProvider);

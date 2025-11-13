@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
+import 'package:homify/features/auth/presentation/providers/registration_flow_provider.dart';
 import 'package:lottie/lottie.dart';
 
-class OwnerRegistrationSuccess extends StatelessWidget {
+class OwnerRegistrationSuccess extends ConsumerWidget {
   const OwnerRegistrationSuccess({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F0), // Your app's bg color
       body: Padding(
@@ -47,7 +50,11 @@ class OwnerRegistrationSuccess extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => context.go('/create-property'),
+                onPressed: () {
+                  ref.invalidate(authStateProvider);
+                  ref.read(justRegisteredProvider.notifier).state = false;
+                  context.go('/create-property');
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF32190D),
                   foregroundColor: Colors.white,

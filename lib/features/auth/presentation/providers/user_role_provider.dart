@@ -8,16 +8,12 @@ import 'package:homify/core/entities/user_entity.dart';
 enum AppUserRole { guest, tenant, owner, admin }
 
 final userRoleProvider = Provider<AppUserRole>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final user = ref.watch(authStateProvider).value;
+  if (user == null) return AppUserRole.guest;
 
-  return authState.whenData((user) {
-        if (user == null) return AppUserRole.guest;
-
-        return switch (user.accountType) {
-          AccountType.tenant => AppUserRole.tenant,
-          AccountType.owner => AppUserRole.owner,
-          AccountType.admin => AppUserRole.admin,
-        };
-      }).value ??
-      AppUserRole.guest;
+  return switch (user.accountType) {
+    AccountType.tenant => AppUserRole.tenant,
+    AccountType.owner => AppUserRole.owner,
+    AccountType.admin => AppUserRole.admin,
+  };
 });

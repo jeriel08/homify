@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 import 'package:homify/features/home/presentation/pages/explore_screen.dart';
 import 'package:homify/features/home/presentation/pages/favorites_screen.dart';
@@ -57,6 +59,18 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ),
             onPressed: () {
+              // ADD THESE 5 LINES
+              debugPrint('=== AUTH DEBUG START ===');
+              final authValue = ref.read(authStateProvider).value;
+              debugPrint(
+                'Firebase UID: ${FirebaseAuth.instance.currentUser?.uid}',
+              );
+              debugPrint('authStateProvider.value: $authValue');
+              debugPrint(
+                'userRoleProvider (watch): ${ref.watch(userRoleProvider)}',
+              );
+              debugPrint('=== AUTH DEBUG END ===');
+
               final roleAsync = ref.watch(userRoleProvider);
 
               debugPrint(

@@ -12,6 +12,8 @@ import 'package:homify/features/auth/presentation/pages/steps/step_gender.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_mobile.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_name.dart';
 import 'package:homify/features/auth/presentation/pages/steps/step_password.dart';
+import 'package:homify/features/auth/presentation/providers/registration_flow_provider.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 
 class RegistrationStep {
   final String title;
@@ -172,10 +174,20 @@ class RegistrationController extends StateNotifier<RegistrationState> {
         password: password,
         userData: data,
       );
+      debugPrint('REGISTRATION: Pre-login userModel: ${userModel.toString()}');
+      debugPrint(
+        'REGISTRATION: Pre-login accountType: ${userModel.accountType}',
+      );
 
       // --- STEP 2: LOG THEM IN AUTOMATICALLY ---
       final loginUser = _ref.read(loginUserUseCaseProvider);
       await loginUser.call(email: email, password: password);
+
+      _ref.read(justRegisteredProvider.notifier).state = true;
+      _ref.read(justRegisteredAsProvider.notifier).state =
+          userModel.accountType;
+
+      state = state.copyWith(submitSuccess: true);
 
       final getCurrentUser = _ref.read(getCurrentUserUseCaseProvider);
       await getCurrentUser();
@@ -184,9 +196,12 @@ class RegistrationController extends StateNotifier<RegistrationState> {
         'REGISTRATION: Firebase login success. UID: ${FirebaseAuth.instance.currentUser?.uid}',
       );
 
+      final roleAsync = _ref.watch(userRoleProvider);
+
       debugPrint('REGISTRATION: Firestore user loaded: ${userModel.uid}');
       debugPrint('REGISTRATION: Account Type: ${userModel.accountType}');
-      debugPrint('REGISTRATION: Full UserModel: $userModel');
+      debugPrint('REGISTRATION: New Account. Current role: $roleAsync');
+      debugPrint('REGISTRATION: Full UserModel: ${userModel.toString()}');
 
       // --- STEP 3: Success! Let router handle navigation ---
       state = state.copyWith(
@@ -194,10 +209,6 @@ class RegistrationController extends StateNotifier<RegistrationState> {
         isSubmitting: false,
         accountType: userModel.accountType,
       );
-
-      final successPath = userModel.accountType == AccountType.owner
-          ? '/owner-success?from=registration'
-          : '/tenant-success?from=registration';
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Use context from RegistrationPage? We'll do it in the page
