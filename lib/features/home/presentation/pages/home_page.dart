@@ -57,9 +57,13 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ),
             onPressed: () {
-              final role = ref.read(userRoleProvider);
-              if (role == AppUserRole.guest) {
-                // Show login prompt
+              final roleAsync = ref.watch(userRoleProvider);
+
+              debugPrint(
+                'HOME PAGE: Profile clicked. Current role: $roleAsync',
+              );
+              if (roleAsync == AppUserRole.guest) {
+                debugPrint('HOME PAGE: Showing Login Required dialog');
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
@@ -83,6 +87,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 );
               } else {
+                debugPrint('HOME PAGE: Navigating to /account');
                 context.push('/account');
               }
             },

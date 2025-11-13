@@ -1,4 +1,5 @@
 // lib/auth/registration/registration_controller.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -175,6 +176,17 @@ class RegistrationController extends StateNotifier<RegistrationState> {
       // --- STEP 2: LOG THEM IN AUTOMATICALLY ---
       final loginUser = _ref.read(loginUserUseCaseProvider);
       await loginUser.call(email: email, password: password);
+
+      final getCurrentUser = _ref.read(getCurrentUserUseCaseProvider);
+      await getCurrentUser();
+
+      debugPrint(
+        'REGISTRATION: Firebase login success. UID: ${FirebaseAuth.instance.currentUser?.uid}',
+      );
+
+      debugPrint('REGISTRATION: Firestore user loaded: ${userModel.uid}');
+      debugPrint('REGISTRATION: Account Type: ${userModel.accountType}');
+      debugPrint('REGISTRATION: Full UserModel: $userModel');
 
       // --- STEP 3: Success! Let router handle navigation ---
       state = state.copyWith(

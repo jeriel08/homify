@@ -14,9 +14,14 @@ import 'package:homify/features/auth/presentation/providers/auth_state_provider.
 import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
+  final authInit = ref.watch(authStateProvider);
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
+      if (authInit.isLoading) {
+        return null; // Don't redirect yet
+      }
+
       final authState = ref.read(authStateProvider);
       final role = ref.read(userRoleProvider);
 
