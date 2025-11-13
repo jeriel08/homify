@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/entities/user_entity.dart';
+// import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/core/widgets/step_progress_bar.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 // import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
@@ -80,20 +81,18 @@ class RegistrationPage extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.submitError!),
-            backgroundColor: Colors.red.shade700,
+            backgroundColor: Colors.red,
           ),
         );
-
         controller.clearSubmitError();
       }
 
-      if (next.submitSuccess &&
-          (previous?.submitSuccess == false || previous == null)) {
-        if (next.accountType == AccountType.owner) {
-          context.go('/owner-success');
-        } else {
-          context.go('/tenant-success');
-        }
+      if (next.submitSuccess && previous?.submitSuccess != true) {
+        final path = next.accountType == AccountType.owner
+            ? '/owner-success?from=registration'
+            : '/tenant-success?from=registration';
+
+        context.go(path);
       }
     });
 

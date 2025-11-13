@@ -164,30 +164,44 @@ class RegistrationController extends StateNotifier<RegistrationState> {
     }
 
     try {
-      // --- PART 1: ALWAYS REGISTER THE USER ---
+      // --- STEP 1: Register the user ---
       final registerUser = _ref.read(registerUserUseCaseProvider);
+      final userModel = await registerUser(
+        email: email,
+        password: password,
+        userData: data,
+      );
 
-      await registerUser(email: email, password: password, userData: data);
+      // --- STEP 2: LOG THEM IN AUTOMATICALLY ---
+      final loginUser = _ref.read(loginUserUseCaseProvider);
+      await loginUser.call(email: email, password: password);
 
-      state = state.copyWith(submitSuccess: true, isSubmitting: false);
+      // --- STEP 3: Success! Let router handle navigation ---
+      state = state.copyWith(
+        submitSuccess: true,
+        isSubmitting: false,
+        accountType: userModel.accountType,
+      );
+
+      final successPath = userModel.accountType == AccountType.owner
+          ? '/owner-success?from=registration'
+          : '/tenant-success?from=registration';
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Use context from RegistrationPage? We'll do it in the page
+      });
     } catch (e) {
-      // --- THIS IS THE NEW CATCH BLOCK ---
       final error = e.toString();
-      int errorStep = state.currentStep; // Default to current (last) step
+      int errorStep = state.currentStep;
 
-      // Check the error message and find the matching step
       if (error.contains('email')) {
         errorStep = _findStepIndexByTitle('Email Address');
       } else if (error.contains('mobile number')) {
         errorStep = _findStepIndexByTitle('Mobile Number');
       }
 
-      // If we couldn't find the step, -1 is returned. Stay on the current step.
-      if (errorStep == -1) {
-        errorStep = state.currentStep;
-      }
+      if (errorStep == -1) errorStep = state.currentStep;
 
-      // Update the state
       state = state.copyWith(
         submitError: error,
         isSubmitting: false,

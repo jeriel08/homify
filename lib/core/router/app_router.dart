@@ -1,4 +1,3 @@
-// lib/core/router/app_router.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,29 +11,59 @@ import 'package:homify/features/home/presentation/pages/home_page.dart';
 import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
 import 'package:homify/features/properties/presentation/pages/property_success_page.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
-      final isLoggedIn = authState.value != null;
-      final isLoggingIn = state.matchedLocation == '/login';
-      final isRegistering = state.matchedLocation == '/register';
-      final isLanding = state.matchedLocation == '/';
+      final authState = ref.read(authStateProvider);
+      final role = ref.read(userRoleProvider);
 
-      // If not logged in and trying to access protected route
-      if (!isLoggedIn && !(isLoggingIn || isRegistering || isLanding)) {
+      final isLoggedIn = authState.value != null;
+      final isGuest = role == AppUserRole.guest;
+
+      final path = state.matchedLocation;
+      final isAuthPage = ['/', '/login', '/register'].contains(path);
+      final isSuccessPage = [
+        '/tenant-success',
+        '/owner-success',
+      ].contains(path);
+
+      // === 1. ALLOW SUCCESS PAGES ONLY IF COMING FROM REGISTRATION ===
+      if (isSuccessPage) {
+        // Check if we just registered (use a flag or query param)
+        final fromRegistration =
+            state.uri.queryParameters['from'] == 'registration';
+        if (!fromRegistration && isLoggedIn) {
+          // Already logged in → skip success page
+          return role == AppUserRole.owner ? '/create-property' : '/home';
+        }
+        return null; // Allow success page
+      }
+
+      // === 2. GUEST RULES ===
+      if (isGuest) {
+        if (path == '/home') return null;
+        if (isAuthPage) return null;
+        return '/home'; // Force guest to home
+      }
+
+      // === 3. LOGGED IN RULES ===
+      if (isLoggedIn) {
+        if (isAuthPage) return '/home';
+        if (path == '/home' && role == AppUserRole.owner) {
+          return '/create-property';
+        }
+        return null;
+      }
+
+      // === 4. NOT LOGGED IN & NOT GUEST ===
+      if (!isAuthPage && !isSuccessPage) {
         return '/login';
       }
 
-      // If logged in and trying to access login/register
-      if (isLoggedIn && (isLoggingIn || isRegistering || isLanding)) {
-        return '/home';
-      }
-
-      return null; // Allow navigation
+      return null;
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const LandingPage()),
@@ -43,11 +72,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register',
         builder: (context, state) => const RegistrationPage(),
       ),
+      GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+      GoRoute(
+        path: '/account',
+        builder: (context, state) => const AccountPage(),
+      ),
       GoRoute(
         path: '/create-property',
         builder: (context, state) => const AddPropertyPage(),
       ),
-      GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+      GoRoute(
+        path: '/property-success',
+        builder: (context, state) => const PropertySuccessPage(),
+      ),
       GoRoute(
         path: '/tenant-success',
         builder: (context, state) => const TenantRegistrationSuccess(),
@@ -56,16 +93,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/owner-success',
         builder: (context, state) => const OwnerRegistrationSuccess(),
       ),
-      GoRoute(
-        path: '/property-success',
-        builder: (context, state) => const PropertySuccessPage(),
-      ),
-      GoRoute(
-        path: '/account',
-        builder: (context, state) => const AccountPage(),
-      ),
+      // Add admin route later
     ],
     errorBuilder: (context, state) =>
-        Scaffold(body: Center(child: Text('Page not found: ${state.error}'))),
+        Scaffold(body: Center(child: Text('404: ${state.error}'))),
   );
 });

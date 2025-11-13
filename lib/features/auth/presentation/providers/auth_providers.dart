@@ -8,6 +8,8 @@ import 'package:homify/features/auth/domain/usecases/get_current_user.dart';
 import 'package:homify/features/auth/domain/usecases/login_user.dart';
 import 'package:homify/features/auth/domain/usecases/sign_in_with_google.dart';
 
+export 'auth_state_provider.dart';
+
 // --- DATA LAYER ---
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
   return AuthRemoteDataSourceImpl();

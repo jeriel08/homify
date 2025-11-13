@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 import 'package:homify/features/home/presentation/pages/explore_screen.dart';
 import 'package:homify/features/home/presentation/pages/favorites_screen.dart';
 
@@ -55,7 +56,36 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: Icon(Icons.person),
               ),
             ),
-            onPressed: () => context.push('/account'),
+            onPressed: () {
+              final role = ref.read(userRoleProvider);
+              if (role == AppUserRole.guest) {
+                // Show login prompt
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Login Required'),
+                    content: const Text(
+                      'Please log in to access your account.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          context.push('/login');
+                        },
+                        child: const Text('Log In'),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                context.push('/account');
+              }
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -94,9 +124,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
           // --- Styling the BottomNavigationBar ---
           backgroundColor: Colors.transparent, // VERY IMPORTANT
-          elevation: 0, // The container handles elevation
-          // --- Icon Colors ---
-          // This sets the color for the INACTIVE icons
+          elevation: 0,
           unselectedItemColor: const Color(0xFFF9E5C5).withValues(alpha: 0.7),
           // This color is overridden by our `_buildActiveIcon` widget,
           // but it's good practice to set it.
