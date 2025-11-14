@@ -3,6 +3,7 @@ import 'package:homify/core/router/app_router.dart';
 import 'package:homify/core/theme/theme_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:homify/core/widgets/loading_screen.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/firebase_options.dart';
 
@@ -19,9 +20,7 @@ void main() async {
 
           return authInit.when(
             data: (_) => const MyApp(),
-            loading: () => const MaterialApp(
-              home: Scaffold(body: Center(child: CircularProgressIndicator())),
-            ),
+            loading: () => const LoadingPage(),
             error: (_, __) => const MaterialApp(
               home: Scaffold(body: Center(child: Text('Auth Error'))),
             ),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:homify/core/widgets/step_progress_bar.dart';
+import 'package:homify/features/auth/presentation/providers/registration_flow_provider.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 // import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
 
@@ -53,6 +54,15 @@ class AddPropertyPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Check if we have a redirect intent
+      final redirectIntent = ref.read(postLoginRedirectProvider);
+      if (redirectIntent != null) {
+        // Clear the intent so we don't get stuck in a loop
+        ref.read(postLoginRedirectProvider.notifier).state = null;
+      }
+    });
+
     // 1. Watch our NEW controller
     final state = ref.watch(addPropertyControllerProvider);
     final controller = ref.read(addPropertyControllerProvider.notifier);

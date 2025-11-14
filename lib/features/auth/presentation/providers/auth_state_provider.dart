@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,8 +16,6 @@ final authStateProvider = StreamProvider<UserModel?>((ref) {
     }
 
     debugPrint('AUTH STATE: Firebase user changed: ${firebaseUser.uid}');
-
-    await Future.delayed(const Duration(milliseconds: 300));
 
     // CRITICAL: Only return UserModel if Firestore data exists
     try {

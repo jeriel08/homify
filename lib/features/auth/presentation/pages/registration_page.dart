@@ -1,8 +1,8 @@
 // lib/auth/registration/registration.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:homify/core/entities/user_entity.dart';
+// import 'package:go_router/go_router.dart';
+// import 'package:homify/core/entities/user_entity.dart';
 // import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/core/widgets/step_progress_bar.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
@@ -87,13 +87,7 @@ class RegistrationPage extends ConsumerWidget {
         controller.clearSubmitError();
       }
 
-      if (next.submitSuccess && previous?.submitSuccess != true) {
-        final path = next.accountType == AccountType.owner
-            ? '/owner-success?from=registration'
-            : '/tenant-success?from=registration';
-
-        context.go(path);
-      }
+      if (next.submitSuccess && previous?.submitSuccess != true) {}
     });
 
     return PopScope(

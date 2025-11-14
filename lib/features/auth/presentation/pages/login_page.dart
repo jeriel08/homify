@@ -75,12 +75,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     bool obscureText = false,
     String? helperText,
     String? Function(String?)? validator,
+    TextInputType? keyboardType,
     Widget? suffixIcon,
   }) {
     return TextFormField(
       obscureText: obscureText,
       controller: controller,
       validator: validator,
+      keyboardType: keyboardType,
       cursorColor: const Color(0xFF32190D),
       decoration: InputDecoration(
         labelText: label,
@@ -173,7 +175,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                   // Email / Phone Field
                   _buildTextField(
-                    label: 'Email or Phone Number',
+                    label: 'Email Address',
+                    keyboardType: TextInputType.emailAddress,
                     controller: _emailController,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
