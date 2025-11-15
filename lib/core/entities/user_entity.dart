@@ -10,6 +10,7 @@ class UserEntity {
   final String mobile; // "+63..."
   final String email;
   final DateTime createdAt;
+  final String? photoUrl;
 
   const UserEntity({
     required this.uid,
@@ -21,5 +22,6 @@ class UserEntity {
     required this.mobile,
     required this.email,
     required this.createdAt,
+    this.photoUrl,
   });
 }

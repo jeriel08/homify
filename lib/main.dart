@@ -21,7 +21,7 @@ void main() async {
           return authInit.when(
             data: (_) => const MyApp(),
             loading: () => const LoadingPage(),
-            error: (_, __) => const MaterialApp(
+            error: (_, _) => const MaterialApp(
               home: Scaffold(body: Center(child: Text('Auth Error'))),
             ),
           );

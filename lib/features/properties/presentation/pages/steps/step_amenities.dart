@@ -129,7 +129,7 @@ class _AmenitiesStepState extends ConsumerState<_AmenitiesStep> {
           Expanded(
             child: ListView.separated(
               itemCount: _amenityGroups.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              separatorBuilder: (_, _) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final entry = _amenityGroups.entries.elementAt(index);
                 final category = entry.key;
