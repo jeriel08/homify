@@ -1,101 +1,30 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
-import 'package:homify/features/home/presentation/pages/explore_screen.dart';
-import 'package:homify/features/home/presentation/pages/favorites_screen.dart';
-import 'package:circular_bottom_navigation/circular_bottom_navigation.dart';
-import 'package:circular_bottom_navigation/tab_item.dart';
 
-class HomePage extends ConsumerStatefulWidget {
+// Import our new providers and widget
+import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
+import 'package:homify/features/home/presentation/widgets/app_bottom_nav_bar.dart';
+
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  ConsumerState<HomePage> createState() => _HomePageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 1. Get the list of screens and the current index from our new providers
+    final navModel = ref.watch(navigationLogicProvider);
+    final selectedIndex = ref.watch(bottomNavIndexProvider);
 
-class _HomePageState extends ConsumerState<HomePage> {
-  int _selectedPos = 0;
+    final screens = navModel.screens;
 
-  late final CircularBottomNavigationController _navigationController;
+    // This check prevents an error if the user role changes
+    // and the new list of screens is shorter than the old index.
+    final bool isIndexSafe = selectedIndex! < screens.length;
 
-  final Color _navBarBgColor = const Color(0xFF32190D);
-  final Color _navBarInactiveColor = const Color(0xFFF9E5C5);
-  final Color _navBarActiveColor = const Color(0xFFE05725);
-  final Color _navBarActiveTextColor = Colors.white;
-
-  late final List<TabItem> _tabItems;
-
-  final List<Widget> _screens = [
-    const ExploreScreen(), // For "Home"
-    const FavoritesScreen(), // For "Favorites"
-    const Placeholder(
-      child: Center(child: Text('Search Screen')),
-    ), // For "Search"
-    const Placeholder(
-      child: Center(child: Text('Notifications Screen')),
-    ), // For "Notifications"
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _navigationController = CircularBottomNavigationController(_selectedPos);
-
-    _tabItems = [
-      TabItem(
-        Icons.home,
-        "Home",
-        _navBarActiveColor, // Active circle color
-        labelStyle: TextStyle(
-          color: _navBarActiveTextColor,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // I added a "Favorites" tab since you have a FavoritesScreen
-      TabItem(
-        Icons.favorite,
-        "Favorites",
-        _navBarActiveColor, // Active circle color
-        labelStyle: TextStyle(
-          color: _navBarActiveTextColor,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      TabItem(
-        Icons.search,
-        "Search",
-        _navBarActiveColor, // Active circle color
-        labelStyle: TextStyle(
-          color: _navBarActiveTextColor,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      TabItem(
-        Icons.notifications,
-        "Notifications",
-        _navBarActiveColor, // Active circle color
-        labelStyle: TextStyle(
-          color: _navBarActiveTextColor,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    _navigationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
-
+      extendBody: true, // This is good, it lets the body go behind the nav bar
+      // --- This AppBar is unchanged, all its logic is still valid ---
       appBar: AppBar(
         title: Text(
           'Homify',
@@ -117,31 +46,16 @@ class _HomePageState extends ConsumerState<HomePage> {
               backgroundColor: const Color(0xFF32190D),
               child: CircleAvatar(
                 radius: 18,
-                backgroundColor: const Color(0xFFF9E5C5), // Icon's background
+                backgroundColor: const Color(0xFFF9E5C5),
                 foregroundColor: const Color(0xFF32190D),
-                child: Icon(Icons.person),
+                child: const Icon(Icons.person),
               ),
             ),
             onPressed: () {
-              // ADD THESE 5 LINES
-              debugPrint('=== AUTH DEBUG START ===');
-              final authValue = ref.read(authStateProvider).value;
-              debugPrint(
-                'Firebase UID: ${FirebaseAuth.instance.currentUser?.uid}',
-              );
-              debugPrint('authStateProvider.value: $authValue');
-              debugPrint(
-                'userRoleProvider (watch): ${ref.watch(userRoleProvider)}',
-              );
-              debugPrint('=== AUTH DEBUG END ===');
-
+              // --- This profile button logic is still perfect ---
               final roleAsync = ref.watch(userRoleProvider);
 
-              debugPrint(
-                'HOME PAGE: Profile clicked. Current role: $roleAsync',
-              );
               if (roleAsync == AppUserRole.guest) {
-                debugPrint('HOME PAGE: Showing Login Required dialog');
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
@@ -165,7 +79,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 );
               } else {
-                debugPrint('HOME PAGE: Navigating to /account');
                 context.push('/account');
               }
             },
@@ -173,13 +86,16 @@ class _HomePageState extends ConsumerState<HomePage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: _screens[_selectedPos],
-      bottomNavigationBar: CircularBottomNavigation(
-        _tabItems,
-        controller: _navigationController,
-        barBackgroundColor: _navBarBgColor,
-        normalIconColor: _navBarInactiveColor,
-      ),
+
+      // --- 2. UPDATED BODY ---
+      // The body now dynamically shows the correct screen based on the provider
+      body: isIndexSafe
+          ? screens[selectedIndex]
+          : const Center(child: CircularProgressIndicator()),
+
+      // --- 3. UPDATED BOTTOM NAVIGATION BAR ---
+      // All that old, messy code is replaced with our one clean widget.
+      bottomNavigationBar: const AppBottomNavBar(),
     );
   }
 }
