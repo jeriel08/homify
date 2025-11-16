@@ -54,6 +54,9 @@ dependencies:
   font_awesome_flutter: ^10.12.0
   google_sign_in: ^7.2.0
   circular_bottom_navigation: ^2.4.0
+  syncfusion_flutter_charts: ^31.2.10
+  skeletonizer: ^2.1.0+1
+  dartz: ^0.10.1
 
 dev_dependencies:
   flutter_test:
