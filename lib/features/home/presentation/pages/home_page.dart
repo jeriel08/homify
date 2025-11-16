@@ -6,6 +6,8 @@ import 'package:homify/features/auth/presentation/providers/auth_state_provider.
 import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 import 'package:homify/features/home/presentation/pages/explore_screen.dart';
 import 'package:homify/features/home/presentation/pages/favorites_screen.dart';
+import 'package:circular_bottom_navigation/circular_bottom_navigation.dart';
+import 'package:circular_bottom_navigation/tab_item.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -15,20 +17,82 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  int _selectedIndex = 0;
+  int _selectedPos = 0;
+
+  late final CircularBottomNavigationController _navigationController;
+
+  final Color _navBarBgColor = const Color(0xFF32190D);
+  final Color _navBarInactiveColor = const Color(0xFFF9E5C5);
+  final Color _navBarActiveColor = const Color(0xFFE05725);
+  final Color _navBarActiveTextColor = Colors.white;
+
+  late final List<TabItem> _tabItems;
+
+  final List<Widget> _screens = [
+    const ExploreScreen(), // For "Home"
+    const FavoritesScreen(), // For "Favorites"
+    const Placeholder(
+      child: Center(child: Text('Search Screen')),
+    ), // For "Search"
+    const Placeholder(
+      child: Center(child: Text('Notifications Screen')),
+    ), // For "Notifications"
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _navigationController = CircularBottomNavigationController(_selectedPos);
+
+    _tabItems = [
+      TabItem(
+        Icons.home,
+        "Home",
+        _navBarActiveColor, // Active circle color
+        labelStyle: TextStyle(
+          color: _navBarActiveTextColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      // I added a "Favorites" tab since you have a FavoritesScreen
+      TabItem(
+        Icons.favorite,
+        "Favorites",
+        _navBarActiveColor, // Active circle color
+        labelStyle: TextStyle(
+          color: _navBarActiveTextColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      TabItem(
+        Icons.search,
+        "Search",
+        _navBarActiveColor, // Active circle color
+        labelStyle: TextStyle(
+          color: _navBarActiveTextColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      TabItem(
+        Icons.notifications,
+        "Notifications",
+        _navBarActiveColor, // Active circle color
+        labelStyle: TextStyle(
+          color: _navBarActiveTextColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ];
+  }
+
+  @override
+  void dispose() {
+    _navigationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    var items = const [
-      BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-      BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Explore'),
-      BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favorites'),
-    ];
-    var screens = [
-      const Placeholder(),
-      const ExploreScreen(),
-      const FavoritesScreen(),
-    ];
-
     return Scaffold(
       extendBody: true,
 
@@ -109,50 +173,12 @@ class _HomePageState extends ConsumerState<HomePage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        // 1. This margin creates the "floating" effect
-        margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
-
-        // 2. This Decoration styles the container
-        decoration: BoxDecoration(
-          color: const Color(
-            0xFF32190D,
-          ).withValues(alpha: 0.95), // Glossy effect
-          borderRadius: BorderRadius.circular(25.0), // Your border radius
-          boxShadow: [
-            // A subtle shadow to lift it off the page
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-
-        // 3. This clips the BottomNavigationBar to the container's shape
-        clipBehavior: Clip.antiAlias,
-
-        // 4. Finally, the BottomNavigationBar itself
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (i) => setState(() => _selectedIndex = i),
-          items: items,
-          type: BottomNavigationBarType.fixed,
-
-          // --- Styling the BottomNavigationBar ---
-          backgroundColor: Colors.transparent, // VERY IMPORTANT
-          elevation: 0,
-          unselectedItemColor: const Color(0xFFF9E5C5).withValues(alpha: 0.7),
-          // This color is overridden by our `_buildActiveIcon` widget,
-          // but it's good practice to set it.
-          selectedItemColor: const Color(0xFFF9E5C5),
-
-          // --- Hide labels ---
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-        ),
+      body: _screens[_selectedPos],
+      bottomNavigationBar: CircularBottomNavigation(
+        _tabItems,
+        controller: _navigationController,
+        barBackgroundColor: _navBarBgColor,
+        normalIconColor: _navBarInactiveColor,
       ),
     );
   }
