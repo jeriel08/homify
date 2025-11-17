@@ -22,15 +22,17 @@ class AdminDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final adminStatsAsync = ref.watch(adminStatsProvider);
     final stats = adminStatsAsync.value ?? AdminStatsModel.dummy();
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       backgroundColor: background,
       body: Skeletonizer(
         enabled: adminStatsAsync.isLoading,
         containersColor: surface,
-        child: SafeArea(
+        child: Padding(
+          padding: EdgeInsetsGeometry.only(top: topPadding),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 60),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -52,45 +54,56 @@ class AdminDashboardScreen extends ConsumerWidget {
                 const Gap(20),
 
                 // KPI Grid - Overflow Safe
-                GridView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 1.1,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  children: [
-                    _KpiCard(
-                      title: "Pending",
-                      value: stats.pendingApprovals,
-                      icon: LucideIcons.clock,
-                      color: Colors.orange.shade700,
-                    ),
-                    _KpiCard(
-                      title: "Properties",
-                      value: stats.totalProperties,
-                      icon: LucideIcons.house,
-                      color: Colors.blue.shade700,
-                    ),
-                    _KpiCard(
-                      title: "Tenants",
-                      value: stats.totalTenants,
-                      icon: LucideIcons.users,
-                      color: Colors.green.shade700,
-                    ),
-                    _KpiCard(
-                      title: "Owners",
-                      value: stats.totalOwners,
-                      icon: LucideIcons.userCog,
-                      color: Colors.purple.shade700,
-                    ),
-                  ],
+                // KPI Grid - Responsive Layout
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final cardWidth = (constraints.maxWidth - 12) / 2;
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        SizedBox(
+                          width: cardWidth,
+                          child: _KpiCard(
+                            title: "Pending",
+                            value: stats.pendingApprovals,
+                            icon: LucideIcons.clock,
+                            color: Colors.orange.shade700,
+                          ),
+                        ),
+                        SizedBox(
+                          width: cardWidth,
+                          child: _KpiCard(
+                            title: "Properties",
+                            value: stats.totalProperties,
+                            icon: LucideIcons.house,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                        SizedBox(
+                          width: cardWidth,
+                          child: _KpiCard(
+                            title: "Tenants",
+                            value: stats.totalTenants,
+                            icon: LucideIcons.users,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                        SizedBox(
+                          width: cardWidth,
+                          child: _KpiCard(
+                            title: "Owners",
+                            value: stats.totalOwners,
+                            icon: LucideIcons.userCog,
+                            color: Colors.purple.shade700,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
 
                 const Gap(48),
-
                 // Quick Actions
                 Text(
                   'Quick Actions',
@@ -162,7 +175,7 @@ class _KpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -176,7 +189,7 @@ class _KpiCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Icon Container
           Container(
@@ -188,7 +201,7 @@ class _KpiCard extends StatelessWidget {
             child: Icon(icon, size: 20, color: color),
           ),
 
-          const Gap(8),
+          const Gap(12),
 
           // Title - Always visible
           Text(
@@ -270,6 +283,7 @@ class _QuickActionCard extends StatelessWidget {
 }
 
 // Registration Trend Chart Card
+// Registration Trend Chart Card
 class _RegistrationTrendCard extends ConsumerWidget {
   const _RegistrationTrendCard();
 
@@ -279,10 +293,25 @@ class _RegistrationTrendCard extends ConsumerWidget {
     final chartDataAsync = ref.watch(adminGraphDataProvider);
     final filters = ['This Week', 'Last Week', 'Last Month'];
 
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -295,46 +324,59 @@ class _RegistrationTrendCard extends ConsumerWidget {
               children: filters.map((f) {
                 final isSelected = selectedFilter == f;
                 return FilterChip(
-                  label: Text(f, style: HomifyTypography.label2),
+                  label: Text(
+                    f,
+                    style: HomifyTypography.label2.copyWith(
+                      color: isSelected
+                          ? const Color(0xFFF9E5C5)
+                          : const Color(0xFF32190D),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   selected: isSelected,
                   onSelected: (_) {
                     ref.read(adminGraphFilterProvider.notifier).state = f;
                   },
-                  backgroundColor: Colors.grey.shade100,
-                  selectedColor: AdminDashboardScreen.primary,
-                  labelStyle: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : AdminDashboardScreen.textPrimary,
-                    fontWeight: FontWeight.w600,
+                  backgroundColor: const Color(
+                    0xFFF9E5C5,
+                  ).withValues(alpha: 0.3),
+                  selectedColor: const Color(0xFF32190D),
+                  shape: StadiumBorder(
+                    side: BorderSide(
+                      color: isSelected
+                          ? const Color(0xFF32190D)
+                          : const Color(0xFFF9E5C5),
+                      width: 1.5,
+                    ),
                   ),
-                  shape: const StadiumBorder(),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),
+                  showCheckmark: false,
                 );
               }).toList(),
             ),
 
-            const Gap(28),
+            const Gap(32),
 
-            // Interactive Column Chart
+            // Interactive Line Chart
             SizedBox(
-              height: 300,
+              height: 320,
               child: chartDataAsync.when(
                 data: (data) => SfCartesianChart(
                   plotAreaBorderWidth: 0,
-                  margin: const EdgeInsets.only(right: 8),
+                  margin: const EdgeInsets.only(right: 12, top: 16),
 
-                  // X-Axis: Days (Mon, Tue, etc.)
+                  // X-Axis: Days
                   primaryXAxis: CategoryAxis(
                     labelStyle: HomifyTypography.label3.copyWith(
                       color: AdminDashboardScreen.textSecondary,
+                      fontWeight: FontWeight.w500,
                     ),
                     majorGridLines: const MajorGridLines(width: 0),
-                    axisLine: const AxisLine(width: 1, color: Colors.grey),
-                    labelIntersectAction: AxisLabelIntersectAction.rotate45,
+                    axisLine: AxisLine(width: 2, color: Colors.grey.shade300),
+                    majorTickLines: const MajorTickLines(width: 0),
                   ),
 
                   // Y-Axis: Number of Users
@@ -343,17 +385,20 @@ class _RegistrationTrendCard extends ConsumerWidget {
                     interval: data.isEmpty ? 10 : null,
                     labelStyle: HomifyTypography.label3.copyWith(
                       color: AdminDashboardScreen.textSecondary,
+                      fontWeight: FontWeight.w500,
                     ),
                     majorGridLines: MajorGridLines(
                       width: 1,
                       color: Colors.grey.shade200,
-                      dashArray: const [4, 4],
+                      dashArray: const [5, 5],
                     ),
-                    axisLine: const AxisLine(width: 1, color: Colors.grey),
+                    axisLine: AxisLine(width: 2, color: Colors.grey.shade300),
+                    majorTickLines: const MajorTickLines(width: 0),
                     title: AxisTitle(
                       text: 'New Users',
                       textStyle: HomifyTypography.label2.copyWith(
                         color: AdminDashboardScreen.textSecondary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -361,47 +406,101 @@ class _RegistrationTrendCard extends ConsumerWidget {
                   // Enable tooltip on tap/hover
                   tooltipBehavior: TooltipBehavior(
                     enable: true,
-                    color: AdminDashboardScreen.textPrimary,
-                    textStyle: const TextStyle(color: Colors.white),
+                    color: const Color(0xFF32190D),
+                    textStyle: const TextStyle(
+                      color: Color(0xFFF9E5C5),
+                      fontWeight: FontWeight.w600,
+                    ),
                     format: 'point.x: point.y users',
+                    borderWidth: 2,
+                    borderColor: AdminDashboardScreen.primary,
+                    elevation: 4,
                   ),
 
                   series: <CartesianSeries<ChartData, String>>[
-                    ColumnSeries<ChartData, String>(
+                    // Area under the line for visual appeal
+                    SplineAreaSeries<ChartData, String>(
+                      dataSource: data,
+                      xValueMapper: (d, _) => d.day,
+                      yValueMapper: (d, _) => d.users,
+                      color: AdminDashboardScreen.primary.withValues(
+                        alpha: 0.15,
+                      ),
+                      borderColor: AdminDashboardScreen.primary,
+                      borderWidth: 0,
+                      gradient: LinearGradient(
+                        colors: [
+                          AdminDashboardScreen.primary.withValues(alpha: 0.3),
+                          AdminDashboardScreen.primary.withValues(alpha: 0.05),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    // Main line with markers
+                    SplineSeries<ChartData, String>(
                       dataSource: data,
                       xValueMapper: (d, _) => d.day,
                       yValueMapper: (d, _) => d.users,
                       name: 'New Users',
                       color: AdminDashboardScreen.primary,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(8),
+                      width: 3,
+
+                      // Smooth spline curve
+                      splineType: SplineType.cardinal,
+                      cardinalSplineTension: 0.5,
+
+                      // Marker settings for data points
+                      markerSettings: MarkerSettings(
+                        isVisible: true,
+                        height: 8,
+                        width: 8,
+                        borderWidth: 3,
+                        borderColor: AdminDashboardScreen.primary,
+                        color: Colors.white,
                       ),
 
-                      // Show value on top of each bar
+                      // Data labels on points
                       dataLabelSettings: DataLabelSettings(
                         isVisible: true,
                         labelAlignment: ChartDataLabelAlignment.top,
-                        textStyle: HomifyTypography.label2.copyWith(
-                          color: AdminDashboardScreen.textPrimary,
+                        textStyle: HomifyTypography.label3.copyWith(
+                          color: const Color(0xFF32190D),
                           fontWeight: FontWeight.w700,
                         ),
+                        margin: const EdgeInsets.only(bottom: 8),
                       ),
 
-                      // Interactive highlight
+                      // Interactive features
                       enableTooltip: true,
-                      animationDuration: 800,
+                      animationDuration: 1200,
                     ),
                   ],
                 ),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                loading: () => Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: AdminDashboardScreen.primary,
+                  ),
                 ),
-                error: (_, _) => Center(
-                  child: Text(
-                    'Failed to load chart data',
-                    style: HomifyTypography.body3.copyWith(
-                      color: Colors.red.shade600,
-                    ),
+                error: (_, __) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        LucideIcons.chartLine,
+                        size: 48,
+                        color: Colors.red.shade300,
+                      ),
+                      const Gap(12),
+                      Text(
+                        'Failed to load chart data',
+                        style: HomifyTypography.body3.copyWith(
+                          color: Colors.red.shade600,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
