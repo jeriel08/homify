@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/core/widgets/loading_screen.dart';
 import 'package:homify/features/auth/presentation/controllers/account_controller.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
@@ -16,8 +17,9 @@ class AccountPage extends ConsumerWidget {
     final userAsync = ref.watch(authStateProvider);
 
     // This listener for the logout action is great. No changes needed.
-    ref.listen<AsyncValue<void>>(logoutControllerProvider, (previous, next) {
-      if (previous is AsyncLoading && next.hasError) {
+    // Safe logout listener — only reacts when actually logging out
+    ref.listen(logoutControllerProvider, (previous, next) {
+      if (next.hasError && !next.isLoading) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error.toString()),
@@ -25,9 +27,7 @@ class AccountPage extends ConsumerWidget {
           ),
         );
       }
-      if (previous is AsyncLoading && next.hasValue) {
-        context.go('/login');
-      }
+      // Remove the auto-redirect entirely — let the logout button handle it
     });
 
     final logoutState = ref.watch(logoutControllerProvider);
@@ -39,13 +39,7 @@ class AccountPage extends ConsumerWidget {
     return userAsync.when(
       data: (user) {
         if (user == null) {
-          // This redirect logic is good.
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.go('/login');
-          });
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: LoadingPage());
         }
 
         String fullname = "${user.firstName} ${user.lastName}";
