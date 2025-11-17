@@ -9,6 +9,19 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
+  Future<UserEntity> getUser(String uid) async {
+    try {
+      // You will need to add `getUser` to your AuthRemoteDataSource
+      final userModel = await remoteDataSource.getUser(uid);
+      return userModel;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Auth Error: ${e.message}');
+    } catch (e) {
+      throw Exception('An unknown error occurred.');
+    }
+  }
+
+  @override
   Future<UserEntity> registerUser(
     String email,
     String password,

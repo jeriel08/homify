@@ -7,6 +7,7 @@ import 'package:homify/features/admin/data/repositories/admin_repository_impl.da
 import 'package:homify/features/admin/domain/repositories/admin_repository.dart';
 import 'package:homify/features/admin/domain/usecases/get_admin_stats.dart';
 import 'package:homify/features/admin/domain/usecases/get_graph_data.dart';
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
@@ -21,7 +22,11 @@ final adminRemoteDataSourceProvider = Provider<AdminRemoteDataSource>((ref) {
 /// Provides the Repository
 final adminRepositoryProvider = Provider<AdminRepository>((ref) {
   final remoteDataSource = ref.watch(adminRemoteDataSourceProvider);
-  return AdminRepositoryImpl(remoteDataSource: remoteDataSource);
+  final authRepository = ref.watch(authRepositoryProvider);
+  return AdminRepositoryImpl(
+    remoteDataSource: remoteDataSource,
+    authRepository: authRepository,
+  );
 });
 
 /// Provides the GetAdminStats Usecase

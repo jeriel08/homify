@@ -35,10 +35,12 @@ class _ApprovalsScreenState extends ConsumerState<ApprovalsScreen> {
         child: pendingAsync.when(
           loading: () => _buildSkeleton(),
           error: (err, _) => Center(child: Text('Error: $err')),
-          data: (properties) {
+          data: (detailsList) {
             final filtered = selectedType == null
-                ? properties
-                : properties.where((p) => p.type == selectedType).toList();
+                ? detailsList
+                : detailsList
+                      .where((d) => d.property.type == selectedType)
+                      .toList();
 
             return RefreshIndicator(
               onRefresh: () async => ref.refresh(pendingPropertiesProvider),
@@ -62,12 +64,15 @@ class _ApprovalsScreenState extends ConsumerState<ApprovalsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
-                          final property = filtered[index];
+                          final details = filtered[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: PendingPropertyCard(
-                              property: property,
-                              onTap: () => _showDetails(context, property),
+                              details: details,
+                              onTap: () => _showDetails(
+                                context,
+                                details.property as PropertyModel,
+                              ),
                             ),
                           );
                         }, childCount: filtered.length),

@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart'; // For kDebugMode
+import 'package:homify/core/error/failure.dart';
 import 'package:homify/features/admin/data/models/admin_stats_model.dart';
 import 'package:homify/features/admin/presentation/providers/admin_provider.dart';
+import 'package:homify/features/properties/data/models/property_model.dart';
 
 // -------------------------------------------------------------------
 // 1. The Abstract Class (The "Contract")
@@ -9,6 +11,7 @@ import 'package:homify/features/admin/presentation/providers/admin_provider.dart
 abstract class AdminRemoteDataSource {
   Future<AdminStatsModel> getAdminStats();
   Future<List<ChartData>> getGraphData(String filter);
+  Stream<List<PropertyModel>> getPendingPropertiesStream();
 }
 
 // -------------------------------------------------------------------
@@ -135,6 +138,27 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
         print('Error in getGraphData: $e');
       }
       rethrow;
+    }
+  }
+
+  @override
+  Stream<List<PropertyModel>> getPendingPropertiesStream() {
+    try {
+      return _firestore
+          .collection('properties')
+          .where('is_verified', isEqualTo: false)
+          .orderBy('created_at', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) => snapshot.docs
+                .map((doc) => PropertyModel.fromFirestore(doc))
+                .toList(),
+          );
+    } catch (e) {
+      // Stream.error is a good way to propagate this
+      return Stream.error(
+        ServerFailure('Failed to stream pending properties.'),
+      );
     }
   }
 

@@ -1,16 +1,22 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homify/features/properties/data/models/property_model.dart';
+// --- UPDATE IMPORTS ---
+import 'package:homify/features/admin/domain/entities/pending_property_details.dart';
+import 'package:homify/features/admin/presentation/providers/admin_provider.dart'; // Or wherever adminRepositoryProvider is
 
-final pendingPropertiesProvider = StreamProvider<List<PropertyModel>>((ref) {
-  return FirebaseFirestore.instance
-      .collection('properties')
-      .where('is_verified', isEqualTo: false)
-      .orderBy('created_at', descending: true)
-      .snapshots()
-      .map(
-        (snapshot) => snapshot.docs
-            .map((doc) => PropertyModel.fromFirestore(doc))
-            .toList(),
-      );
+// --- THIS IS YOUR NEW PROVIDER ---
+final pendingPropertiesProvider = StreamProvider<List<PendingPropertyDetails>>((
+  ref,
+) {
+  final adminRepo = ref.watch(adminRepositoryProvider);
+
+  // 1. Call the new repository method
+  final streamEither = adminRepo.getPendingProperties();
+
+  // 2. Handle the Either<> inside the stream
+  return streamEither.map((either) {
+    return either.fold(
+      (failure) => [], // On failure, return an empty list
+      (details) => details, // On success, return the list
+    );
+  });
 });

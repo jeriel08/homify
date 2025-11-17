@@ -31,6 +31,8 @@ class UserModel extends UserEntity {
     );
   }
 
+  String get fullName => '$firstName $lastName';
+
   factory UserModel.fromEntity(UserEntity entity) {
     return UserModel(
       uid: entity.uid,

@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/core/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
-import 'package:homify/features/properties/data/models/property_model.dart';
+import 'package:homify/features/admin/domain/entities/pending_property_details.dart';
+import 'package:homify/features/auth/data/models/user_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PendingPropertyCard extends StatelessWidget {
-  final PropertyModel property;
+  final PendingPropertyDetails details;
   final VoidCallback onTap;
 
   const PendingPropertyCard({
     super.key,
-    required this.property,
+    required this.details,
     required this.onTap,
   });
 
@@ -23,6 +24,9 @@ class PendingPropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final property = details.property;
+    final user = details.user as UserModel;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -70,13 +74,13 @@ class PendingPropertyCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Owner ID',
+                          'Owner',
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(color: textSecondary),
                         ),
                         const Gap(2),
                         Text(
-                          property.ownerUid,
+                          user.fullName,
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
                                 color: textPrimary,
