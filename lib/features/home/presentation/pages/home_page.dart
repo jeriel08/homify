@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
-
-// Import our new providers and widget
+import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
 import 'package:homify/features/home/presentation/widgets/app_bottom_nav_bar.dart';
 
@@ -61,46 +59,116 @@ class _HomePageState extends ConsumerState<HomePage> {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.black.withValues(alpha: 0.2),
         actions: [
-          IconButton(
-            icon: CircleAvatar(
-              radius: 20,
-              backgroundColor: const Color(0xFF32190D),
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: const Color(0xFFF9E5C5),
-                foregroundColor: const Color(0xFF32190D),
-                child: const Icon(Icons.person),
-              ),
-            ),
-            onPressed: () {
-              final roleAsync = ref.watch(userRoleProvider);
+          // Replace the entire IconButton with this Widget
+          Consumer(
+            builder: (context, ref, child) {
+              final userAsync = ref.watch(authStateProvider);
 
-              if (roleAsync == AppUserRole.guest) {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Login Required'),
-                    content: const Text(
-                      'Please log in to access your account.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          context.push('/login');
+              return userAsync.when(
+                data: (user) {
+                  // Determine avatar image (same logic as AccountPage)
+                  ImageProvider? backgroundImage;
+                  if (user?.photoUrl != null && user!.photoUrl!.isNotEmpty) {
+                    backgroundImage = NetworkImage(user.photoUrl!);
+                  } else if (user?.gender == 'male') {
+                    backgroundImage = const AssetImage(
+                      'assets/images/placeholder_male.png',
+                    );
+                  } else if (user?.gender == 'female') {
+                    backgroundImage = const AssetImage(
+                      'assets/images/placeholder_female.png',
+                    );
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Material(
+                      color: const Color(0xFFF9E5C5),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(
+                          28,
+                        ), // for ripple effect
+                        onTap: () {
+                          if (user == null || user.email.isEmpty) {
+                            // Guest flow
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Login Required'),
+                                content: const Text(
+                                  'Please log in to access your account.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      context.go('/login');
+                                    },
+                                    child: const Text('Log In'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            context.push('/account');
+                          }
                         },
-                        child: const Text('Log In'),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF32190D),
+                              width: 2.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                            image: backgroundImage != null
+                                ? DecorationImage(
+                                    image: backgroundImage,
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: backgroundImage == null
+                              ? const Icon(
+                                  Icons.person,
+                                  color: Color(0xFF32190D),
+                                  size: 24,
+                                )
+                              : null,
+                        ),
                       ),
-                    ],
+                    ),
+                  );
+                },
+                loading: () => const Padding(
+                  padding: EdgeInsets.only(right: 8.0),
+                  child: CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Color(0xFFF9E5C5),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                );
-              } else {
-                context.push('/account');
-              }
+                ),
+                error: (_, _) => const Padding(
+                  padding: EdgeInsets.only(right: 8.0),
+                  child: CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Color(0xFFE05725),
+                    child: Icon(Icons.error, color: Colors.white),
+                  ),
+                ),
+              );
             },
           ),
           const SizedBox(width: 8),
