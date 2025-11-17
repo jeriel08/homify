@@ -29,7 +29,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
   int _currentPage = 0;
 
   // Brand colors
-  static const Color primary = Color(0xFF32190D);
+  static const Color primary = Color(0xFFE05725);
   static const Color surface = Color(0xFFF9E5C5);
   static const Color textPrimary = Color(0xFF32190D);
   static const Color textSecondary = Color(0xFF6B4F3C);
@@ -133,7 +133,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                     child: Image.network(
                                       widget.property.imageUrls[i],
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
+                                      errorBuilder: (_, _, _) => Container(
                                         color: surface.withValues(alpha: 0.3),
                                         child: Center(
                                           child: Icon(
@@ -364,25 +364,35 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                               ),
                             ),
                             const Gap(4),
-                            RichText(
-                              text: TextSpan(
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  TextSpan(
-                                    text:
-                                        '₱${widget.property.rentAmount.toInt()}',
-                                    style: HomifyTypography.bold(
-                                      HomifyTypography.heading5.copyWith(
-                                        color: primary,
-                                      ),
-                                    ),
+                                  // Philippine Peso Icon
+                                  Icon(
+                                    LucideIcons.philippinePeso,
+                                    size: 16,
+                                    color: textPrimary,
                                   ),
-                                  TextSpan(
-                                    text:
-                                        ' / ${widget.property.rentChargeMethod == RentChargeMethod.perUnit ? "unit" : "bed"}',
-                                    style: HomifyTypography.medium(
-                                      HomifyTypography.body3.copyWith(
-                                        color: textSecondary,
-                                      ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    widget.property.rentAmount
+                                        .toInt()
+                                        .toString(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: textPrimary,
+                                        ),
+                                  ),
+                                  Text(
+                                    ' / ${widget.property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                    style: HomifyTypography.body3.copyWith(
+                                      color: textSecondary,
                                     ),
                                   ),
                                 ],

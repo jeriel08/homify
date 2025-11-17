@@ -163,36 +163,36 @@ class _ApprovalsScreenState extends ConsumerState<ApprovalsScreen> {
           result.fold(
             (_) => showAwesomeSnackbar(
               context: context,
-              title: 'Success!',
-              message: 'Property approved successfully',
-              contentType: ContentType.success,
-            ),
-            (_) => showAwesomeSnackbar(
-              context: context,
               title: 'Failed',
               message: 'Could not approve property',
               contentType: ContentType.failure,
             ),
+            (_) => showAwesomeSnackbar(
+              context: context,
+              title: 'Success!',
+              message: 'Property approved successfully',
+              contentType: ContentType.success,
+            ),
           );
-          if (context.mounted) Navigator.of(context).pop();
+          // if (context.mounted) Navigator.of(context).pop();
         },
         onReject: () async {
           final result = await verify(property.id, false);
           result.fold(
             (_) => showAwesomeSnackbar(
               context: context,
-              title: 'Rejected',
-              message: 'Property has been rejected',
-              contentType: ContentType.warning,
-            ),
-            (_) => showAwesomeSnackbar(
-              context: context,
               title: 'Failed',
               message: 'Could not reject property',
               contentType: ContentType.failure,
             ),
+            (_) => showAwesomeSnackbar(
+              context: context,
+              title: 'Rejected',
+              message: 'Property has been rejected',
+              contentType: ContentType.warning,
+            ),
           );
-          if (context.mounted) Navigator.of(context).pop();
+          // if (context.mounted) Navigator.of(context).pop();
         },
       ),
     );

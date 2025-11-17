@@ -7,24 +7,45 @@ import 'package:homify/features/auth/presentation/providers/user_role_provider.d
 import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
 import 'package:homify/features/home/presentation/widgets/app_bottom_nav_bar.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // 1. Get the list of screens and the current index from our new providers
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  int _previousIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _previousIndex = ref.read(bottomNavIndexProvider) ?? 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final navModel = ref.watch(navigationLogicProvider);
     final selectedIndex = ref.watch(bottomNavIndexProvider);
-
     final screens = navModel.screens;
 
     // This check prevents an error if the user role changes
     // and the new list of screens is shorter than the old index.
-    final bool isIndexSafe = selectedIndex! < screens.length;
+    final bool isIndexSafe =
+        selectedIndex != null && selectedIndex < screens.length;
+
+    // Track previous index for determining slide direction
+    ref.listen<int?>(bottomNavIndexProvider, (previous, next) {
+      if (previous != null && next != null && previous != next) {
+        setState(() {
+          _previousIndex = previous;
+        });
+      }
+    });
 
     return Scaffold(
-      extendBody: true, // This is good, it lets the body go behind the nav bar
-      // --- This AppBar is unchanged, all its logic is still valid ---
+      extendBody: true,
+      // --- AppBar unchanged ---
       appBar: AppBar(
         title: Text(
           'Homify',
@@ -52,7 +73,6 @@ class HomePage extends ConsumerWidget {
               ),
             ),
             onPressed: () {
-              // --- This profile button logic is still perfect ---
               final roleAsync = ref.watch(userRoleProvider);
 
               if (roleAsync == AppUserRole.guest) {
@@ -87,14 +107,49 @@ class HomePage extends ConsumerWidget {
         ],
       ),
 
-      // --- 2. UPDATED BODY ---
-      // The body now dynamically shows the correct screen based on the provider
+      // --- UPDATED BODY with AnimatedSwitcher for direct transitions ---
       body: isIndexSafe
-          ? screens[selectedIndex]
+          ? AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              switchInCurve: Curves.easeInOutCubic,
+              switchOutCurve: Curves.easeInOutCubic,
+              transitionBuilder: (child, animation) {
+                // Determine slide direction based on index comparison
+                final bool slideFromRight = selectedIndex > _previousIndex;
+
+                // Slide animation
+                final offsetAnimation =
+                    Tween<Offset>(
+                      begin: slideFromRight
+                          ? const Offset(1.0, 0.0) // Coming from right
+                          : const Offset(-1.0, 0.0), // Coming from left
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeInOutCubic,
+                      ),
+                    );
+
+                return SlideTransition(position: offsetAnimation, child: child);
+              },
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              child: Container(
+                key: ValueKey<int>(selectedIndex),
+                child: screens[selectedIndex],
+              ),
+            )
           : const Center(child: CircularProgressIndicator()),
 
-      // --- 3. UPDATED BOTTOM NAVIGATION BAR ---
-      // All that old, messy code is replaced with our one clean widget.
+      // --- Bottom Navigation Bar ---
       bottomNavigationBar: const AppBottomNavBar(),
     );
   }

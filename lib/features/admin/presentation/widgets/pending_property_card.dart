@@ -71,20 +71,17 @@ class PendingPropertyCard extends StatelessWidget {
                       children: [
                         Text(
                           'Owner ID',
-                          style: HomifyTypography.medium(
-                            HomifyTypography.label3.copyWith(
-                              color: textSecondary,
-                            ),
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: textSecondary),
                         ),
                         const Gap(2),
                         Text(
                           property.ownerUid,
-                          style: HomifyTypography.semibold(
-                            HomifyTypography.label2.copyWith(
-                              color: textPrimary,
-                            ),
-                          ),
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -112,9 +109,11 @@ class PendingPropertyCard extends StatelessWidget {
                         const Gap(4),
                         Text(
                           'Pending',
-                          style: HomifyTypography.bold(
-                            HomifyTypography.label3.copyWith(color: primary),
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ],
                     ),
@@ -131,8 +130,9 @@ class PendingPropertyCard extends StatelessWidget {
                   const Gap(6),
                   Text(
                     'Submitted ${_timeAgo(property.createdAt)}',
-                    style: HomifyTypography.medium(
-                      HomifyTypography.label3.copyWith(color: textSecondary),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -218,8 +218,9 @@ class PendingPropertyCard extends StatelessWidget {
               // Property name
               Text(
                 property.name,
-                style: HomifyTypography.bold(
-                  HomifyTypography.title3.copyWith(color: textPrimary),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: textPrimary,
+                  fontWeight: FontWeight.bold,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -280,29 +281,31 @@ class PendingPropertyCard extends StatelessWidget {
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: RichText(
-                            text: TextSpan(
-                              style: TextStyle(color: textPrimary),
-                              children: [
-                                TextSpan(
-                                  text: '₱${property.rentAmount.toInt()}',
-                                  style: HomifyTypography.bold(
-                                    HomifyTypography.title3.copyWith(
-                                      color: primary,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Philippine Peso Icon
+                              Icon(
+                                LucideIcons.philippinePeso,
+                                size: 16,
+                                color: textPrimary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                property.rentAmount.toInt().toString(),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: textPrimary,
                                     ),
-                                  ),
+                              ),
+                              Text(
+                                ' / ${property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                style: HomifyTypography.body3.copyWith(
+                                  color: textSecondary,
                                 ),
-                                TextSpan(
-                                  text:
-                                      ' / ${property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
-                                  style: HomifyTypography.medium(
-                                    HomifyTypography.body3.copyWith(
-                                      color: textSecondary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -345,10 +348,10 @@ class PendingPropertyCard extends StatelessWidget {
                   icon: const Icon(LucideIcons.eye, size: 18),
                   label: const Text('View Details'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primary,
+                    backgroundColor: textPrimary,
                     foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 1,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
