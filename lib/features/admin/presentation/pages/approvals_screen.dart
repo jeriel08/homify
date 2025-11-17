@@ -1,9 +1,12 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/core/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
+import 'package:homify/core/utils/show_awesome_snackbar.dart';
 import 'package:homify/features/admin/presentation/providers/pending_properties_provider.dart';
+import 'package:homify/features/admin/presentation/providers/property_verification_provider.dart';
 import 'package:homify/features/admin/presentation/widgets/pending_property_card.dart';
 import 'package:homify/features/admin/presentation/widgets/property_details_sheet.dart';
 import 'package:homify/features/properties/data/models/property_model.dart';
@@ -97,33 +100,56 @@ class _ApprovalsScreenState extends ConsumerState<ApprovalsScreen> {
   }
 
   void _showDetails(BuildContext context, PropertyModel property) {
+    final verify = ref.read(verifyPropertyProvider);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => PropertyDetailsSheet(
         property: property,
-        onApprove: () => _approveProperty(property.id),
-        onReject: () => _rejectProperty(property.id),
+        onApprove: () async {
+          final result = await verify(property.id, true);
+          result.fold(
+            (failure) => showAwesomeSnackbar(
+              context: context,
+              title: 'Oops!',
+              message: 'Failed to approve property',
+              contentType: ContentType.failure,
+            ),
+            (_) {
+              showAwesomeSnackbar(
+                context: context,
+                title: 'Success!',
+                message: 'Property approved successfully',
+                contentType: ContentType.success,
+              );
+              ref.invalidate(pendingPropertiesProvider);
+            },
+          );
+        },
+        onReject: () async {
+          final result = await verify(property.id, false);
+          result.fold(
+            (failure) => showAwesomeSnackbar(
+              context: context,
+              title: 'Rejected',
+              message: 'Property has been rejected',
+              contentType: ContentType.warning,
+            ),
+            (_) {
+              showAwesomeSnackbar(
+                context: context,
+                title: 'Done',
+                message: 'Property rejected',
+                contentType: ContentType.help,
+              );
+              ref.invalidate(pendingPropertiesProvider);
+            },
+          );
+        },
       ),
     );
-  }
-
-  Future<void> _approveProperty(String id) async {
-    // TODO: Call use case to approve
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Property approved!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  Future<void> _rejectProperty(String id) async {
-    // TODO: Call use case to reject
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Property rejected')));
   }
 
   Widget _buildEmptyState() {
