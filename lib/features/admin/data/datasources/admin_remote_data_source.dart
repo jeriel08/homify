@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart'; // For kDebugMode
-import 'package:homify/features/home/data/models/admin_stats_model.dart';
-import 'package:homify/features/home/presentation/providers/admin_provider.dart';
+import 'package:homify/features/admin/data/models/admin_stats_model.dart';
+import 'package:homify/features/admin/presentation/providers/admin_provider.dart';
 
 // -------------------------------------------------------------------
 // 1. The Abstract Class (The "Contract")

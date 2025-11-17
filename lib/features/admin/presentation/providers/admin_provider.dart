@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:homify/features/home/data/datasources/admin_remote_data_source.dart';
-import 'package:homify/features/home/data/models/admin_stats_model.dart';
-import 'package:homify/features/home/data/repositories/admin_repository_impl.dart';
-import 'package:homify/features/home/domain/repositories/admin_repository.dart';
-import 'package:homify/features/home/domain/usecases/get_admin_stats.dart';
-import 'package:homify/features/home/domain/usecases/get_graph_data.dart';
+import 'package:homify/features/admin/data/datasources/admin_remote_data_source.dart';
+import 'package:homify/features/admin/data/models/admin_stats_model.dart';
+import 'package:homify/features/admin/data/repositories/admin_repository_impl.dart';
+import 'package:homify/features/admin/domain/repositories/admin_repository.dart';
+import 'package:homify/features/admin/domain/usecases/get_admin_stats.dart';
+import 'package:homify/features/admin/domain/usecases/get_graph_data.dart';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;

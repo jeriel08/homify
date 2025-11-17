@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:homify/core/error/failure.dart';
-import 'package:homify/features/home/data/models/admin_stats_model.dart';
-import 'package:homify/features/home/domain/repositories/admin_repository.dart';
+import 'package:homify/features/admin/data/models/admin_stats_model.dart';
+import 'package:homify/features/admin/domain/repositories/admin_repository.dart';
 
 class GetAdminStats {
   final AdminRepository repository;

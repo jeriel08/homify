@@ -8,9 +8,9 @@ import 'package:homify/features/home/presentation/pages/favorites_screen.dart';
 import 'package:homify/features/home/presentation/pages/tenant_home_screen.dart';
 import 'package:homify/features/properties/presentation/pages/my_properties_screen.dart';
 import 'package:homify/features/home/presentation/pages/messages_screen.dart';
-import 'package:homify/features/home/presentation/pages/admin_dashboard_screen.dart';
-import 'package:homify/features/home/presentation/pages/approvals_screen.dart';
-import 'package:homify/features/home/presentation/pages/reports_screen.dart';
+import 'package:homify/features/admin/presentation/pages/admin_dashboard_screen.dart';
+import 'package:homify/features/admin/presentation/pages/approvals_screen.dart';
+import 'package:homify/features/admin/presentation/pages/reports_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 // Define the colors for our nav bar (same as before)
