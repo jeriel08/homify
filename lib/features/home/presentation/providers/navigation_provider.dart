@@ -7,7 +7,7 @@ import 'package:homify/features/home/presentation/pages/explore_screen.dart';
 import 'package:homify/features/home/presentation/pages/favorites_screen.dart';
 import 'package:homify/features/home/presentation/pages/tenant_home_screen.dart';
 import 'package:homify/features/properties/presentation/pages/my_properties_screen.dart';
-import 'package:homify/features/home/presentation/pages/messages_screen.dart';
+import 'package:homify/features/messages/presentation/pages/messages_screen.dart';
 import 'package:homify/features/admin/presentation/pages/admin_dashboard_screen.dart';
 import 'package:homify/features/admin/presentation/pages/approvals_screen.dart';
 import 'package:homify/features/admin/presentation/pages/reports_screen.dart';

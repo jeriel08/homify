@@ -1,0 +1,204 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
+import 'package:homify/core/entities/user_entity.dart';
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
+import 'package:homify/features/messages/presentation/providers/message_provider.dart';
+import 'package:homify/features/messages/presentation/widgets/chat_bubble.dart';
+import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+class ChatScreen extends ConsumerWidget {
+  final String conversationId;
+  final UserEntity otherUser;
+
+  const ChatScreen({
+    super.key,
+    required this.conversationId,
+    required this.otherUser,
+  });
+
+  static const Color primary = Color(0xFFE05725);
+  static const Color background = Color(0xFFFFFAF5);
+  static const Color textPrimary = Color(0xFF32190D);
+  static const Color surface = Color(0xFFF9E5C5);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 1. Watch the specific stream for this conversation
+    final messagesAsync = ref.watch(chatStreamProvider(conversationId));
+
+    // 2. Get current user ID to know which bubbles are "mine"
+    final currentUser = ref.watch(currentUserProvider).value;
+
+    return Scaffold(
+      backgroundColor: background,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black.withValues(
+          alpha: 0.1,
+        ), // Replaced withValues for older Flutter versions or use withValues(alpha:0.1)
+        leading: IconButton(
+          icon: const Icon(LucideIcons.arrowLeft, color: textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          children: [
+            const CircleAvatar(
+              radius: 18,
+              backgroundColor: surface,
+              child: Icon(LucideIcons.user, color: primary, size: 20),
+            ),
+            const Gap(12),
+            Expanded(
+              child: Text(
+                otherUser.fullName, // Dynamic Name
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.phone, color: textPrimary),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Live Chat List
+          Expanded(
+            child: messagesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('Error: $err')),
+              data: (messages) {
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'Say hello to ${otherUser.firstName}!',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  reverse: true, // Important for chat
+                  padding: const EdgeInsets.all(16),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = messages[index];
+                    final isMe = msg.senderId == currentUser?.uid;
+
+                    return ChatBubble(
+                      text: msg.content,
+                      isMe: isMe,
+                      time: DateFormat('h:mm a').format(msg.timestamp),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+
+          // Input Area
+          _ChatInput(
+            onSend: (text) {
+              if (currentUser == null) return;
+
+              // Call Repository
+              ref
+                  .read(messageRepositoryProvider)
+                  .sendMessage(
+                    conversationId: conversationId,
+                    senderId: currentUser.uid,
+                    content: text,
+                  );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatInput extends StatefulWidget {
+  final Function(String) onSend;
+  const _ChatInput({required this.onSend});
+
+  @override
+  State<_ChatInput> createState() => _ChatInputState();
+}
+
+class _ChatInputState extends State<_ChatInput> {
+  final _controller = TextEditingController();
+
+  void _handleSend() {
+    if (_controller.text.trim().isEmpty) return;
+    widget.onSend(_controller.text.trim());
+    _controller.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 8,
+        top: 8,
+        bottom: 8 + MediaQuery.of(context).padding.bottom,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(LucideIcons.plus, color: ChatScreen.textPrimary),
+            onPressed: () {},
+          ),
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                hintText: 'Type a message...',
+                filled: true,
+                fillColor: ChatScreen.background,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: const BorderSide(
+                    color: ChatScreen.primary,
+                    width: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(LucideIcons.send, color: ChatScreen.primary),
+            onPressed: _handleSend,
+          ),
+        ],
+      ),
+    );
+  }
+}

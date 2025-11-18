@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/core/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
+import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/properties/data/models/property_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -44,7 +45,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final topPadding = MediaQuery.of(context).padding.top;
-    final maxHeight = screenHeight - topPadding - 20; // 20px margin from top
+    final maxHeight = screenHeight - topPadding - 60; // 20px margin from top
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -461,6 +462,10 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                   // Divider
                   Container(height: 1, color: surface.withValues(alpha: 0.5)),
+
+                  const Gap(24),
+
+                  ContactOwnerButton(ownerUid: widget.property.ownerUid),
 
                   const Gap(24),
 
