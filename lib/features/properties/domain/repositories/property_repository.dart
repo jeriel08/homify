@@ -10,4 +10,7 @@ abstract class PropertyRepository {
   );
 
   Future<Either<Failure, List<PropertyEntity>>> getVerifiedProperties();
+  Future<Either<Failure, List<PropertyEntity>>> getPropertiesByOwner(
+    String ownerUid,
+  );
 }

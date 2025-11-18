@@ -33,6 +33,7 @@ class PropertyRepositoryImpl implements PropertyRepository {
         imageUrls: [], // Will be filled by data source
         createdAt: propertyData.createdAt,
         isVerified: propertyData.isVerified,
+        favoritesCount: propertyData.favoritesCount,
       );
 
       // 2. Call the data source
@@ -52,6 +53,18 @@ class PropertyRepositoryImpl implements PropertyRepository {
   Future<Either<Failure, List<PropertyEntity>>> getVerifiedProperties() async {
     try {
       final properties = await remoteDataSource.getVerifiedProperties();
+      return Right(properties);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<PropertyEntity>>> getPropertiesByOwner(
+    String ownerUid,
+  ) async {
+    try {
+      final properties = await remoteDataSource.getPropertiesByOwner(ownerUid);
       return Right(properties);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

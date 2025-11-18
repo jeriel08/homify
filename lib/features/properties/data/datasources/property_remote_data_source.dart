@@ -10,6 +10,7 @@ abstract class PropertyRemoteDataSource {
     List<File> images,
   );
   Future<List<PropertyModel>> getVerifiedProperties();
+  Future<List<PropertyModel>> getPropertiesByOwner(String ownerUid);
 }
 
 class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
@@ -37,6 +38,7 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
       final tempProperty = propertyData.copyWith(
         id: newDocRef.id,
         imageUrls: [], // Start with empty images
+        favoritesCount: 0,
       );
 
       await newDocRef.set(tempProperty.toFirestore());
@@ -93,6 +95,23 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
           .toList();
     } catch (e) {
       throw Exception('Server Failed');
+    }
+  }
+
+  @override
+  Future<List<PropertyModel>> getPropertiesByOwner(String ownerUid) async {
+    try {
+      final snapshot = await _firestore
+          .collection('properties')
+          .where('owner_uid', isEqualTo: ownerUid)
+          .orderBy('created_at', descending: true) // Show newest first
+          .get();
+
+      return snapshot.docs
+          .map((doc) => PropertyModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch owner properties: $e');
     }
   }
 }

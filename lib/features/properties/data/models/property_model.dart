@@ -17,6 +17,7 @@ class PropertyModel extends PropertyEntity {
     required super.createdAt,
     required super.isVerified,
     super.updatedAt,
+    required int favoritesCount,
   });
 
   // Firestore stores GeoPoint, but our Entity just cares about lat/lng
@@ -50,6 +51,7 @@ class PropertyModel extends PropertyEntity {
           ? (data['updated_at'] as Timestamp).toDate()
           : null,
       isVerified: data['is_verified'] ?? false,
+      favoritesCount: data['favorites_count'] ?? 0,
     );
   }
 
@@ -66,6 +68,7 @@ class PropertyModel extends PropertyEntity {
       'image_urls': imageUrls,
       'created_at': FieldValue.serverTimestamp(),
       'is_verified': isVerified,
+      'favorites_count': favoritesCount,
       if (updatedAt != null) 'updated_at': Timestamp.fromDate(updatedAt!),
     };
   }
