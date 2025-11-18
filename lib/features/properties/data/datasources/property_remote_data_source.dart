@@ -9,6 +9,7 @@ abstract class PropertyRemoteDataSource {
     PropertyModel propertyData,
     List<File> images,
   );
+  Future<List<PropertyModel>> getVerifiedProperties();
 }
 
 class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
@@ -76,6 +77,22 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
     } catch (e) {
       debugPrint('Cloudinary upload failed: $e');
       throw Exception('Image upload failed');
+    }
+  }
+
+  @override
+  Future<List<PropertyModel>> getVerifiedProperties() async {
+    try {
+      final snapshot = await _firestore
+          .collection('properties')
+          .where('is_verified', isEqualTo: true) // Filter handled by backend
+          .get();
+
+      return snapshot.docs
+          .map((doc) => PropertyModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Server Failed');
     }
   }
 }

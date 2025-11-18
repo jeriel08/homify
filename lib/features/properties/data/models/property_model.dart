@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:homify/core/entities/property_entity.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
 
 class PropertyModel extends PropertyEntity {
   const PropertyModel({
@@ -49,7 +49,7 @@ class PropertyModel extends PropertyEntity {
       updatedAt: data['updated_at'] != null
           ? (data['updated_at'] as Timestamp).toDate()
           : null,
-      isVerified: false,
+      isVerified: data['is_verified'] ?? false,
     );
   }
 

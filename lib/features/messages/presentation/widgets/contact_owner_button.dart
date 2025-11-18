@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homify/core/entities/property_entity.dart'; // Or PropertyModel
+// import 'package:homify/core/entities/property_entity.dart'; // Or PropertyModel
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/messages/presentation/pages/chat_screen.dart';
 import 'package:homify/features/messages/presentation/providers/message_provider.dart';

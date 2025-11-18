@@ -16,7 +16,7 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Colors from your other files
-    const Color primary = Color(0xFFE05725);
+    // const Color primary = Color(0xFFE05725);
     const Color textPrimary = Color(0xFF32190D);
     const Color textSecondary = Color(0xFF6B4F3C);
     const Color myBubbleColor = Color(0xFFF9E5C5);

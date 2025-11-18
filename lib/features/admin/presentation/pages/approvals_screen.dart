@@ -2,7 +2,7 @@ import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:homify/core/entities/property_entity.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/utils/show_awesome_snackbar.dart';
 import 'package:homify/features/admin/presentation/providers/pending_properties_provider.dart';
 import 'package:homify/features/admin/presentation/providers/property_verification_provider.dart';

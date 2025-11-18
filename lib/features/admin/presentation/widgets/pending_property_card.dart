@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:homify/core/entities/property_entity.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/admin/domain/entities/pending_property_details.dart';
 import 'package:homify/features/auth/data/models/user_model.dart';

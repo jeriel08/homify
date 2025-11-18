@@ -1,5 +1,7 @@
 import 'dart:io';
-import 'package:homify/core/entities/property_entity.dart';
+import 'package:dartz/dartz.dart';
+import 'package:homify/core/error/failure.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
 
 abstract class PropertyRepository {
   Future<PropertyEntity> addProperty(
@@ -7,6 +9,5 @@ abstract class PropertyRepository {
     List<File> images,
   );
 
-  // You would also add:
-  // Future<List<PropertyEntity>> getAllProperties();
+  Future<Either<Failure, List<PropertyEntity>>> getVerifiedProperties();
 }
