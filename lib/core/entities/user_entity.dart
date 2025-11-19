@@ -11,6 +11,7 @@ class UserEntity {
   final String email;
   final DateTime createdAt;
   final String? photoUrl;
+  final bool onboardingComplete;
 
   String get fullName => '$firstName $lastName';
 
@@ -24,6 +25,7 @@ class UserEntity {
     required this.mobile,
     required this.email,
     required this.createdAt,
+    required this.onboardingComplete,
     this.photoUrl,
   });
 }

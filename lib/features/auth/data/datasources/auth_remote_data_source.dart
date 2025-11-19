@@ -47,12 +47,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       password: password,
     );
 
-    if (cred.user == null) {
-      throw Exception('User creation failed, but no exception was thrown.');
-    }
+    if (cred.user == null) throw Exception('User creation failed');
 
-    // 2. Build the UserModel
-    // We use the new UID from auth and the data from the form
+    await cred.user!.sendEmailVerification();
+
     final userModel = UserModel(
       uid: cred.user!.uid, // Use the auth UID
       accountType: AccountType.values.firstWhere(
@@ -65,7 +63,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       gender: userData['gender'] as String,
       mobile: userData['mobile'] as String,
       email: email,
-      createdAt: DateTime.now(), // This will be replaced by server timestamp
+      createdAt: DateTime.now(),
+      onboardingComplete: false,
     );
 
     // 3. Save the UserModel to Firestore
@@ -201,6 +200,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           gender: '', // User must fill this in later
           mobile: user.phoneNumber ?? '', // May be null
           createdAt: DateTime.now(),
+          onboardingComplete: false,
         );
 
         // Save to Firestore
