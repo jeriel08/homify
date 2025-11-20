@@ -36,7 +36,7 @@ class PropertySuccessPage extends StatelessWidget {
 
             // 2. Subheader (This is from your original file)
             Text(
-              'Your property is now pending verification by our admin team before it can be seen by tenants.',
+              'Your boarding house has been submitted for verification. You can now track its status on your dashboard.',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),

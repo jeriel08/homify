@@ -14,7 +14,9 @@ import 'package:homify/features/auth/presentation/pages/tenant_onboarding_page.d
 import 'package:homify/features/home/presentation/pages/account_page.dart';
 import 'package:homify/features/home/presentation/pages/home_page.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
-import 'package:homify/features/auth/presentation/providers/current_user_provider.dart'; // Import new provider
+import 'package:homify/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
+import 'package:homify/features/properties/presentation/pages/property_success_page.dart'; // Import new provider
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -92,17 +94,21 @@ final routerProvider = Provider<GoRouter>((ref) {
 
           // Owner Onboarding Check (Placeholder)
           if (userModel.accountType == AccountType.owner) {
-            // if (path == '/owner-onboarding') return null;
-            // return '/owner-onboarding';
+            if (path == '/owner-onboarding') return null;
+            return '/owner-onboarding';
           }
         }
 
         // 6. Completion Guard
         // If Onboarding is done, don't let them go back to setup pages
         if (userModel != null && userModel.onboardingComplete) {
-          if (path == '/tenant-onboarding' ||
-              path == '/role-selection' ||
-              path == '/verify-email') {
+          final restrictedPaths = [
+            '/tenant-onboarding',
+            '/role-selection',
+            '/verify-email',
+            '/owner-onboarding', // Lock owner out of onboarding url
+          ];
+          if (restrictedPaths.contains(path)) {
             return '/home';
           }
         }
@@ -149,8 +155,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const TenantOnboardingPage(),
       ),
       GoRoute(
+        path: '/owner-onboarding',
+        builder: (context, state) => const AddPropertyPage(),
+      ),
+      GoRoute(
         path: '/account',
         builder: (context, state) => const AccountPage(),
+      ),
+      GoRoute(
+        path: '/property-success',
+        builder: (context, state) => const PropertySuccessPage(),
       ),
     ],
   );
