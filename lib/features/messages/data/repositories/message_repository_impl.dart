@@ -47,6 +47,24 @@ class MessageRepositoryImpl implements MessageRepository {
   }
 
   @override
+  Future<Either<Failure, void>> sendImageMessage({
+    required String conversationId,
+    required String senderId,
+    required String imagePath,
+  }) async {
+    try {
+      await remoteDataSource.sendImageMessage(
+        conversationId: conversationId,
+        senderId: senderId,
+        imagePath: imagePath,
+      );
+      return const Right(null);
+    } catch (e) {
+      return const Left(ServerFailure('Failed to send image'));
+    }
+  }
+
+  @override
   Future<Either<Failure, String>> startConversation({
     required String currentUserId,
     required String otherUserId,
@@ -72,6 +90,26 @@ class MessageRepositoryImpl implements MessageRepository {
       return const Right(null);
     } catch (e) {
       return const Left(ServerFailure('Failed to mark messages as read'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> toggleReaction({
+    required String conversationId,
+    required String messageId,
+    required String userId,
+    required String emoji,
+  }) async {
+    try {
+      await remoteDataSource.toggleReaction(
+        conversationId: conversationId,
+        messageId: messageId,
+        userId: userId,
+        emoji: emoji,
+      );
+      return const Right(null);
+    } catch (e) {
+      return const Left(ServerFailure('Failed to toggle reaction'));
     }
   }
 }

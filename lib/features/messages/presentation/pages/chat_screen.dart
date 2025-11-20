@@ -7,6 +7,7 @@ import 'package:homify/features/messages/presentation/providers/message_provider
 import 'package:homify/features/messages/presentation/widgets/chat_bubble.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ChatScreen extends ConsumerWidget {
   final String conversationId;
@@ -94,10 +95,60 @@ class ChatScreen extends ConsumerWidget {
                     final msg = messages[index];
                     final isMe = msg.senderId == currentUser?.uid;
 
+                    String? myReactionValue;
+                    if (currentUser != null) {
+                      myReactionValue = msg.reactions?[currentUser.uid];
+                    }
+
                     return ChatBubble(
                       text: msg.content,
                       isMe: isMe,
                       time: DateFormat('h:mm a').format(msg.timestamp),
+                      imageUrl: msg.imageUrl,
+                      reactions: msg.reactions,
+                      myReaction: myReactionValue,
+                      onLongPress: () async {
+                        if (currentUser == null) return;
+                        final emoji = await showDialog<String>(
+                          context: context,
+                          barrierDismissible: true,
+                          builder: (ctx) {
+                            final options = ['👍','❤️','😂','😮','😢','👏'];
+                            return AlertDialog(
+                              contentPadding: const EdgeInsets.all(12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              content: Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: options
+                                    .map((e) => InkWell(
+                                          borderRadius: BorderRadius.circular(12),
+                                          onTap: () => Navigator.pop(ctx, e),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade100,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(e, style: const TextStyle(fontSize: 22)),
+                                          ),
+                                        ))
+                                    .toList(),
+                              ),
+                            );
+                          },
+                        );
+                        if (emoji != null) {
+                          await ref.read(messageRepositoryProvider).toggleReaction(
+                                conversationId: conversationId,
+                                messageId: msg.id,
+                                userId: currentUser.uid,
+                                emoji: emoji,
+                              );
+                        }
+                      },
                     );
                   },
                 );
@@ -119,6 +170,21 @@ class ChatScreen extends ConsumerWidget {
                     content: text,
                   );
             },
+            onPickImage: () async {
+              if (currentUser == null) return;
+              final picker = ImagePicker();
+              final picked = await picker.pickImage(
+                source: ImageSource.gallery,
+                imageQuality: 85,
+              );
+              if (picked != null) {
+                await ref.read(messageRepositoryProvider).sendImageMessage(
+                      conversationId: conversationId,
+                      senderId: currentUser.uid,
+                      imagePath: picked.path,
+                    );
+              }
+            },
           ),
         ],
       ),
@@ -128,7 +194,8 @@ class ChatScreen extends ConsumerWidget {
 
 class _ChatInput extends StatefulWidget {
   final Function(String) onSend;
-  const _ChatInput({required this.onSend});
+  final VoidCallback onPickImage;
+  const _ChatInput({required this.onSend, required this.onPickImage});
 
   @override
   State<_ChatInput> createState() => _ChatInputState();
@@ -166,7 +233,7 @@ class _ChatInputState extends State<_ChatInput> {
         children: [
           IconButton(
             icon: const Icon(LucideIcons.plus, color: ChatScreen.textPrimary),
-            onPressed: () {},
+            onPressed: widget.onPickImage,
           ),
           Expanded(
             child: TextField(
