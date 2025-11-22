@@ -6,6 +6,7 @@ class UserModel extends UserEntity {
   final bool emailVerified;
   final String? school;
   final Map<String, dynamic>? preferences;
+  final String? occupation;
 
   const UserModel({
     required super.uid,
@@ -21,6 +22,7 @@ class UserModel extends UserEntity {
     this.emailVerified = false,
     this.school,
     this.preferences,
+    this.occupation,
   });
 
   /// Convert Firestore document → UserModel
@@ -45,6 +47,7 @@ class UserModel extends UserEntity {
       school: data['school'] as String?,
       preferences: data['preferences'] as Map<String, dynamic>?,
       emailVerified: data['email_verified'] as bool? ?? false,
+      occupation: data['occupation'] as String?,
     );
   }
 
@@ -81,6 +84,7 @@ class UserModel extends UserEntity {
       'school': school,
       'preferences': preferences,
       'email_verified': emailVerified,
+      'occupation': occupation,
     };
   }
 

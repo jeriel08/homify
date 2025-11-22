@@ -53,8 +53,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
         // 2. Guest Rules
         if (firebaseUser == null) {
-          final isPublicPage = ['/', '/login', '/register'].contains(path);
-          if (isPublicPage) return null;
+          // Define routes that Guests are allowed to see
+          final publicRoutes = ['/', '/login', '/register', '/home'];
+          final isAllowed = publicRoutes.any((route) => path.startsWith(route));
+
+          if (isAllowed) return null;
+
+          // If they try to go to /account or /messages, kick them to login
           return '/login';
         }
 

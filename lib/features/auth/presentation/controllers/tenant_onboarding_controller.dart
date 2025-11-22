@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_budget.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_preferences.dart';
+import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_profile.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_school.dart';
 
 // 1. Define the Step Structure (Same pattern as Registration)
@@ -20,11 +21,6 @@ class OnboardingStep {
 }
 
 // 2. Define the State
-// lib/features/auth/presentation/controllers/tenant_onboarding_controller.dart
-
-// ... imports remain the same
-
-// 2. Define the State
 class TenantOnboardingState {
   final int currentStep;
   final List<OnboardingStep> steps;
@@ -32,6 +28,7 @@ class TenantOnboardingState {
   final String? error;
 
   // Data Fields
+  final String? selectedOccupation;
   final String? selectedSchool;
   final RangeValues budgetRange;
   final List<String> selectedDealbreakers;
@@ -41,6 +38,7 @@ class TenantOnboardingState {
     this.steps = const [],
     this.isSubmitting = false,
     this.error,
+    this.selectedOccupation,
     this.selectedSchool,
     this.budgetRange = const RangeValues(1500, 5000),
     this.selectedDealbreakers = const [],
@@ -51,6 +49,7 @@ class TenantOnboardingState {
     List<OnboardingStep>? steps,
     bool? isSubmitting,
     String? error,
+    String? selectedOccupation,
     String? selectedSchool,
     RangeValues? budgetRange,
     List<String>? selectedDealbreakers,
@@ -60,29 +59,26 @@ class TenantOnboardingState {
       steps: steps ?? this.steps,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       error: error,
+      selectedOccupation: selectedOccupation ?? this.selectedOccupation,
       selectedSchool: selectedSchool ?? this.selectedSchool,
       budgetRange: budgetRange ?? this.budgetRange,
       selectedDealbreakers: selectedDealbreakers ?? this.selectedDealbreakers,
     );
   }
 
-  // --- MISSING GETTERS FIXED HERE ---
-
-  // 1. Alias isSubmitting to isLoading so the UI understands it
   bool get isLoading => isSubmitting;
 
-  // 2. Re-implement the validation logic so the button can disable itself
   bool get isCurrentStepValid {
-    switch (currentStep) {
-      case 0: // School Step
-        return selectedSchool != null && selectedSchool!.isNotEmpty;
-      case 1: // Budget Step
-        return true; // Always valid (has defaults)
-      case 2: // Preferences Step
-        return true; // Optional
-      default:
-        return true;
+    if (steps.isEmpty) return false;
+
+    if (currentStep == 0) {
+      if (selectedOccupation == null) return false;
+      if (selectedOccupation == 'Student' &&
+          (selectedSchool == null || selectedSchool!.isEmpty)) {
+        return false;
+      }
     }
+    return true;
   }
 }
 
@@ -94,14 +90,25 @@ class TenantOnboardingController extends StateNotifier<TenantOnboardingState> {
 
   void _buildSteps() {
     final steps = <OnboardingStep>[
-      stepSchool(),
+      stepProfile(),
       stepBudget(),
       stepPreferences(),
     ];
     state = state.copyWith(steps: steps);
   }
 
-  // --- DATA UPDATERS ---
+  void selectOccupation(String occupation) {
+    String? newSchool = state.selectedSchool;
+    if (occupation != 'Student') {
+      newSchool = null;
+    }
+    state = state.copyWith(
+      selectedOccupation: occupation,
+      selectedSchool: newSchool,
+      error: null,
+    );
+  }
+
   void selectSchool(String school) {
     state = state.copyWith(selectedSchool: school, error: null);
   }
@@ -152,6 +159,7 @@ class TenantOnboardingController extends StateNotifier<TenantOnboardingState> {
       if (uid == null) throw Exception("User not logged in");
 
       final dataToSave = {
+        'occupation': state.selectedOccupation,
         'school': state.selectedSchool,
         'preferences': {
           'min_budget': state.budgetRange.start,
