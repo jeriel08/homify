@@ -25,7 +25,7 @@ class PropertySuccessPage extends StatelessWidget {
 
             // 1. Header
             Text(
-              'Property Listed!', // <-- NEW HEADER
+              'Property Listed!',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF32190D),

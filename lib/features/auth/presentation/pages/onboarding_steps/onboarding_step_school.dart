@@ -56,7 +56,7 @@ class _SchoolStep extends ConsumerWidget {
           ),
           const Gap(32),
           DropdownButtonFormField<String>(
-            value: state.selectedSchool,
+            initialValue: state.selectedSchool,
             isExpanded: true,
             decoration: InputDecoration(
               labelText: 'Select University/College',

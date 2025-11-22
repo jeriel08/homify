@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +8,7 @@ import 'package:homify/features/auth/presentation/pages/login_page.dart';
 import 'package:homify/features/auth/presentation/pages/registration_page.dart';
 import 'package:homify/features/auth/presentation/pages/role_selection_page.dart'; // Import this
 import 'package:homify/features/auth/presentation/pages/success_pages/pending_email_verification.dart';
+import 'package:homify/features/auth/presentation/pages/success_pages/tenant_success_page.dart';
 import 'package:homify/features/auth/presentation/pages/tenant_onboarding_page.dart'; // Import this
 import 'package:homify/features/home/presentation/pages/account_page.dart';
 import 'package:homify/features/home/presentation/pages/home_page.dart';
@@ -22,24 +21,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     // Refresh the router if Auth changes OR if Firestore User Data changes
-    refreshListenable: Listenable.merge([
-      GoRouterRefreshStream(
-        ref
-            .watch(authStateProvider)
-            .maybeWhen(
-              data: (user) => Stream.value(user),
-              orElse: () => Stream.value(null),
-            ),
-      ),
-      GoRouterRefreshStream(
-        ref
-            .watch(currentUserProvider)
-            .maybeWhen(
-              data: (user) => Stream.value(user),
-              orElse: () => Stream.value(null),
-            ),
-      ),
-    ]),
+    refreshListenable: RouterRefreshNotifier(ref),
     redirect: (context, state) {
       try {
         final path = state.matchedLocation;
@@ -47,20 +29,25 @@ final routerProvider = Provider<GoRouter>((ref) {
 
         // 1. Load Auth State
         final authState = ref.read(authStateProvider);
-        if (authState.isLoading) return '/loading';
+        if (authState.isLoading && !authState.hasValue) {
+          return '/loading';
+        }
 
-        final firebaseUser = authState.value;
+        final firebaseUser = authState.when(
+          data: (user) => user,
+          loading: () => null,
+          error: (err, stack) => null,
+        );
 
         // 2. Guest Rules
         if (firebaseUser == null) {
-          // Define routes that Guests are allowed to see
+          debugPrint("Router: User logged out");
           final publicRoutes = ['/', '/login', '/register', '/home'];
           final isAllowed = publicRoutes.any((route) => path.startsWith(route));
 
           if (isAllowed) return null;
 
-          // If they try to go to /account or /messages, kick them to login
-          return '/login';
+          return '/';
         }
 
         // 3. Load Firestore Data
@@ -73,8 +60,6 @@ final routerProvider = Provider<GoRouter>((ref) {
 
         final isAuthVerified = firebaseUser.emailVerified;
         final isFirestoreVerified = userModel?.emailVerified ?? false;
-
-        // If EITHER says true, we consider them verified
         final isVerified = isAuthVerified || isFirestoreVerified;
 
         debugPrint(
@@ -124,6 +109,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/login',
           '/register',
           '/verify-email',
+          '/loading',
         ].contains(path);
         if (isAuthPage) return '/home';
 
@@ -160,6 +146,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const TenantOnboardingPage(),
       ),
       GoRoute(
+        path: '/tenant-success',
+        builder: (context, state) => const TenantRegistrationSuccess(),
+      ),
+      GoRoute(
         path: '/owner-onboarding',
         builder: (context, state) => const AddPropertyPage(),
       ),
@@ -175,19 +165,11 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class GoRouterRefreshStream extends ChangeNotifier {
-  late final StreamSubscription<dynamic> _subscription;
-
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
-    _subscription = stream.asBroadcastStream().listen(
-      (dynamic _) => notifyListeners(),
-    );
-  }
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
+class RouterRefreshNotifier extends ChangeNotifier {
+  RouterRefreshNotifier(Ref ref) {
+    // Notify the router if Auth State changes
+    ref.listen(authStateProvider, (_, _) => notifyListeners());
+    // Notify the router if User Data (Firestore) changes
+    ref.listen(currentUserProvider, (_, _) => notifyListeners());
   }
 }

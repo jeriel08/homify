@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_budget.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_preferences.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_profile.dart';
-import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_school.dart';
 
 // 1. Define the Step Structure (Same pattern as Registration)
 class OnboardingStep {

@@ -21,13 +21,20 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
   void _handleNext() async {
     final controller = ref.read(tenantOnboardingProvider.notifier);
     final state = ref.read(tenantOnboardingProvider);
-    final success = await controller.next();
 
-    if (success && state.currentStep == state.steps.length - 1) {
-      // The controller handles submission logic,
-      // but we handle the navigation after submission here.
-      // Note: controller.next() calls submit() on the last step.
-      if (mounted) context.go('/home');
+    if (state.currentStep < 2) {
+      controller.next();
+      // ... animation code
+    } else {
+      // Submit
+      final success = await controller.submit();
+      if (success && mounted) {
+        context.go('/tenant-success');
+      } else if (mounted && state.error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
+      }
     }
   }
 
@@ -41,8 +48,9 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
     final steps = state.steps;
 
     // Safety check if steps aren't loaded yet
-    if (steps.isEmpty)
+    if (steps.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     final isLastStep = state.currentStep == steps.length - 1;
     final currentStepWidget = steps[state.currentStep].builder(context);

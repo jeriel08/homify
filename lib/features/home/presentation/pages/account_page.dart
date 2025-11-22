@@ -305,7 +305,12 @@ class AccountPage extends ConsumerWidget {
                             ),
                           );
                           if (confirm != true) return;
-                          ref.read(logoutControllerProvider.notifier).logout();
+                          await ref
+                              .read(logoutControllerProvider.notifier)
+                              .logout();
+                          if (context.mounted) {
+                            context.go('/');
+                          }
                         },
 
                   // 3. The 'child' of the button changes based on the 'isLoading' state

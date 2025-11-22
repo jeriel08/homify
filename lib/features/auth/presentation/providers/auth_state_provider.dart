@@ -5,7 +5,7 @@ import 'package:homify/features/auth/data/models/user_model.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 
 final authStateProvider = StreamProvider<UserModel?>((ref) {
-  final getCurrentUser = ref.watch(getCurrentUserUseCaseProvider);
+  final getCurrentUser = ref.read(getCurrentUserUseCaseProvider);
 
   return FirebaseAuth.instance.authStateChanges().asyncMap((
     firebaseUser,

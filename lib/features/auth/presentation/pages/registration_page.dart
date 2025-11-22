@@ -1,6 +1,7 @@
 // lib/auth/registration/registration.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 // import 'package:go_router/go_router.dart';
 // import 'package:homify/core/entities/user_entity.dart';
 // import 'package:homify/core/entities/user_entity.dart';
@@ -87,7 +88,9 @@ class RegistrationPage extends ConsumerWidget {
         controller.clearSubmitError();
       }
 
-      if (next.submitSuccess && previous?.submitSuccess != true) {}
+      if (next.submitSuccess && previous?.submitSuccess != true) {
+        context.go('/verify-email');
+      }
     });
 
     return PopScope(

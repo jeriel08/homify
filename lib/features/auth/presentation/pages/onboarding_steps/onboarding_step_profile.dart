@@ -123,7 +123,7 @@ class _ProfileStep extends ConsumerWidget {
                       ),
                       const Gap(16),
                       DropdownButtonFormField<String>(
-                        value: state.selectedSchool,
+                        initialValue: state.selectedSchool,
                         isExpanded: true,
                         decoration: InputDecoration(
                           labelText: 'Select University/College',

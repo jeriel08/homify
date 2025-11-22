@@ -20,13 +20,12 @@ class _LoadingPageState extends State<LoadingPage> {
             children: [
               Lottie.asset(
                 'assets/animations/LoadingAnimation.json',
-                height: 250,
-                width: 250,
+                height: 300,
+                width: 300,
               ),
-              const SizedBox(height: 40),
               Text(
                 'Polishing the doorknobs...',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF32190D),
                 ),

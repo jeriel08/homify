@@ -6,7 +6,11 @@ import 'package:homify/features/auth/presentation/providers/auth_state_provider.
 // This provider listens to the FIRESTORE document of the currently logged-in user
 final currentUserProvider = StreamProvider<UserModel?>((ref) {
   final authState = ref.watch(authStateProvider);
-  final user = authState.value;
+  final user = authState.when(
+    data: (user) => user,
+    loading: () => null,
+    error: (err, stack) => null,
+  );
 
   if (user == null) {
     return Stream.value(null);

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:lottie/lottie.dart';
 
@@ -83,6 +84,9 @@ class _PendingEmailVerificationPageState
       debugPrint('Logout successful. Router should trigger redirect.');
       // Optional: Force a refresh if the router doesn't pick it up immediately
       ref.invalidate(authStateProvider);
+      if (mounted) {
+        context.go('/');
+      }
     } catch (e) {
       debugPrint('Logout failed: $e');
     }
