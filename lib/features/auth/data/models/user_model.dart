@@ -31,6 +31,9 @@ class UserModel extends UserEntity {
     );
   }
 
+  @override
+  String get fullName => '$firstName $lastName';
+
   factory UserModel.fromEntity(UserEntity entity) {
     return UserModel(
       uid: entity.uid,

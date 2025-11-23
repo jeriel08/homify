@@ -18,6 +18,7 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> signInWithGoogle();
   Future<UserModel> loginUser(String email, String password);
   Future<UserModel?> getCurrentUser();
+  Future<UserModel> getUser(String uid);
   Future<void> logout();
 }
 
@@ -75,6 +76,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     // 4. Return the full user model
     return userModel;
+  }
+
+  @override
+  Future<UserModel> getUser(String uid) async {
+    final userDoc = await _firestore.collection('users').doc(uid).get();
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+    return UserModel.fromSnapshot(userDoc);
   }
 
   @override

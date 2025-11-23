@@ -1,5 +1,7 @@
 import 'dart:io';
-import 'package:homify/core/entities/property_entity.dart';
+import 'package:dartz/dartz.dart';
+import 'package:homify/core/error/failure.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/data/datasources/property_remote_data_source.dart';
 import 'package:homify/features/properties/data/models/property_model.dart';
 import 'package:homify/features/properties/domain/repositories/property_repository.dart';
@@ -31,6 +33,7 @@ class PropertyRepositoryImpl implements PropertyRepository {
         imageUrls: [], // Will be filled by data source
         createdAt: propertyData.createdAt,
         isVerified: propertyData.isVerified,
+        favoritesCount: propertyData.favoritesCount,
       );
 
       // 2. Call the data source
@@ -43,6 +46,28 @@ class PropertyRepositoryImpl implements PropertyRepository {
       return newPropertyModel;
     } catch (e) {
       throw Exception('Repository error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<PropertyEntity>>> getVerifiedProperties() async {
+    try {
+      final properties = await remoteDataSource.getVerifiedProperties();
+      return Right(properties);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<PropertyEntity>>> getPropertiesByOwner(
+    String ownerUid,
+  ) async {
+    try {
+      final properties = await remoteDataSource.getPropertiesByOwner(ownerUid);
+      return Right(properties);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

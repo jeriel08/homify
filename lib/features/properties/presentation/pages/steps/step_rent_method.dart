@@ -1,7 +1,7 @@
 // lib/auth/registration/steps/step_rent_method.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homify/core/entities/property_entity.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 

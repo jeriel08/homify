@@ -12,6 +12,8 @@ class UserEntity {
   final DateTime createdAt;
   final String? photoUrl;
 
+  String get fullName => '$firstName $lastName';
+
   const UserEntity({
     required this.uid,
     required this.accountType,

@@ -19,6 +19,7 @@ class PropertyEntity {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final bool isVerified;
+  final int favoritesCount;
 
   const PropertyEntity({
     required this.id,
@@ -35,6 +36,7 @@ class PropertyEntity {
     required this.createdAt,
     required this.isVerified,
     this.updatedAt,
+    this.favoritesCount = 0,
   });
 
   PropertyModel copyWith({
@@ -52,6 +54,7 @@ class PropertyEntity {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isVerified,
+    int? favoritesCount,
   }) {
     return PropertyModel(
       id: id ?? this.id,
@@ -68,6 +71,7 @@ class PropertyEntity {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isVerified: isVerified ?? this.isVerified,
+      favoritesCount: favoritesCount ?? this.favoritesCount,
     );
   }
 }

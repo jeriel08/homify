@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:homify/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:homify/features/auth/domain/repositories/auth_repository.dart';
@@ -7,6 +8,7 @@ import 'package:homify/features/auth/domain/usecases/register_user.dart';
 import 'package:homify/features/auth/domain/usecases/get_current_user.dart';
 import 'package:homify/features/auth/domain/usecases/login_user.dart';
 import 'package:homify/features/auth/domain/usecases/sign_in_with_google.dart';
+import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 
 export 'auth_state_provider.dart';
 
@@ -44,4 +46,11 @@ final logoutUserUseCaseProvider = Provider<LogoutUser>((ref) {
 final signInWithGoogleUseCaseProvider = Provider<SignInWithGoogle>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   return SignInWithGoogle(repository: repository);
+});
+
+final currentUserProvider = FutureProvider<UserEntity?>((ref) async {
+  final authState = ref.watch(authStateProvider);
+  return authState.value?.uid != null
+      ? await ref.watch(authRepositoryProvider).getUser(authState.value!.uid)
+      : null;
 });

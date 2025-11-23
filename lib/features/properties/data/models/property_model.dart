@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:homify/core/entities/property_entity.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
 
 class PropertyModel extends PropertyEntity {
   const PropertyModel({
@@ -17,6 +17,7 @@ class PropertyModel extends PropertyEntity {
     required super.createdAt,
     required super.isVerified,
     super.updatedAt,
+    required int favoritesCount,
   });
 
   // Firestore stores GeoPoint, but our Entity just cares about lat/lng
@@ -49,7 +50,8 @@ class PropertyModel extends PropertyEntity {
       updatedAt: data['updated_at'] != null
           ? (data['updated_at'] as Timestamp).toDate()
           : null,
-      isVerified: false,
+      isVerified: data['is_verified'] ?? false,
+      favoritesCount: data['favorites_count'] ?? 0,
     );
   }
 
@@ -66,6 +68,7 @@ class PropertyModel extends PropertyEntity {
       'image_urls': imageUrls,
       'created_at': FieldValue.serverTimestamp(),
       'is_verified': isVerified,
+      'favorites_count': favoritesCount,
       if (updatedAt != null) 'updated_at': Timestamp.fromDate(updatedAt!),
     };
   }
