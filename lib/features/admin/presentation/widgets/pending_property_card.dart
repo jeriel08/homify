@@ -4,6 +4,7 @@ import 'package:homify/features/properties/domain/entities/property_entity.dart'
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/admin/domain/entities/pending_property_details.dart';
 import 'package:homify/features/auth/data/models/user_model.dart';
+import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PendingPropertyCard extends StatelessWidget {
@@ -245,13 +246,12 @@ class PendingPropertyCard extends StatelessWidget {
                   ),
                   const Gap(8),
                   Expanded(
-                    child: Text(
-                      '${property.latitude.toStringAsFixed(4)}, ${property.longitude.toStringAsFixed(4)}',
+                    child: PropertyAddressWidget(
+                      latitude: property.latitude,
+                      longitude: property.longitude,
                       style: HomifyTypography.medium(
                         HomifyTypography.body3.copyWith(color: textSecondary),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

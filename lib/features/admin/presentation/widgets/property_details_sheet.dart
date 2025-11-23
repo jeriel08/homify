@@ -3,6 +3,7 @@ import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
+import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:homify/features/properties/data/models/property_model.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -443,8 +444,9 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                 ),
                               ),
                               const Gap(4),
-                              Text(
-                                '${widget.property.latitude.toStringAsFixed(4)}, ${widget.property.longitude.toStringAsFixed(4)}',
+                              PropertyAddressWidget(
+                                latitude: widget.property.latitude,
+                                longitude: widget.property.longitude,
                                 style: HomifyTypography.medium(
                                   HomifyTypography.body3.copyWith(
                                     color: textPrimary,
