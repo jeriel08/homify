@@ -16,4 +16,5 @@ abstract class AuthRepository {
   Future<UserEntity?> getCurrentUser();
   Future<UserEntity> getUser(String uid);
   Future<void> logout();
+  Future<void> sendPasswordResetEmail(String email);
 }

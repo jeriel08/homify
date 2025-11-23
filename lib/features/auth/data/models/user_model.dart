@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:homify/core/entities/user_entity.dart';
 
 class UserModel extends UserEntity {
-  final bool emailVerified;
   final String? school;
   final Map<String, dynamic>? preferences;
   final String? occupation;
@@ -19,7 +18,7 @@ class UserModel extends UserEntity {
     required super.email,
     required super.createdAt,
     required super.onboardingComplete,
-    this.emailVerified = false,
+    required super.emailVerified,
     this.school,
     this.preferences,
     this.occupation,
@@ -66,6 +65,7 @@ class UserModel extends UserEntity {
       email: entity.email,
       createdAt: entity.createdAt,
       onboardingComplete: entity.onboardingComplete,
+      emailVerified: entity.emailVerified,
     );
   }
 

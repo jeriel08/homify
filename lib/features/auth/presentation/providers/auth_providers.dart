@@ -8,6 +8,7 @@ import 'package:homify/features/auth/domain/usecases/register_user.dart';
 import 'package:homify/features/auth/domain/usecases/get_current_user.dart';
 import 'package:homify/features/auth/domain/usecases/login_user.dart';
 import 'package:homify/features/auth/domain/usecases/sign_in_with_google.dart';
+import 'package:homify/features/auth/domain/usecases/send_password_reset_email_use_case.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 
 export 'auth_state_provider.dart';
@@ -47,6 +48,11 @@ final signInWithGoogleUseCaseProvider = Provider<SignInWithGoogle>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   return SignInWithGoogle(repository: repository);
 });
+
+final sendPasswordResetEmailUseCaseProvider =
+    Provider<SendPasswordResetEmailUseCase>((ref) {
+      return SendPasswordResetEmailUseCase(ref.read(authRepositoryProvider));
+    });
 
 final currentUserProvider = FutureProvider<UserEntity?>((ref) async {
   final authState = ref.watch(authStateProvider);

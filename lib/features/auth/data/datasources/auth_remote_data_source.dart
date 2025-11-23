@@ -20,6 +20,7 @@ abstract class AuthRemoteDataSource {
   Future<UserModel?> getCurrentUser();
   Future<UserModel> getUser(String uid);
   Future<void> logout();
+  Future<void> sendPasswordResetEmail(String email);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -34,6 +35,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) : _auth = auth ?? FirebaseAuth.instance,
        _firestore = firestore ?? FirebaseFirestore.instance,
        _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
 
   @override
   Future<UserModel> registerUser(
@@ -65,6 +71,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       email: email,
       createdAt: DateTime.now(),
       onboardingComplete: false,
+      emailVerified: false,
     );
 
     // 3. Save the UserModel to Firestore
@@ -201,6 +208,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           mobile: user.phoneNumber ?? '', // May be null
           createdAt: DateTime.now(),
           onboardingComplete: false,
+          emailVerified: user.emailVerified,
         );
 
         // Save to Firestore

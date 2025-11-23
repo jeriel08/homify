@@ -6,21 +6,20 @@ import 'package:homify/core/widgets/loading_screen.dart';
 import 'package:homify/features/auth/presentation/pages/landing_page.dart';
 import 'package:homify/features/auth/presentation/pages/login_page.dart';
 import 'package:homify/features/auth/presentation/pages/registration_page.dart';
-import 'package:homify/features/auth/presentation/pages/role_selection_page.dart'; // Import this
+import 'package:homify/features/auth/presentation/pages/role_selection_page.dart';
 import 'package:homify/features/auth/presentation/pages/success_pages/pending_email_verification.dart';
 import 'package:homify/features/auth/presentation/pages/success_pages/tenant_success_page.dart';
-import 'package:homify/features/auth/presentation/pages/tenant_onboarding_page.dart'; // Import this
+import 'package:homify/features/auth/presentation/pages/tenant_onboarding_page.dart';
+import 'package:homify/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:homify/features/home/presentation/pages/account_page.dart';
 import 'package:homify/features/home/presentation/pages/home_page.dart';
-import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
-import 'package:homify/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
-import 'package:homify/features/properties/presentation/pages/property_success_page.dart'; // Import new provider
+import 'package:homify/features/properties/presentation/pages/property_success_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
-    // Refresh the router if Auth changes OR if Firestore User Data changes
     refreshListenable: RouterRefreshNotifier(ref),
     redirect: (context, state) {
       try {
@@ -42,7 +41,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         // 2. Guest Rules
         if (firebaseUser == null) {
           debugPrint("Router: User logged out");
-          final publicRoutes = ['/', '/login', '/register', '/home'];
+          final publicRoutes = [
+            '/',
+            '/login',
+            '/register',
+            '/home',
+            '/forgot-password',
+          ];
           final isAllowed = publicRoutes.any((route) => path.startsWith(route));
 
           if (isAllowed) return null;
@@ -110,6 +115,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/register',
           '/verify-email',
           '/loading',
+          '/forgot-password',
         ].contains(path);
         if (isAuthPage) return '/home';
 
@@ -160,6 +166,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/property-success',
         builder: (context, state) => const PropertySuccessPage(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordPage(),
       ),
     ],
   );

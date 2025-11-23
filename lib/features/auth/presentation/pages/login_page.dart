@@ -161,7 +161,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     label: 'Password',
                     controller: _passwordController,
                     obscureText: _isPasswordObscure,
-                    helperText: 'Forgot Password? Tap Here.',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
@@ -180,6 +179,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           _isPasswordObscure = !_isPasswordObscure;
                         });
                       },
+                    ),
+                  ),
+
+                  // Forgot Password Button
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        context.push('/forgot-password');
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF32190D),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('Forgot Password?'),
                     ),
                   ),
 
