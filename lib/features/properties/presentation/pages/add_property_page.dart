@@ -1,4 +1,4 @@
-// lib/features/properties/presentation/pages/add_property_page.dart
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,8 +8,15 @@ import 'package:homify/features/auth/presentation/providers/registration_flow_pr
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 // import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
 
-class AddPropertyPage extends ConsumerWidget {
+class AddPropertyPage extends ConsumerStatefulWidget {
   const AddPropertyPage({super.key});
+
+  @override
+  ConsumerState<AddPropertyPage> createState() => _AddPropertyPageState();
+}
+
+class _AddPropertyPageState extends ConsumerState<AddPropertyPage> {
+  bool _isReverse = false;
 
   // This dialog prevents the owner from skipping this step
   Future<void> _showExitConfirmDialog(BuildContext context) async {
@@ -53,7 +60,7 @@ class AddPropertyPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Check if we have a redirect intent
       final redirectIntent = ref.read(postLoginRedirectProvider);
@@ -66,6 +73,13 @@ class AddPropertyPage extends ConsumerWidget {
     // 1. Watch our NEW controller
     final state = ref.watch(addPropertyControllerProvider);
     final controller = ref.read(addPropertyControllerProvider.notifier);
+
+    // Listen for step changes to determine direction
+    ref.listen(addPropertyControllerProvider, (previous, next) {
+      if (previous != null && next.currentStep != previous.currentStep) {
+        _isReverse = next.currentStep < previous.currentStep;
+      }
+    });
 
     // 2. Listen for navigation and errors
     ref.listen(addPropertyControllerProvider, (previous, next) {
@@ -125,7 +139,32 @@ class AddPropertyPage extends ConsumerWidget {
             Expanded(
               child: state.steps.isEmpty
                   ? const Center(child: CircularProgressIndicator())
-                  : state.steps[state.currentStep].builder(context),
+                  : PageTransitionSwitcher(
+                      duration: const Duration(milliseconds: 500),
+                      reverse: _isReverse,
+                      transitionBuilder:
+                          (
+                            Widget child,
+                            Animation<double> primaryAnimation,
+                            Animation<double> secondaryAnimation,
+                          ) {
+                            return SharedAxisTransition(
+                              animation: primaryAnimation,
+                              secondaryAnimation: secondaryAnimation,
+                              transitionType:
+                                  SharedAxisTransitionType.horizontal,
+                              fillColor: Colors.transparent,
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: child,
+                              ),
+                            );
+                          },
+                      child: KeyedSubtree(
+                        key: ValueKey(state.currentStep),
+                        child: state.steps[state.currentStep].builder(context),
+                      ),
+                    ),
             ),
           ],
         ),

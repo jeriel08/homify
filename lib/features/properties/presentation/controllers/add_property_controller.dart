@@ -108,7 +108,12 @@ class AddPropertyController extends StateNotifier<AddPropertyState> {
 
       debugPrint("Onboarding marked as complete for owner: $ownerUid");
 
-      // 3. Success
+      // 4. Force refresh of the user provider so Router sees the new status
+      _ref.invalidate(currentUserProvider);
+      // Wait a bit for the provider to update
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // 5. Success
       state = state.copyWith(submitSuccess: true, isSubmitting: false);
     } catch (e) {
       state = state.copyWith(submitError: e.toString(), isSubmitting: false);
