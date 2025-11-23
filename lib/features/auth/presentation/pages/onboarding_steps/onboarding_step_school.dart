@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:homify/core/theme/app_colors.dart';
 import 'package:homify/features/auth/presentation/controllers/tenant_onboarding_controller.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -46,7 +47,7 @@ class _SchoolStep extends ConsumerWidget {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF32190D),
+              color: AppColors.primary,
             ),
           ),
           const Gap(8),
@@ -58,17 +59,48 @@ class _SchoolStep extends ConsumerWidget {
           DropdownButtonFormField<String>(
             initialValue: state.selectedSchool,
             isExpanded: true,
+            borderRadius: BorderRadius.circular(16),
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.primary,
+              fontFamily: 'Poppins',
+            ),
             decoration: InputDecoration(
               labelText: 'Select University/College',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+              labelStyle: const TextStyle(fontSize: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
               ),
-              prefixIcon: const Icon(LucideIcons.graduationCap),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.primary),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Colors.grey),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
+              ),
+              prefixIcon: const Icon(
+                LucideIcons.graduationCap,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
             items: kDavaoSchools.map((school) {
               return DropdownMenuItem(
                 value: school,
-                child: Text(school, overflow: TextOverflow.ellipsis),
+                child: Text(
+                  school,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14),
+                ),
               );
             }).toList(),
             onChanged: (val) {

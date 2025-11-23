@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_budget.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_preferences.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_profile.dart';
+import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_school.dart';
 
 // 1. Define the Step Structure (Same pattern as Registration)
 class OnboardingStep {
@@ -69,14 +70,7 @@ class TenantOnboardingState {
 
   bool get isCurrentStepValid {
     if (steps.isEmpty) return false;
-
-    if (currentStep == 0) {
-      if (selectedOccupation == null) return false;
-      if (selectedOccupation == 'Student' &&
-          (selectedSchool == null || selectedSchool!.isEmpty)) {
-        return false;
-      }
-    }
+    // Validation is now delegated to the step itself
     return true;
   }
 }
@@ -101,9 +95,23 @@ class TenantOnboardingController extends StateNotifier<TenantOnboardingState> {
     if (occupation != 'Student') {
       newSchool = null;
     }
+
+    // Dynamic Step Logic
+    List<OnboardingStep> currentSteps = List.from(state.steps);
+    bool hasSchoolStep = currentSteps.any((s) => s.title == 'School');
+
+    if (occupation == 'Student' && !hasSchoolStep) {
+      // Insert School step after Profile (index 0)
+      // We assume Profile is always at index 0
+      currentSteps.insert(1, stepSchool());
+    } else if (occupation != 'Student' && hasSchoolStep) {
+      currentSteps.removeWhere((s) => s.title == 'School');
+    }
+
     state = state.copyWith(
       selectedOccupation: occupation,
       selectedSchool: newSchool,
+      steps: currentSteps,
       error: null,
     );
   }

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/controllers/tenant_onboarding_controller.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import 'package:homify/core/theme/app_colors.dart';
 
 class TenantOnboardingPage extends ConsumerStatefulWidget {
@@ -64,43 +64,14 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
             // --- HEADER (Progress) ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Row(
-                children: [
-                  if (state.currentStep > 0)
-                    IconButton(
-                      onPressed: _handleBack,
-                      icon: const Icon(
-                        LucideIcons.arrowLeft,
-                        color: AppColors.primary,
-                      ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  if (state.currentStep > 0) const Gap(16),
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: (state.currentStep + 1) / steps.length,
-                        backgroundColor: AppColors.primary.withValues(
-                          alpha: 0.2,
-                        ),
-                        valueColor: const AlwaysStoppedAnimation(
-                          AppColors.primary,
-                        ),
-                        minHeight: 6,
-                      ),
-                    ),
-                  ),
-                  const Gap(16),
-                  Text(
-                    '${state.currentStep + 1}/${steps.length}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: (state.currentStep + 1) / steps.length,
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                  valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                  minHeight: 6,
+                ),
               ),
             ),
 
@@ -118,38 +89,67 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
             // --- FOOTER (Buttons) ---
             Padding(
               padding: const EdgeInsets.all(24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: state.isLoading || !state.isCurrentStepValid
-                      ? null
-                      : _handleNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: state.isLoading || !state.isCurrentStepValid
+                          ? null
+                          : _handleNext,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: state.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              isLastStep ? 'Finish Setup' : 'Continue',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
-                    elevation: 0,
                   ),
-                  child: state.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                  if (state.currentStep > 0) ...[
+                    const Gap(12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: state.isLoading ? null : _handleBack,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        )
-                      : Text(
-                          isLastStep ? 'Finish Setup' : 'Continue',
-                          style: const TextStyle(
+                        ),
+                        child: const Text(
+                          'Back',
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],

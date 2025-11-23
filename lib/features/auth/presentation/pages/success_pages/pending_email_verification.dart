@@ -50,15 +50,6 @@ class _PendingEmailVerificationPageState
         // This forces the app to re-fetch the Firestore data immediately
         ref.invalidate(currentUserProvider);
         ref.invalidate(authStateProvider);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Email Verified! Redirecting...'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
       } else {
         debugPrint('WAITING: Email still not verified.');
         if (mounted) {
