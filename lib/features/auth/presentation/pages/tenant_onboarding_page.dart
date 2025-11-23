@@ -23,7 +23,7 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
     final controller = ref.read(tenantOnboardingProvider.notifier);
     final state = ref.read(tenantOnboardingProvider);
 
-    if (state.currentStep < 2) {
+    if (state.currentStep < state.steps.length - 1) {
       controller.next();
       // ... animation code
     } else {

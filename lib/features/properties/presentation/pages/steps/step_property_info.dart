@@ -99,6 +99,7 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
             // ---- Property Name -----------------------------------------
             TextField(
               controller: _nameCtrl,
+              textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
                 labelText: 'Property name',
                 hintText: 'e.g. Sunny Hills Boarding House',
@@ -136,6 +137,7 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
             TextField(
               controller: _descCtrl,
               maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 labelText: 'Description',
                 hintText:

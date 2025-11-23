@@ -55,20 +55,14 @@ class _EmailStepState extends ConsumerState<_EmailStep> {
   bool get _hasError => _triedNext && !_isValid(_controller.text.trim());
 
   void _onChanged(String value) {
-    final trimmed = value.trim();
-    _controller.value = TextEditingValue(
-      text: trimmed,
-      selection: TextSelection.collapsed(offset: trimmed.length),
-    );
-
     if (_triedNext) {
       setState(() => _triedNext = false);
     }
 
-    final isValid = _isValid(trimmed);
+    final isValid = _isValid(value.trim());
     ref
         .read(registrationControllerProvider.notifier)
-        .updateData('email', isValid ? trimmed : null);
+        .updateData('email', isValid ? value.trim() : null);
   }
 
   @override

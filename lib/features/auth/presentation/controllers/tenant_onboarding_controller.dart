@@ -102,11 +102,22 @@ class TenantOnboardingController extends StateNotifier<TenantOnboardingState> {
 
     // Dynamic Step Logic
     List<OnboardingStep> currentSteps = List.from(state.steps);
+
+    // Always ensure base steps are present
+    final hasProfile = currentSteps.any((s) => s.title == 'Profile');
+    final hasBudget = currentSteps.any((s) => s.title == 'Budget');
+    final hasPreferences = currentSteps.any((s) => s.title == 'Preferences');
+
+    // Rebuild if missing critical steps (sanity check)
+    if (!hasProfile || !hasBudget || !hasPreferences) {
+      _buildSteps();
+      currentSteps = List.from(state.steps);
+    }
+
     bool hasSchoolStep = currentSteps.any((s) => s.title == 'School');
 
     if (occupation == 'Student' && !hasSchoolStep) {
       // Insert School step after Profile (index 0)
-      // We assume Profile is always at index 0
       currentSteps.insert(1, stepSchool());
     } else if (occupation != 'Student' && hasSchoolStep) {
       currentSteps.removeWhere((s) => s.title == 'School');
