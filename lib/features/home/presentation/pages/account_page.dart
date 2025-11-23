@@ -284,7 +284,10 @@ class AccountPage extends ConsumerWidget {
                   onPressed: isLoading
                       ? null
                       : () async {
-                          // 2. This is the exact same logic from your 'onTap'
+                          // 1. Capture the router BEFORE the async gap
+                          final router = GoRouter.of(context);
+
+                          // 2. Show confirmation dialog
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (_) => AlertDialog(
@@ -305,12 +308,14 @@ class AccountPage extends ConsumerWidget {
                             ),
                           );
                           if (confirm != true) return;
+
+                          // 3. Perform logout
                           await ref
                               .read(logoutControllerProvider.notifier)
                               .logout();
-                          if (context.mounted) {
-                            context.go('/');
-                          }
+
+                          // 4. Use the captured router to navigate
+                          router.go('/');
                         },
 
                   // 3. The 'child' of the button changes based on the 'isLoading' state

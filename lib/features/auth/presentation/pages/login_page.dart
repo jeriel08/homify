@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:homify/core/services/location_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/controllers/login_controller.dart';
 import 'package:homify/features/auth/presentation/controllers/google_sign_in_controller.dart';
@@ -23,26 +22,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initLocation();
-    });
-  }
-
-  Future<void> _initLocation() async {
-    final granted = await LocationService.requestAndSaveLocation();
-
-    if (!mounted) return;
-
-    if (!granted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Location access needed for nearby searches. Enable in settings?',
-          ),
-        ),
-      );
-    }
+    // Location logic moved to LandingPage
   }
 
   void _submitLogin() {
@@ -112,23 +92,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final loginState = ref.watch(loginControllerProvider);
     final googleSignInState = ref.watch(googleSignInControllerProvider);
 
-    final loginController = ref.read(loginControllerProvider.notifier);
-
     final isEitherLoading = loginState.isLoading || googleSignInState.isLoading;
 
-    ref.listen<LoginState>(loginControllerProvider, (previous, next) {
-      if (next.errorMessage != null) {
-        // Show an error snackbar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: Colors.red,
-          ),
-        );
-        loginController.clearError(); // Clear error after showing
-      }
-      if (next.loginSuccess) {}
-    });
+    // We removed the ref.listen for Snackbars here.
+    // Errors will be displayed inline below.
 
     ref.listen<GoogleSignInState>(googleSignInControllerProvider, (
       previous,
@@ -145,7 +112,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         // Clear the error after showing
         ref.read(googleSignInControllerProvider.notifier).clearError();
       }
-      if (next.signInSuccess) {}
     });
 
     return Scaffold(
@@ -218,6 +184,40 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
 
                   const SizedBox(height: 32),
+
+                  // Inline Error Message
+                  if (loginState.errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red.shade700,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                loginState.errorMessage!,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
 
                   // Log in Button
                   ElevatedButton.icon(
