@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/controllers/forgot_password_controller.dart';
 import 'package:lottie/lottie.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -62,13 +63,13 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF32190D)),
+          icon: const Icon(LucideIcons.arrowLeft, color: AppColors.primary),
           onPressed: () => context.pop(),
         ),
-        backgroundColor: const Color(0xFFFFF8F0),
+        backgroundColor: AppColors.background,
         elevation: 0,
       ),
-      backgroundColor: const Color(0xFFFFF8F0),
+      backgroundColor: AppColors.background,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Center(
@@ -89,7 +90,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF32190D),
+                      color: AppColors.primary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -105,34 +106,8 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    cursorColor: const Color(0xFF32190D),
-                    decoration: InputDecoration(
-                      labelText: 'Email Address',
-                      labelStyle: Theme.of(
-                        context,
-                      ).inputDecorationTheme.labelStyle,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF32190D),
-                          width: 1,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF32190D),
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                    ),
+                    cursorColor: AppColors.primary,
+                    decoration: InputDecoration(labelText: 'Email Address'),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter your email';
@@ -150,7 +125,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     onPressed: state.isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 44),
-                      backgroundColor: const Color(0xFF32190D),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),

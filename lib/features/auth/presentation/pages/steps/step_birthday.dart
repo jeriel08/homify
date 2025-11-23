@@ -5,6 +5,7 @@ import 'package:homify/features/auth/presentation/controllers/registration_contr
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 RegistrationStep stepBirthday() {
   return RegistrationStep(
@@ -75,7 +76,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFF32190D)),
+            colorScheme: const ColorScheme.light(primary: AppColors.primary),
             textTheme: GoogleFonts.poppinsTextTheme(),
           ),
           child: child!,
@@ -122,7 +123,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
             'When’s your birthday?',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF32190D),
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 24),
@@ -137,7 +138,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
               hintText: 'Select your birthday',
               suffixIcon: const Icon(
                 LucideIcons.calendar,
-                color: Color(0xFF32190D),
+                color: AppColors.primary,
               ),
               contentPadding: const EdgeInsets.symmetric(
                 vertical: 12,
@@ -149,27 +150,27 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide(
-                  color: _hasError ? Colors.red : const Color(0xFF32190D),
+                  color: _hasError ? AppColors.error : AppColors.primary,
                   width: _hasError ? 2 : 1,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide(
-                  color: _hasError ? Colors.red : const Color(0xFF32190D),
+                  color: _hasError ? AppColors.error : AppColors.primary,
                   width: 2,
                 ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(color: Colors.red, width: 2),
+                borderSide: const BorderSide(color: AppColors.error, width: 2),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(color: Colors.red, width: 2),
+                borderSide: const BorderSide(color: AppColors.error, width: 2),
               ),
             ),
-            cursorColor: const Color(0xFF32190D),
+            cursorColor: AppColors.primary,
           ),
 
           // Inline error
@@ -178,7 +179,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 _errorMessage,
-                style: const TextStyle(color: Colors.red, fontSize: 12),
+                style: const TextStyle(color: AppColors.error, fontSize: 12),
               ),
             ),
 
@@ -209,7 +210,7 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF32190D),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         minimumSize: const Size.fromHeight(44),
                       ),
@@ -232,8 +233,8 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
                       child: OutlinedButton(
                         onPressed: controller.back,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF32190D),
-                          side: const BorderSide(color: Color(0xFF32190D)),
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
                           minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text(

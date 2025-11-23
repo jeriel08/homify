@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/controllers/login_controller.dart';
 import 'package:homify/features/auth/presentation/controllers/google_sign_in_controller.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -63,26 +64,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       controller: controller,
       validator: validator,
       keyboardType: keyboardType,
-      cursorColor: const Color(0xFF32190D),
+      cursorColor: AppColors.primary,
       decoration: InputDecoration(
         labelText: label,
         suffixIcon: suffixIcon,
         helperText: helperText,
-        helperStyle: Theme.of(context).inputDecorationTheme.helperStyle,
-        labelStyle: Theme.of(context).inputDecorationTheme.labelStyle,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Color(0xFF32190D), width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Color(0xFF32190D), width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 12,
-          horizontal: 16,
-        ),
       ),
     );
   }
@@ -116,13 +102,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Scaffold(
       appBar: AppBar(
-        foregroundColor: Color(0xFF32190D),
-        backgroundColor: Color(0xFFFFF8F0),
+        foregroundColor: AppColors.primary,
+        backgroundColor: AppColors.background,
         toolbarHeight: 28,
       ),
-      backgroundColor: const Color(
-        0xFFFFF8F0,
-      ), // Light creamy background for Homify
+      backgroundColor: AppColors.background,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Center(
@@ -172,7 +156,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         _isPasswordObscure
                             ? LucideIcons.eyeOff
                             : LucideIcons.eye,
-                        color: const Color(0xFF32190D).withValues(alpha: 0.6),
+                        color: AppColors.primary.withValues(alpha: 0.6),
                       ),
                       onPressed: () {
                         setState(() {
@@ -190,7 +174,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         context.push('/forgot-password');
                       },
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF32190D),
+                        foregroundColor: AppColors.primary,
                         padding: EdgeInsets.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
@@ -239,7 +223,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     onPressed: loginState.isLoading ? null : _submitLogin,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 44),
-                      backgroundColor: const Color(0xFF32190D),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                     ),
                     icon: loginState.isLoading
@@ -266,8 +250,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     onPressed: isEitherLoading ? null : _submitGoogleLogin,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 44),
-                      backgroundColor: const Color(0xFFFFEDD4),
-                      foregroundColor: const Color(0xFF32190D),
+                      backgroundColor: AppColors.secondary,
+                      foregroundColor: AppColors.primary,
                     ),
                     icon:
                         googleSignInState
@@ -277,7 +261,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             height: 24,
                             padding: const EdgeInsets.all(2.0),
                             child: const CircularProgressIndicator(
-                              color: Color(0xFF32190D),
+                              color: AppColors.primary,
                               strokeWidth: 3,
                             ),
                           )
@@ -299,8 +283,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     },
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 44),
-                      side: const BorderSide(color: Color(0xFF32190D)),
-                      foregroundColor: const Color(0xFF32190D),
+                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppColors.primary,
                     ),
                     child: const Text(
                       'Create New Account',

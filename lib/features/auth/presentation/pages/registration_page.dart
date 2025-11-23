@@ -3,6 +3,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/core/theme/app_colors.dart';
 // import 'package:go_router/go_router.dart';
 // import 'package:homify/core/entities/user_entity.dart';
 // import 'package:homify/core/entities/user_entity.dart';
@@ -126,6 +127,7 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
+        backgroundColor: AppColors.background,
         body: Column(
           children: [
             // 1. Progress Bar
@@ -154,6 +156,7 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                               secondaryAnimation: secondaryAnimation,
                               transitionType:
                                   SharedAxisTransitionType.horizontal,
+                              fillColor: Colors.transparent,
                               child: child,
                             );
                           },

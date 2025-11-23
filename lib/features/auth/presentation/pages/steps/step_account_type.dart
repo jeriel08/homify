@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 import 'package:homify/core/entities/user_entity.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 /// The very first registration step – choose Tenant or Owner.
 RegistrationStep stepAccountType() {
@@ -64,7 +65,7 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
     }
 
     final bool showError = _triedNext && _selected == null;
-    final Color borderColor = showError ? Colors.red : const Color(0xFF32190D);
+    final Color borderColor = showError ? AppColors.error : AppColors.primary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -78,7 +79,7 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
             'How will you use Homify?',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF32190D),
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 4),
@@ -101,7 +102,7 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
                 width: showError ? 2 : (_selected != null ? 2 : 1),
               ),
             ),
-            color: const Color(0xFFFFEDD4),
+            color: AppColors.secondary,
             child: Column(
               children: [
                 RadioGroup<AccountType>(
@@ -114,12 +115,12 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
                           'Tenant',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF32190D),
+                            color: AppColors.primary,
                           ),
                         ),
                         trailing: Radio<AccountType>(
                           value: AccountType.tenant,
-                          activeColor: Color(0xFF32190D),
+                          activeColor: AppColors.primary,
                         ),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 20,
@@ -131,12 +132,12 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
                           'Owner',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF32190D),
+                            color: AppColors.primary,
                           ),
                         ),
                         trailing: Radio<AccountType>(
                           value: AccountType.owner,
-                          activeColor: Color(0xFF32190D),
+                          activeColor: AppColors.primary,
                         ),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 20,
@@ -155,7 +156,7 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
               padding: EdgeInsets.only(top: 8),
               child: Text(
                 'Please select an account type.',
-                style: TextStyle(color: Colors.red, fontSize: 12),
+                style: TextStyle(color: AppColors.error, fontSize: 12),
               ),
             ),
 
@@ -191,7 +192,7 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF32190D),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         minimumSize: const Size.fromHeight(44),
                       ),
@@ -212,8 +213,8 @@ class _AccountTypeStepState extends ConsumerState<_AccountTypeStep> {
                       child: OutlinedButton(
                         onPressed: controller.back,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF32190D),
-                          side: const BorderSide(color: Color(0xFF32190D)),
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
                           minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text(

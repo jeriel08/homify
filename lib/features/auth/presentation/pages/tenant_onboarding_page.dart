@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/controllers/tenant_onboarding_controller.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 class TenantOnboardingPage extends ConsumerStatefulWidget {
   const TenantOnboardingPage({super.key});
@@ -56,7 +57,7 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
     final currentStepWidget = steps[state.currentStep].builder(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -70,7 +71,7 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
                       onPressed: _handleBack,
                       icon: const Icon(
                         LucideIcons.arrowLeft,
-                        color: Color(0xFF32190D),
+                        color: AppColors.primary,
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -81,9 +82,11 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: (state.currentStep + 1) / steps.length,
-                        backgroundColor: const Color(0xFFF9E5C5),
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.2,
+                        ),
                         valueColor: const AlwaysStoppedAnimation(
-                          Color(0xFF32190D),
+                          AppColors.primary,
                         ),
                         minHeight: 6,
                       ),
@@ -94,7 +97,7 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
                     '${state.currentStep + 1}/${steps.length}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF32190D),
+                      color: AppColors.primary,
                     ),
                   ),
                 ],
@@ -123,7 +126,7 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
                       ? null
                       : _handleNext,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF32190D),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 enum Gender { male, female }
 
@@ -74,7 +75,7 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
             'What\'s your gender?',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF32190D),
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 24),
@@ -85,11 +86,11 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
               side: BorderSide(
-                color: _hasError ? Colors.red : const Color(0xFF32190D),
+                color: _hasError ? AppColors.error : AppColors.primary,
                 width: _hasError ? 2 : (_selected != null ? 2 : 1),
               ),
             ),
-            color: const Color(0xFFFFEDD4),
+            color: AppColors.secondary,
             child: Column(
               children: [
                 RadioGroup(
@@ -102,12 +103,12 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
                           'Male',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF32190D),
+                            color: AppColors.primary,
                           ),
                         ),
                         trailing: Radio<Gender>(
                           value: Gender.male,
-                          activeColor: Color(0xFF32190D),
+                          activeColor: AppColors.primary,
                         ),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 20,
@@ -119,12 +120,12 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
                           'Female',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF32190D),
+                            color: AppColors.primary,
                           ),
                         ),
                         trailing: Radio<Gender>(
                           value: Gender.female,
-                          activeColor: Color(0xFF32190D),
+                          activeColor: AppColors.primary,
                         ),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 20,
@@ -144,7 +145,7 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
               padding: EdgeInsets.only(top: 4, left: 12),
               child: Text(
                 'Please select a gender.',
-                style: TextStyle(color: Colors.red, fontSize: 12),
+                style: TextStyle(color: AppColors.error, fontSize: 12),
               ),
             ),
 
@@ -180,7 +181,7 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF32190D),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         minimumSize: const Size.fromHeight(44),
                       ),
@@ -201,8 +202,8 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
                       child: OutlinedButton(
                         onPressed: controller.back,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF32190D),
-                          side: const BorderSide(color: Color(0xFF32190D)),
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
                           minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text(

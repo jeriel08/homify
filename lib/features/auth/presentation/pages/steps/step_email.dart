@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 RegistrationStep stepEmail() {
   return RegistrationStep(
@@ -84,7 +85,7 @@ class _EmailStepState extends ConsumerState<_EmailStep> {
               "What's your email address?",
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF32190D),
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 4),
@@ -121,28 +122,34 @@ class _EmailStepState extends ConsumerState<_EmailStep> {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide(
-                    color: _hasError ? Colors.red : const Color(0xFF32190D),
+                    color: _hasError ? AppColors.error : AppColors.primary,
                     width: _hasError ? 2 : 1,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide(
-                    color: _hasError ? Colors.red : const Color(0xFF32190D),
+                    color: _hasError ? AppColors.error : AppColors.primary,
                     width: 2,
                   ),
                 ),
                 // Also good to define the error borders explicitly
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Colors.red, width: 2),
+                  borderSide: const BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Colors.red, width: 2),
+                  borderSide: const BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
                 ),
               ),
-              cursorColor: const Color(0xFF32190D),
+              cursorColor: AppColors.primary,
               onChanged: _onChanged,
             ),
 
@@ -179,7 +186,7 @@ class _EmailStepState extends ConsumerState<_EmailStep> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF32190D),
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           minimumSize: const Size.fromHeight(44),
                         ),
@@ -201,8 +208,8 @@ class _EmailStepState extends ConsumerState<_EmailStep> {
                         child: OutlinedButton(
                           onPressed: controller.back,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF32190D),
-                            side: const BorderSide(color: Color(0xFF32190D)),
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
                             minimumSize: const Size.fromHeight(44),
                           ),
                           child: const Text(

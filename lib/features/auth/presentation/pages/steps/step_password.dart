@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 RegistrationStep stepPassword() {
   return RegistrationStep(
@@ -107,7 +108,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
               "Create a password",
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF32190D),
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 4),
@@ -130,7 +131,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                 suffixIcon: IconButton(
                   icon: Icon(_showPass ? LucideIcons.eye : LucideIcons.eyeOff),
                   onPressed: () => setState(() => _showPass = !_showPass),
-                  color: const Color(0xFF32190D),
+                  color: AppColors.primary,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 12,
@@ -142,21 +143,21 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide(
-                    color: hasPassError ? Colors.red : const Color(0xFF32190D),
+                    color: hasPassError ? AppColors.error : AppColors.primary,
                     width: hasPassError ? 2 : 1,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide(
-                    color: hasPassError ? Colors.red : const Color(0xFF32190D),
+                    color: hasPassError ? AppColors.error : AppColors.primary,
                     width: 2,
                   ),
                 ),
                 errorText: passError,
-                errorStyle: const TextStyle(color: Colors.red),
+                errorStyle: const TextStyle(color: AppColors.error),
               ),
-              cursorColor: const Color(0xFF32190D),
+              cursorColor: AppColors.primary,
               onChanged: (v) {
                 _update('password', v);
                 setState(() {}); // trigger error update
@@ -177,7 +178,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                     _showConfirm ? LucideIcons.eye : LucideIcons.eyeOff,
                   ),
                   onPressed: () => setState(() => _showConfirm = !_showConfirm),
-                  color: const Color(0xFF32190D),
+                  color: AppColors.primary,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 12,
@@ -190,8 +191,8 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide(
                     color: hasConfirmError
-                        ? Colors.red
-                        : const Color(0xFF32190D),
+                        ? AppColors.error
+                        : AppColors.primary,
                     width: hasConfirmError ? 2 : 1,
                   ),
                 ),
@@ -199,15 +200,15 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide(
                     color: hasConfirmError
-                        ? Colors.red
-                        : const Color(0xFF32190D),
+                        ? AppColors.error
+                        : AppColors.primary,
                     width: 2,
                   ),
                 ),
                 errorText: confirmError,
-                errorStyle: const TextStyle(color: Colors.red),
+                errorStyle: const TextStyle(color: AppColors.error),
               ),
-              cursorColor: const Color(0xFF32190D),
+              cursorColor: AppColors.primary,
               onChanged: (v) {
                 _update('confirm_password', v);
                 setState(() {});
@@ -248,7 +249,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                                 }
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF32190D),
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           minimumSize: const Size.fromHeight(44),
                         ),
@@ -280,8 +281,8 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                         child: OutlinedButton(
                           onPressed: isSubmitting ? null : controller.back,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF32190D),
-                            side: const BorderSide(color: Color(0xFF32190D)),
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
                             minimumSize: const Size.fromHeight(44),
                           ),
                           child: const Text(
