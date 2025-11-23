@@ -29,9 +29,12 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
     } else {
       // Submit
       final success = await controller.submit();
-      if (success && mounted) {
+      if (!mounted) return;
+
+      if (success) {
+        // Force navigation to success page
         context.go('/tenant-success');
-      } else if (mounted && state.error != null) {
+      } else if (state.error != null) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
@@ -79,9 +82,12 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
-                child: KeyedSubtree(
-                  key: ValueKey(state.currentStep),
-                  child: currentStepWidget,
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: KeyedSubtree(
+                    key: ValueKey(state.currentStep),
+                    child: currentStepWidget,
+                  ),
                 ),
               ),
             ),

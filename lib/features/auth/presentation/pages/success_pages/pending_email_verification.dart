@@ -17,6 +17,55 @@ class PendingEmailVerificationPage extends ConsumerStatefulWidget {
 class _PendingEmailVerificationPageState
     extends ConsumerState<PendingEmailVerificationPage> {
   bool _isChecking = false;
+  bool _isResending = false;
+  int _resendCooldown = 0;
+  // ignore: unused_field
+  // Timer? _timer; // We'll use Future.delayed for simplicity or a Timer if needed for countdown
+
+  @override
+  void dispose() {
+    // _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _resendEmail() async {
+    setState(() => _isResending = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.sendEmailVerification();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Verification email sent!')),
+          );
+        }
+        // Start Cooldown
+        setState(() {
+          _resendCooldown = 60;
+          _isResending = false;
+        });
+        _startCooldown();
+      }
+    } catch (e) {
+      debugPrint('Error resending email: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+      setState(() => _isResending = false);
+    }
+  }
+
+  void _startCooldown() async {
+    while (_resendCooldown > 0) {
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
+      setState(() {
+        _resendCooldown--;
+      });
+    }
+  }
 
   Future<void> _checkVerification() async {
     setState(() => _isChecking = true);
@@ -138,6 +187,35 @@ class _PendingEmailVerificationPageState
                     : const Text(
                         'I have verified my email',
                         style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Resend Email Button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: _resendCooldown > 0 ? null : _resendEmail,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF32190D),
+                  side: const BorderSide(color: Color(0xFF32190D)),
+                  minimumSize: const Size.fromHeight(44),
+                ),
+                child: _isResending
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF32190D),
+                        ),
+                      )
+                    : Text(
+                        _resendCooldown > 0
+                            ? 'Resend in ${_resendCooldown}s'
+                            : 'Resend Email',
+                        style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
               ),
             ),

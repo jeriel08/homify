@@ -157,7 +157,10 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                               transitionType:
                                   SharedAxisTransitionType.horizontal,
                               fillColor: Colors.transparent,
-                              child: child,
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: child,
+                              ),
                             );
                           },
                       child: KeyedSubtree(

@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_budget.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_preferences.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_profile.dart';
 import 'package:homify/features/auth/presentation/pages/onboarding_steps/onboarding_step_school.dart';
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 
 // 1. Define the Step Structure (Same pattern as Registration)
 class OnboardingStep {
@@ -77,7 +79,9 @@ class TenantOnboardingState {
 
 // 3. The Controller
 class TenantOnboardingController extends StateNotifier<TenantOnboardingState> {
-  TenantOnboardingController() : super(TenantOnboardingState()) {
+  final Ref _ref;
+
+  TenantOnboardingController(this._ref) : super(TenantOnboardingState()) {
     _buildSteps();
   }
 
@@ -176,10 +180,17 @@ class TenantOnboardingController extends StateNotifier<TenantOnboardingState> {
         'onboarding_complete': true,
       };
 
+      // Add timeout to prevent infinite loading
       await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
-          .update(dataToSave);
+          .update(dataToSave)
+          .timeout(const Duration(seconds: 10));
+
+      // Force refresh of the user provider so Router sees the new status
+      _ref.invalidate(currentUserProvider);
+      // Wait a bit for the provider to update
+      await Future.delayed(const Duration(milliseconds: 500));
 
       return true;
     } catch (e) {
@@ -194,5 +205,5 @@ final tenantOnboardingProvider =
       TenantOnboardingController,
       TenantOnboardingState
     >((ref) {
-      return TenantOnboardingController();
+      return TenantOnboardingController(ref);
     });

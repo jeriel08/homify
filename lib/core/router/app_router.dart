@@ -87,7 +87,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             return '/tenant-onboarding';
           }
 
-          // Owner Onboarding Check (Placeholder)
+          // Owner Onboarding Check
           if (userModel.accountType == AccountType.owner) {
             if (path == '/owner-onboarding') return null;
             return '/owner-onboarding';
@@ -97,11 +97,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         // 6. Completion Guard
         // If Onboarding is done, don't let them go back to setup pages
         if (userModel != null && userModel.onboardingComplete) {
+          // Fix: If we just finished onboarding, redirect to success
+          if (path == '/tenant-onboarding') {
+            return '/tenant-success';
+          }
+
           final restrictedPaths = [
-            '/tenant-onboarding',
             '/role-selection',
             '/verify-email',
-            '/owner-onboarding', // Lock owner out of onboarding url
+            '/owner-onboarding',
           ];
           if (restrictedPaths.contains(path)) {
             return '/home';
