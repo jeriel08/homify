@@ -6,7 +6,6 @@ import 'package:homify/core/theme/app_colors.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/admin/presentation/widgets/property_details_sheet.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
-import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/properties_providers.dart';
 import 'package:homify/features/reports/domain/entities/report_entity.dart';
@@ -234,6 +233,14 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
         return 'BUG';
       case ReportType.inappropriateContent:
         return 'INAPPROPRIATE CONTENT';
+      case ReportType.fakeProperty:
+        return 'FAKE PROPERTY';
+      case ReportType.inappropriateDescription:
+        return 'INAPPROPRIATE DESCRIPTION';
+      case ReportType.unresponsiveOwner:
+        return 'UNRESPONSIVE OWNER';
+      case ReportType.inappropriateImage:
+        return 'INAPPROPRIATE IMAGE';
       case ReportType.other:
         return 'OTHER';
     }

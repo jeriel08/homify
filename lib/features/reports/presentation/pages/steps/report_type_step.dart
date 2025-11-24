@@ -18,8 +18,35 @@ class ReportTypeStep extends StatelessWidget {
         return 'BUG';
       case ReportType.inappropriateContent:
         return 'INAPPROPRIATE CONTENT';
+      case ReportType.fakeProperty:
+        return 'FAKE PROPERTY';
+      case ReportType.inappropriateDescription:
+        return 'INAPPROPRIATE DESCRIPTION';
+      case ReportType.unresponsiveOwner:
+        return 'UNRESPONSIVE OWNER';
+      case ReportType.inappropriateImage:
+        return 'INAPPROPRIATE IMAGE';
       case ReportType.other:
         return 'OTHER';
+    }
+  }
+
+  IconData _getIcon(ReportType type) {
+    switch (type) {
+      case ReportType.bug:
+        return LucideIcons.bug;
+      case ReportType.fakeProperty:
+        return LucideIcons.circleAlert;
+      case ReportType.inappropriateDescription:
+        return LucideIcons.messageSquareOff;
+      case ReportType.unresponsiveOwner:
+        return LucideIcons.userX;
+      case ReportType.inappropriateImage:
+        return LucideIcons.imageOff;
+      case ReportType.inappropriateContent:
+        return LucideIcons.triangleAlert;
+      case ReportType.other:
+        return LucideIcons.circleQuestionMark;
     }
   }
 
@@ -63,26 +90,23 @@ class ReportTypeStep extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(
-                        type == ReportType.bug
-                            ? LucideIcons.bug
-                            : type == ReportType.inappropriateContent
-                            ? LucideIcons.triangleAlert
-                            : LucideIcons.circleQuestionMark,
+                        _getIcon(type),
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
                             : Colors.grey.shade600,
                       ),
                       const SizedBox(width: 16),
-                      Text(
-                        _formatType(type),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey.shade800,
+                      Expanded(
+                        child: Text(
+                          _formatType(type),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey.shade800,
+                          ),
                         ),
                       ),
-                      const Spacer(),
                       if (isSelected)
                         Icon(
                           LucideIcons.check,

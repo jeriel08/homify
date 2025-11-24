@@ -13,12 +13,20 @@ class ReportReviewStep extends StatelessWidget {
     required this.description,
   });
 
-  String _formatType(ReportType type) {
+  String _formatReportType(ReportType type) {
     switch (type) {
       case ReportType.bug:
         return 'BUG';
       case ReportType.inappropriateContent:
         return 'INAPPROPRIATE CONTENT';
+      case ReportType.fakeProperty:
+        return 'FAKE PROPERTY';
+      case ReportType.inappropriateDescription:
+        return 'INAPPROPRIATE DESCRIPTION';
+      case ReportType.unresponsiveOwner:
+        return 'UNRESPONSIVE OWNER';
+      case ReportType.inappropriateImage:
+        return 'INAPPROPRIATE IMAGE';
       case ReportType.other:
         return 'OTHER';
     }
@@ -35,12 +43,12 @@ class ReportReviewStep extends StatelessWidget {
             'Review your report',
             style: Theme.of(
               context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 20),
           _buildReviewItem(
             'Type',
-            selectedType != null ? _formatType(selectedType!) : '',
+            selectedType != null ? _formatReportType(selectedType!) : '',
           ),
           const SizedBox(height: 16),
           _buildReviewItem('Title', title),

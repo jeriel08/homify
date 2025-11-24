@@ -19,6 +19,14 @@ class ReportCard extends StatelessWidget {
         return 'BUG';
       case ReportType.inappropriateContent:
         return 'INAPPROPRIATE CONTENT';
+      case ReportType.fakeProperty:
+        return 'FAKE PROPERTY';
+      case ReportType.inappropriateDescription:
+        return 'INAPPROPRIATE DESCRIPTION';
+      case ReportType.unresponsiveOwner:
+        return 'UNRESPONSIVE OWNER';
+      case ReportType.inappropriateImage:
+        return 'INAPPROPRIATE IMAGE';
       case ReportType.other:
         return 'OTHER';
     }

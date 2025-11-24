@@ -1,6 +1,14 @@
 import 'package:equatable/equatable.dart';
 
-enum ReportType { bug, inappropriateContent, other }
+enum ReportType {
+  bug,
+  inappropriateContent,
+  fakeProperty,
+  inappropriateDescription,
+  unresponsiveOwner,
+  inappropriateImage,
+  other,
+}
 
 enum ReportStatus { pending, solved, fixed }
 
