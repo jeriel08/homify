@@ -148,13 +148,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                     QuickActionCard(
                       label: "View Reports",
                       icon: LucideIcons.chartColumnIncreasing,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Reports feature coming soon!'),
-                          ),
-                        );
-                      },
+                      onTap: () => context.push('/admin/reports'),
                     ),
                   ],
                 ),

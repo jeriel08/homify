@@ -6,6 +6,7 @@ import 'package:homify/features/messages/presentation/widgets/contact_owner_butt
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:go_router/go_router.dart';
 
 class PropertyDetailsSheet extends StatefulWidget {
   final PropertyEntity property;
@@ -623,6 +624,35 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                     ),
                     const Gap(20),
                   ],
+
+                  // Report Issue Button
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        context.push(
+                          '/report',
+                          extra: {
+                            'targetId': widget.property.id,
+                            'targetType': 'property',
+                          },
+                        );
+                      },
+                      icon: Icon(
+                        LucideIcons.flag,
+                        size: 16,
+                        color: textSecondary.withValues(alpha: 0.6),
+                      ),
+                      label: Text(
+                        'Report Issue',
+                        style: HomifyTypography.medium(
+                          HomifyTypography.label3.copyWith(
+                            color: textSecondary.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Gap(20),
                 ],
               ),
             ),

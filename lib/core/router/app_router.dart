@@ -19,6 +19,10 @@ import 'package:homify/features/properties/presentation/pages/property_success_p
 import 'package:homify/features/admin/presentation/pages/approvals_screen.dart';
 import 'package:homify/features/admin/presentation/pages/all_properties_screen.dart';
 import 'package:homify/features/admin/presentation/pages/all_users_screen.dart';
+import 'package:homify/features/reports/domain/entities/report_entity.dart';
+import 'package:homify/features/reports/presentation/pages/admin_reports_screen.dart';
+import 'package:homify/features/reports/presentation/pages/report_details_screen.dart';
+import 'package:homify/features/reports/presentation/pages/submit_report_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -200,6 +204,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final extra = state.extra as int? ?? 0;
           return AllUsersScreen(initialIndex: extra);
+        },
+      ),
+      GoRoute(
+        path: '/admin/reports',
+        builder: (context, state) => const AdminReportsScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final report = state.extra as ReportEntity;
+              return ReportDetailsScreen(report: report);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/report',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return SubmitReportScreen(
+            targetId: extra['targetId'] as String?,
+            targetType: extra['targetType'] as String,
+          );
         },
       ),
     ],
