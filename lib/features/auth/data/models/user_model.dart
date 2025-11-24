@@ -19,6 +19,9 @@ class UserModel extends UserEntity {
     required super.createdAt,
     required super.onboardingComplete,
     required super.emailVerified,
+    super.isBanned,
+    super.bannedAt,
+    super.bannedBy,
     this.school,
     this.preferences,
     this.occupation,
@@ -47,6 +50,9 @@ class UserModel extends UserEntity {
       preferences: data['preferences'] as Map<String, dynamic>?,
       emailVerified: data['email_verified'] as bool? ?? false,
       occupation: data['occupation'] as String?,
+      isBanned: data['is_banned'] as bool? ?? false,
+      bannedAt: (data['banned_at'] as Timestamp?)?.toDate(),
+      bannedBy: data['banned_by'] as String?,
     );
   }
 
@@ -85,6 +91,9 @@ class UserModel extends UserEntity {
       'preferences': preferences,
       'email_verified': emailVerified,
       'occupation': occupation,
+      'is_banned': isBanned,
+      'banned_at': bannedAt != null ? Timestamp.fromDate(bannedAt!) : null,
+      'banned_by': bannedBy,
     };
   }
 

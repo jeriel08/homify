@@ -23,6 +23,9 @@ import 'package:homify/features/reports/domain/entities/report_entity.dart';
 import 'package:homify/features/reports/presentation/pages/admin_reports_screen.dart';
 import 'package:homify/features/reports/presentation/pages/report_details_screen.dart';
 import 'package:homify/features/reports/presentation/pages/submit_report_screen.dart';
+import 'package:homify/features/profile/presentation/pages/profile_screen.dart';
+import 'package:homify/features/profile/presentation/pages/edit_profile_screen.dart';
+import 'package:homify/features/profile/domain/entities/user_profile_entity.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -227,6 +230,21 @@ final routerProvider = Provider<GoRouter>((ref) {
             targetId: extra['targetId'] as String?,
             targetType: extra['targetType'] as String,
           );
+        },
+      ),
+      // PROFILE ROUTES
+      GoRoute(
+        path: '/profile/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return ProfileScreen(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) {
+          final profile = state.extra as UserProfile;
+          return EditProfileScreen(profile: profile);
         },
       ),
     ],

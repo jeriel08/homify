@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/admin/presentation/providers/admin_provider.dart';
 import 'package:homify/features/admin/presentation/widgets/admin_search_bar.dart';
@@ -153,60 +154,67 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen>
                 ? 'assets/images/placeholder_male.png'
                 : 'assets/images/placeholder_female.png';
 
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: const Color(
-                      0xFFE05725,
-                    ).withValues(alpha: 0.1),
-                    backgroundImage: AssetImage(imageAsset),
-                  ),
-                  const Gap(16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.fullName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Color(0xFF32190D),
-                          ),
-                        ),
-                        const Gap(4),
-                        Text(
-                          user.email,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+            return InkWell(
+              onTap: () {
+                // Navigate to ProfileScreen
+                context.push('/profile/${user.uid}');
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  Icon(
-                    LucideIcons.chevronRight,
-                    color: Colors.grey.shade400,
-                    size: 20,
-                  ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: const Color(
+                        0xFFE05725,
+                      ).withValues(alpha: 0.1),
+                      backgroundImage: AssetImage(imageAsset),
+                    ),
+                    const Gap(16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.fullName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Color(0xFF32190D),
+                            ),
+                          ),
+                          const Gap(4),
+                          Text(
+                            user.email,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      LucideIcons.chevronRight,
+                      color: Colors.grey.shade400,
+                      size: 20,
+                    ),
+                  ],
+                ),
               ),
             );
           },

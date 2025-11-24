@@ -11,7 +11,19 @@ service cloud.firestore {
     match /users/{userId} {
       allow create: if request.auth.uid == userId;
       allow read : if request.auth != null;
-      allow update: if request.auth.uid == userId || isUserAdmin();
+      
+      // Users can update their own profile (firstName, lastName only)
+      allow update: if request.auth.uid == userId &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['first_name', 'last_name', 'updated_at']);
+      
+      // Only admins can ban/unban users
+      allow update: if isUserAdmin() &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['is_banned', 'banned_at', 'banned_by', 'updated_at']);
+      
+      // Admins can update any other fields
+      allow update: if isUserAdmin();
     }
     
     match /users {

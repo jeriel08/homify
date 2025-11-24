@@ -206,21 +206,6 @@ class AccountPage extends ConsumerWidget {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 20),
-
-              Divider(radius: BorderRadiusGeometry.circular(20)),
-
-              // ───── 2. ACCOUNT SECTION ─────
-              const _SectionHeader(title: 'Account Settings'),
-              ListTile(
-                leading: const Icon(LucideIcons.shield),
-                title: const Text('Security & Password'),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () {
-                  /* TODO: Navigate to password page */
-                },
-              ),
               ListTile(
                 leading: const Icon(LucideIcons.bell),
                 title: const Text('Notification Settings'),
