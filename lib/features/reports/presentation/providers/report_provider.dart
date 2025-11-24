@@ -27,8 +27,9 @@ final updateReportStatusUseCaseProvider = Provider<UpdateReportStatus>((ref) {
   return UpdateReportStatus(ref.read(reportRepositoryProvider));
 });
 
-final reportsProvider = FutureProvider<List<ReportEntity>>((ref) async {
-  final getReports = ref.read(getReportsUseCaseProvider);
-  final result = await getReports();
-  return result.fold((failure) => throw failure, (reports) => reports);
+final reportsProvider = StreamProvider<List<ReportEntity>>((ref) {
+  final repository = ref.read(reportRepositoryProvider);
+  return repository.getReportsStream().map((either) {
+    return either.fold((failure) => throw failure, (reports) => reports);
+  });
 });

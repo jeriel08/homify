@@ -14,6 +14,8 @@ class ReportEntity extends Equatable {
   final String description;
   final ReportStatus status;
   final DateTime createdAt;
+  final String? resolvedBy; // ID of admin who resolved the report
+  final DateTime? resolvedAt; // When the report was resolved
 
   const ReportEntity({
     required this.id,
@@ -25,6 +27,8 @@ class ReportEntity extends Equatable {
     required this.description,
     required this.status,
     required this.createdAt,
+    this.resolvedBy,
+    this.resolvedAt,
   });
 
   @override
@@ -38,5 +42,7 @@ class ReportEntity extends Equatable {
     description,
     status,
     createdAt,
+    resolvedBy,
+    resolvedAt,
   ];
 }

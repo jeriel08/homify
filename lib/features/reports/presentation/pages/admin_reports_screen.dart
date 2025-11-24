@@ -35,14 +35,17 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: const Color(0xFFFFEDD4),
+        foregroundColor: const Color(0xFF32190D),
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        elevation: 5,
+        shadowColor: Colors.black.withValues(alpha: 0.2),
         title: Text(
           'Reports',
-          style: HomifyTypography.heading6.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
       ),
       body: Column(

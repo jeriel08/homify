@@ -42,12 +42,24 @@ class ReportRepositoryImpl implements ReportRepository {
   }
 
   @override
+  Stream<Either<Failure, List<ReportEntity>>> getReportsStream() {
+    try {
+      return remoteDataSource.getReportsStream().map((reports) {
+        return Right<Failure, List<ReportEntity>>(reports);
+      });
+    } catch (e) {
+      return Stream.value(Left(ServerFailure(e.toString())));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> updateReportStatus(
     String reportId,
     ReportStatus status,
+    String resolvedBy,
   ) async {
     try {
-      await remoteDataSource.updateReportStatus(reportId, status);
+      await remoteDataSource.updateReportStatus(reportId, status, resolvedBy);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

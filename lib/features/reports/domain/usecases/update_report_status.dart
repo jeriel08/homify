@@ -9,16 +9,22 @@ class UpdateReportStatus {
   UpdateReportStatus(this.repository);
 
   Future<Either<Failure, void>> call(UpdateReportStatusParams params) {
-    return repository.updateReportStatus(params.reportId, params.status);
+    return repository.updateReportStatus(
+      params.reportId,
+      params.status,
+      params.resolvedBy,
+    );
   }
 }
 
 class UpdateReportStatusParams {
   final String reportId;
   final ReportStatus status;
+  final String resolvedBy;
 
   const UpdateReportStatusParams({
     required this.reportId,
     required this.status,
+    required this.resolvedBy,
   });
 }

@@ -5,12 +5,16 @@ import 'package:go_router/go_router.dart';
 import 'package:homify/core/theme/app_colors.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/admin/presentation/widgets/property_details_sheet.dart';
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
+import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/properties_providers.dart';
 import 'package:homify/features/reports/domain/entities/report_entity.dart';
 import 'package:homify/features/reports/domain/usecases/update_report_status.dart'
     as usecase;
 import 'package:homify/features/reports/presentation/providers/report_provider.dart';
+import 'package:homify/features/reports/presentation/widgets/report_section_card.dart';
+import 'package:homify/features/reports/presentation/widgets/report_status_badge.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -30,14 +34,60 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
   bool _isUpdating = false;
   PropertyEntity? _targetProperty;
   bool _isLoadingProperty = false;
+  String? _reporterName;
+  String? _resolverName;
+  bool _isLoadingUsers = false;
 
   @override
   void initState() {
     super.initState();
     _currentStatus = widget.report.status;
+    _fetchUserNames();
     if (widget.report.targetType == 'property' &&
         widget.report.targetId != null) {
       _fetchTargetProperty();
+    }
+  }
+
+  Future<void> _fetchUserNames() async {
+    setState(() {
+      _isLoadingUsers = true;
+    });
+
+    final authRepo = ref.read(authRepositoryProvider);
+
+    try {
+      // Fetch reporter name
+      final reporter = await authRepo.getUser(widget.report.reporterId);
+      if (mounted) {
+        setState(() {
+          _reporterName = '${reporter.firstName} ${reporter.lastName}';
+        });
+      }
+
+      // Fetch resolver name if report is resolved
+      if (widget.report.resolvedBy != null) {
+        final resolver = await authRepo.getUser(widget.report.resolvedBy!);
+        if (mounted) {
+          setState(() {
+            _resolverName = '${resolver.firstName} ${resolver.lastName}';
+          });
+        }
+      }
+    } catch (e) {
+      // Handle errors silently, keep showing UIDs if fetch fails
+      if (mounted) {
+        setState(() {
+          _reporterName = widget.report.reporterId;
+          _resolverName = widget.report.resolvedBy;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingUsers = false;
+        });
+      }
     }
   }
 
@@ -57,7 +107,26 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
     }
   }
 
+  bool get _isResolved =>
+      _currentStatus == ReportStatus.solved ||
+      _currentStatus == ReportStatus.fixed;
+
   Future<void> _updateStatus(ReportStatus newStatus) async {
+    final authState = ref.read(authStateProvider);
+    final currentUser = authState.value;
+
+    if (currentUser == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not authenticated'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isUpdating = true;
     });
@@ -67,6 +136,7 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
       usecase.UpdateReportStatusParams(
         reportId: widget.report.id,
         status: newStatus,
+        resolvedBy: currentUser.uid,
       ),
     );
 
@@ -91,8 +161,8 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
             _currentStatus = newStatus;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Status updated successfully'),
+            const SnackBar(
+              content: Text('Status updated successfully'),
               backgroundColor: AppColors.success,
             ),
           );
@@ -130,8 +200,12 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: const Color(0xFFFFEDD4),
+        foregroundColor: const Color(0xFF32190D),
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        elevation: 5,
+        shadowColor: Colors.black.withValues(alpha: 0.2),
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft, color: AppColors.primary),
           onPressed: () => context.pop(),
@@ -152,7 +226,7 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
             // Status and Date Row
             Row(
               children: [
-                _StatusBadge(status: _currentStatus),
+                ReportStatusBadge(status: _currentStatus),
                 const Spacer(),
                 Icon(LucideIcons.clock, size: 16, color: Colors.grey.shade500),
                 const Gap(6),
@@ -177,51 +251,43 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
             const Gap(16),
 
             // Type Badge
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.accent.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    widget.report.type == ReportType.bug
+                        ? LucideIcons.bug
+                        : widget.report.type == ReportType.inappropriateContent
+                        ? LucideIcons.triangleAlert
+                        : LucideIcons.circleQuestionMark,
+                    size: 18,
+                    color: AppColors.accent,
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.accent.withValues(alpha: 0.3),
+                  const Gap(8),
+                  Text(
+                    _formatReportType(widget.report.type),
+                    style: HomifyTypography.label2.copyWith(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        widget.report.type == ReportType.bug
-                            ? LucideIcons.bug
-                            : widget.report.type ==
-                                  ReportType.inappropriateContent
-                            ? LucideIcons.triangleAlert
-                            : LucideIcons.circleQuestionMark,
-                        size: 18,
-                        color: AppColors.accent,
-                      ),
-                      const Gap(8),
-                      Text(
-                        _formatReportType(widget.report.type),
-                        style: HomifyTypography.label2.copyWith(
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
             const Gap(28),
 
             // Description Section
-            _SectionCard(
+            ReportSectionCard(
               title: 'Description',
               child: Text(
                 widget.report.description,
@@ -234,7 +300,7 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
             const Gap(20),
 
             // Target Section
-            _SectionCard(
+            ReportSectionCard(
               title: 'Target',
               child: Skeletonizer(
                 enabled: _isLoadingProperty,
@@ -313,170 +379,161 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
                 ),
               ),
             ),
-            const Gap(32),
+            const Gap(20),
 
-            // Actions Section
-            Text(
-              'Actions',
-              style: HomifyTypography.heading6.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+            // Reported By Section
+            ReportSectionCard(
+              title: 'Reported By',
+              child: Skeletonizer(
+                enabled: _isLoadingUsers,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        LucideIcons.userRound,
+                        color: AppColors.accent,
+                        size: 20,
+                      ),
+                    ),
+                    const Gap(12),
+                    Text(
+                      _reporterName ?? widget.report.reporterId,
+                      style: HomifyTypography.body2.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const Gap(16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed:
-                        _isUpdating || _currentStatus == ReportStatus.solved
-                        ? null
-                        : () => _updateStatus(ReportStatus.solved),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(
-                        color: _currentStatus == ReportStatus.solved
-                            ? Colors.grey.shade300
-                            : AppColors.success,
-                        width: 2,
+
+            // Resolved By Section (if resolved)
+            if (widget.report.resolvedBy != null) ...[
+              const Gap(20),
+              ReportSectionCard(
+                title: 'Resolved By',
+                child: Skeletonizer(
+                  enabled: _isLoadingUsers,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              LucideIcons.userCheck,
+                              color: AppColors.success,
+                              size: 20,
+                            ),
+                          ),
+                          const Gap(12),
+                          Expanded(
+                            child: Text(
+                              _resolverName ?? widget.report.resolvedBy!,
+                              style: HomifyTypography.body2.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      foregroundColor: AppColors.success,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(LucideIcons.check, size: 20),
-                    label: const Text(
-                      'Solved',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                      if (widget.report.resolvedAt != null) ...[
+                        const Gap(12),
+                        Row(
+                          children: [
+                            Icon(
+                              LucideIcons.clock,
+                              size: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                            const Gap(6),
+                            Text(
+                              DateFormat.yMMMd().add_jm().format(
+                                widget.report.resolvedAt!,
+                              ),
+                              style: HomifyTypography.label3.copyWith(
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                const Gap(12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed:
-                        _isUpdating || _currentStatus == ReportStatus.fixed
-                        ? null
-                        : () => _updateStatus(ReportStatus.fixed),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: AppColors.accent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(LucideIcons.wrench, size: 20),
-                    label: const Text(
-                      'Fixed',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final Widget child;
-
-  const _SectionCard({required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: HomifyTypography.heading6.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const Gap(12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.secondary.withValues(alpha: 0.6),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
               ),
             ],
-          ),
-          child: child,
+
+            // Actions Section (only show if not resolved)
+            if (!_isResolved) ...[
+              const Gap(32),
+              Text(
+                'Actions',
+                style: HomifyTypography.heading6.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Gap(16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _isUpdating
+                          ? null
+                          : () => _updateStatus(ReportStatus.solved),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: AppColors.success, width: 2),
+                        foregroundColor: AppColors.success,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(LucideIcons.check, size: 20),
+                      label: const Text(
+                        'Solved',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  const Gap(12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: _isUpdating
+                          ? null
+                          : () => _updateStatus(ReportStatus.fixed),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: AppColors.accent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(LucideIcons.wrench, size: 20),
+                      label: const Text(
+                        'Fixed',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ),
-      ],
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final ReportStatus status;
-
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    Color color;
-    String label;
-    IconData icon;
-
-    switch (status) {
-      case ReportStatus.pending:
-        color = Colors.orange.shade700;
-        label = 'Pending';
-        icon = LucideIcons.clock;
-        break;
-      case ReportStatus.solved:
-        color = Colors.green.shade700;
-        label = 'Solved';
-        icon = LucideIcons.circleCheck;
-        break;
-      case ReportStatus.fixed:
-        color = Colors.blue.shade700;
-        label = 'Fixed';
-        icon = LucideIcons.wrench;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const Gap(6),
-          Text(
-            label.toUpperCase(),
-            style: HomifyTypography.label2.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
       ),
     );
   }

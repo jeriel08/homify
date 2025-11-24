@@ -5,7 +5,12 @@ import 'package:homify/features/reports/domain/entities/report_entity.dart';
 abstract class ReportRemoteDataSource {
   Future<void> submitReport(ReportModel report);
   Future<List<ReportModel>> getReports();
-  Future<void> updateReportStatus(String reportId, ReportStatus status);
+  Stream<List<ReportModel>> getReportsStream();
+  Future<void> updateReportStatus(
+    String reportId,
+    ReportStatus status,
+    String resolvedBy,
+  );
 }
 
 class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
@@ -31,9 +36,28 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
   }
 
   @override
-  Future<void> updateReportStatus(String reportId, ReportStatus status) async {
+  Stream<List<ReportModel>> getReportsStream() {
+    return firestore
+        .collection('reports')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => ReportModel.fromSnapshot(doc))
+              .toList();
+        });
+  }
+
+  @override
+  Future<void> updateReportStatus(
+    String reportId,
+    ReportStatus status,
+    String resolvedBy,
+  ) async {
     await firestore.collection('reports').doc(reportId).update({
       'status': status.name,
+      'resolvedBy': resolvedBy,
+      'resolvedAt': FieldValue.serverTimestamp(),
     });
   }
 }

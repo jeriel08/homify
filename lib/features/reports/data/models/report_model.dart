@@ -12,6 +12,8 @@ class ReportModel extends ReportEntity {
     required super.description,
     required super.status,
     required super.createdAt,
+    super.resolvedBy,
+    super.resolvedAt,
   });
 
   factory ReportModel.fromSnapshot(DocumentSnapshot doc) {
@@ -32,6 +34,10 @@ class ReportModel extends ReportEntity {
         orElse: () => ReportStatus.pending,
       ),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      resolvedBy: data['resolvedBy'],
+      resolvedAt: data['resolvedAt'] != null
+          ? (data['resolvedAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -45,6 +51,8 @@ class ReportModel extends ReportEntity {
       'description': description,
       'status': status.name,
       'createdAt': Timestamp.fromDate(createdAt),
+      'resolvedBy': resolvedBy,
+      'resolvedAt': resolvedAt != null ? Timestamp.fromDate(resolvedAt!) : null,
     };
   }
 }

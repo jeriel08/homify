@@ -146,8 +146,8 @@ class AdminDashboardScreen extends ConsumerWidget {
                       onTap: () => context.push('/admin/all-users'),
                     ),
                     QuickActionCard(
-                      label: "View Reports",
-                      icon: LucideIcons.chartColumnIncreasing,
+                      label: "Review Reports",
+                      icon: LucideIcons.flag,
                       onTap: () => context.push('/admin/reports'),
                     ),
                   ],
