@@ -3,66 +3,110 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/theme/typography.dart';
+import 'package:homify/features/admin/presentation/widgets/admin_search_bar.dart';
 import 'package:homify/features/reports/domain/entities/report_entity.dart';
 import 'package:homify/features/reports/presentation/providers/report_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class AdminReportsScreen extends ConsumerWidget {
+class AdminReportsScreen extends ConsumerStatefulWidget {
   const AdminReportsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminReportsScreen> createState() => _AdminReportsScreenState();
+}
+
+class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final reportsAsync = ref.watch(reportsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Reports')),
-      body: reportsAsync.when(
-        data: (reports) {
-          if (reports.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    LucideIcons.circleQuestionMark,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const Gap(16),
-                  Text(
-                    'No reports found',
-                    style: HomifyTypography.heading6.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
+      body: Column(
+        children: [
+          Padding(
             padding: const EdgeInsets.all(16),
-            itemCount: reports.length,
-            separatorBuilder: (context, index) => const Gap(12),
-            itemBuilder: (context, index) {
-              final report = reports[index];
-              return _ReportCard(report: report);
-            },
-          );
-        },
-        loading: () => Skeletonizer(
-          enabled: true,
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: 5,
-            separatorBuilder: (context, index) => const Gap(12),
-            itemBuilder: (context, index) =>
-                const Card(child: SizedBox(height: 100)),
+            child: AdminSearchBar(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
+              hintText: 'Search reports...',
+            ),
           ),
-        ),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+          Expanded(
+            child: reportsAsync.when(
+              data: (reports) {
+                final filteredReports = reports.where((report) {
+                  final title = report.title.toLowerCase();
+                  final description = report.description.toLowerCase();
+                  final type = report.type.name.toLowerCase();
+                  return title.contains(_searchQuery) ||
+                      description.contains(_searchQuery) ||
+                      type.contains(_searchQuery);
+                }).toList();
+
+                if (filteredReports.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          LucideIcons.circleQuestionMark,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const Gap(16),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'No reports found'
+                              : 'No matching reports',
+                          style: HomifyTypography.heading6.copyWith(
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  itemCount: filteredReports.length,
+                  separatorBuilder: (context, index) => const Gap(12),
+                  itemBuilder: (context, index) {
+                    final report = filteredReports[index];
+                    return _ReportCard(report: report);
+                  },
+                );
+              },
+              loading: () => Skeletonizer(
+                enabled: true,
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  itemCount: 5,
+                  separatorBuilder: (context, index) => const Gap(12),
+                  itemBuilder: (context, index) =>
+                      const Card(child: SizedBox(height: 100)),
+                ),
+              ),
+              error: (error, stack) => Center(child: Text('Error: $error')),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -104,7 +148,12 @@ class _ReportCard extends StatelessWidget {
                 ],
               ),
               const Gap(12),
-              Text(report.title, style: HomifyTypography.heading6),
+              Text(
+                report.title,
+                style: HomifyTypography.heading6.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const Gap(4),
               Text(
                 report.description,
@@ -112,6 +161,7 @@ class _ReportCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: HomifyTypography.body2.copyWith(
                   color: Colors.grey.shade600,
+                  height: 1.4,
                 ),
               ),
               const Gap(12),
@@ -131,6 +181,7 @@ class _ReportCard extends StatelessWidget {
                     report.type.name.toUpperCase(),
                     style: HomifyTypography.label3.copyWith(
                       color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -155,31 +206,33 @@ class _StatusBadge extends StatelessWidget {
 
     switch (status) {
       case ReportStatus.pending:
-        color = Colors.orange;
+        color = Colors.orange.shade700;
         label = 'Pending';
         break;
       case ReportStatus.solved:
-        color = Colors.green;
+        color = Colors.green.shade700;
         label = 'Solved';
         break;
       case ReportStatus.fixed:
-        color = Colors.blue;
+        color = Colors.blue.shade700;
         label = 'Fixed';
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
-        label,
+        label.toUpperCase(),
         style: HomifyTypography.label3.copyWith(
           color: color,
           fontWeight: FontWeight.bold,
+          fontSize: 10,
+          letterSpacing: 0.5,
         ),
       ),
     );
