@@ -18,6 +18,9 @@ import 'package:homify/features/reports/presentation/widgets/report_status_badge
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 
 class ReportDetailsScreen extends ConsumerStatefulWidget {
   final ReportEntity report;
@@ -117,12 +120,25 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
 
     if (currentUser == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User not authenticated'),
-            backgroundColor: AppColors.error,
+        DelightToastBar(
+          autoDismiss: true,
+          position: DelightSnackbarPosition.top,
+          builder: (context) => ToastCard(
+            leading: Icon(
+              LucideIcons.triangleAlert,
+              size: 28,
+              color: AppColors.error,
+            ),
+            title: Text(
+              'User not authenticated',
+              style: HomifyTypography.body2.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+            color: AppColors.error.withValues(alpha: 0.1),
           ),
-        );
+        ).show(context);
       }
       return;
     }
@@ -147,12 +163,26 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
     result.fold(
       (failure) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to update status: ${failure.message}'),
-              backgroundColor: AppColors.error,
+          DelightToastBar(
+            autoDismiss: true,
+            snackbarDuration: const Duration(seconds: 3),
+            position: DelightSnackbarPosition.top,
+            builder: (context) => ToastCard(
+              leading: Icon(
+                LucideIcons.triangleAlert,
+                size: 28,
+                color: AppColors.error,
+              ),
+              title: Text(
+                'Failed to update status: ${failure.message}',
+                style: HomifyTypography.body2.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+              color: Colors.white,
             ),
-          );
+          ).show(context);
         }
       },
       (_) {
@@ -160,12 +190,26 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
           setState(() {
             _currentStatus = newStatus;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Status updated successfully'),
-              backgroundColor: AppColors.success,
+          DelightToastBar(
+            autoDismiss: true,
+            snackbarDuration: const Duration(seconds: 3),
+            position: DelightSnackbarPosition.top,
+            builder: (context) => ToastCard(
+              leading: Icon(
+                LucideIcons.circleCheck,
+                size: 28,
+                color: AppColors.success,
+              ),
+              title: Text(
+                'Status updated successfully',
+                style: HomifyTypography.body2.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+              color: Colors.white,
             ),
-          );
+          ).show(context);
           ref.invalidate(reportsProvider);
         }
       },

@@ -12,6 +12,10 @@ import 'package:homify/features/reports/presentation/pages/steps/report_review_s
 import 'package:homify/features/reports/presentation/pages/steps/report_type_step.dart';
 import 'package:homify/features/reports/presentation/providers/report_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
+import 'package:homify/core/theme/typography.dart';
 
 class SubmitReportScreen extends ConsumerStatefulWidget {
   final String? targetId;
@@ -45,9 +49,26 @@ class _SubmitReportScreenState extends ConsumerState<SubmitReportScreen> {
 
   void _nextStep() {
     if (_currentStep == 0 && _selectedType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a report type')),
-      );
+      DelightToastBar(
+        autoDismiss: true,
+        snackbarDuration: const Duration(seconds: 3),
+        position: DelightSnackbarPosition.top,
+        builder: (context) => ToastCard(
+          leading: Icon(
+            LucideIcons.triangleAlert,
+            size: 28,
+            color: AppColors.error,
+          ),
+          title: Text(
+            'Please select a report type',
+            style: HomifyTypography.body2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
+          ),
+          color: AppColors.error.withValues(alpha: 0.1),
+        ),
+      ).show(context);
       return;
     }
     if (_currentStep == 1) {
@@ -73,11 +94,26 @@ class _SubmitReportScreenState extends ConsumerState<SubmitReportScreen> {
 
     final currentUser = ref.read(currentUserProvider).value;
     if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You must be logged in to submit a report'),
+      DelightToastBar(
+        autoDismiss: true,
+        snackbarDuration: const Duration(seconds: 3),
+        position: DelightSnackbarPosition.top,
+        builder: (context) => ToastCard(
+          leading: Icon(
+            LucideIcons.triangleAlert,
+            size: 28,
+            color: AppColors.error,
+          ),
+          title: Text(
+            'You must be logged in to submit a report',
+            style: HomifyTypography.body2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
+          ),
+          color: Colors.white,
         ),
-      );
+      ).show(context);
       setState(() {
         _isSubmitting = false;
       });
@@ -107,16 +143,48 @@ class _SubmitReportScreenState extends ConsumerState<SubmitReportScreen> {
 
     result.fold(
       (failure) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit report: ${failure.message}'),
+        DelightToastBar(
+          autoDismiss: true,
+          snackbarDuration: const Duration(seconds: 3),
+          position: DelightSnackbarPosition.top,
+          builder: (context) => ToastCard(
+            leading: Icon(
+              LucideIcons.triangleAlert,
+              size: 28,
+              color: AppColors.error,
+            ),
+            title: Text(
+              'Failed to submit report: ${failure.message}',
+              style: HomifyTypography.body2.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+            color: Colors.white,
           ),
-        );
+        ).show(context);
       },
       (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Report submitted successfully')),
-        );
+        DelightToastBar(
+          autoDismiss: true,
+          snackbarDuration: const Duration(seconds: 3),
+          position: DelightSnackbarPosition.top,
+          builder: (context) => ToastCard(
+            leading: Icon(
+              LucideIcons.circleCheck,
+              size: 28,
+              color: AppColors.success,
+            ),
+            title: Text(
+              'Report submitted successfully',
+              style: HomifyTypography.body2.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+            color: Colors.white,
+          ),
+        ).show(context);
         context.pop();
       },
     );
