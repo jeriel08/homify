@@ -2,10 +2,11 @@ import 'package:dartz/dartz.dart';
 import 'package:homify/core/error/failure.dart';
 import 'package:homify/features/admin/data/datasources/admin_remote_data_source.dart';
 import 'package:homify/features/admin/data/models/admin_stats_model.dart';
-import 'package:homify/features/admin/domain/entities/pending_property_details.dart';
+import 'package:homify/features/admin/domain/entities/chart_data.dart';
+import 'package:homify/features/admin/domain/entities/property_with_user.dart';
 import 'package:homify/features/admin/domain/repositories/admin_repository.dart';
-import 'package:homify/features/admin/presentation/providers/admin_provider.dart';
 import 'package:homify/features/auth/domain/repositories/auth_repository.dart';
+import 'package:homify/core/entities/user_entity.dart';
 
 class AdminRepositoryImpl implements AdminRepository {
   final AdminRemoteDataSource remoteDataSource;
@@ -38,7 +39,7 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Stream<Either<Failure, List<PendingPropertyDetails>>> getPendingProperties() {
+  Stream<Either<Failure, List<PropertyWithUser>>> getPendingProperties() {
     try {
       // 1. Get the stream of properties
       final propertiesStream = remoteDataSource.getPendingPropertiesStream();
@@ -48,8 +49,6 @@ class AdminRepositoryImpl implements AdminRepository {
         try {
           // 3. Create a list of futures to get all users
           final userFutures = properties.map((prop) {
-            // --- THIS IS THE MAGIC ---
-            // We can now call this method!
             return authRepository.getUser(prop.ownerUid);
           }).toList();
 
@@ -57,14 +56,12 @@ class AdminRepositoryImpl implements AdminRepository {
           final userResults = await Future.wait(userFutures);
 
           // 5. Combine properties and users
-          final List<PendingPropertyDetails> detailedList = [];
+          final List<PropertyWithUser> detailedList = [];
           for (int i = 0; i < properties.length; i++) {
             final property = properties[i];
             final user = userResults[i]; // This is a UserEntity
 
-            detailedList.add(
-              PendingPropertyDetails(property: property, user: user),
-            );
+            detailedList.add(PropertyWithUser(property: property, user: user));
           }
           // 6. Return the combined list, wrapped in Right()
           return Right(detailedList);
@@ -79,6 +76,53 @@ class AdminRepositoryImpl implements AdminRepository {
       // Handle initial stream error
       return Stream.value(
         const Left(ServerFailure('Failed to stream pending properties.')),
+      );
+    }
+  }
+
+  @override
+  Stream<Either<Failure, List<PropertyWithUser>>> getAllProperties() {
+    try {
+      final propertiesStream = remoteDataSource.getAllPropertiesStream();
+
+      return propertiesStream.asyncMap((properties) async {
+        try {
+          final userFutures = properties.map((prop) {
+            return authRepository.getUser(prop.ownerUid);
+          }).toList();
+
+          final userResults = await Future.wait(userFutures);
+
+          final List<PropertyWithUser> detailedList = [];
+          for (int i = 0; i < properties.length; i++) {
+            final property = properties[i];
+            final user = userResults[i];
+
+            detailedList.add(PropertyWithUser(property: property, user: user));
+          }
+          return Right(detailedList);
+        } catch (e) {
+          return const Left(
+            ServerFailure('Failed to fetch user data for properties.'),
+          );
+        }
+      });
+    } catch (e) {
+      return Stream.value(
+        const Left(ServerFailure('Failed to stream all properties.')),
+      );
+    }
+  }
+
+  @override
+  Stream<Either<Failure, List<UserEntity>>> getAllUsers() {
+    try {
+      return remoteDataSource.getAllUsersStream().map((users) {
+        return Right(users);
+      });
+    } catch (e) {
+      return Stream.value(
+        const Left(ServerFailure('Failed to stream all users.')),
       );
     }
   }

@@ -64,14 +64,14 @@ class _ApprovalsScreenState extends ConsumerState<ApprovalsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
-                          final details = filtered[index];
+                          final propertyWithUser = filtered[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: PendingPropertyCard(
-                              details: details,
+                              propertyWithUser: propertyWithUser,
                               onTap: () => _showDetails(
                                 context,
-                                details.property as PropertyModel,
+                                propertyWithUser.property as PropertyModel,
                               ),
                             ),
                           );

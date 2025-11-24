@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'package:homify/core/error/failure.dart';
 import 'package:homify/features/admin/data/models/admin_stats_model.dart';
-import 'package:homify/features/admin/presentation/providers/admin_provider.dart';
+import 'package:homify/features/admin/domain/entities/chart_data.dart';
+import 'package:homify/features/auth/data/models/user_model.dart';
 import 'package:homify/features/properties/data/models/property_model.dart';
 
 // -------------------------------------------------------------------
@@ -12,6 +13,8 @@ abstract class AdminRemoteDataSource {
   Future<AdminStatsModel> getAdminStats();
   Future<List<ChartData>> getGraphData(String filter);
   Stream<List<PropertyModel>> getPendingPropertiesStream();
+  Stream<List<PropertyModel>> getAllPropertiesStream();
+  Stream<List<UserModel>> getAllUsersStream();
 }
 
 // -------------------------------------------------------------------
@@ -159,6 +162,40 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
       return Stream.error(
         ServerFailure('Failed to stream pending properties.'),
       );
+    }
+  }
+
+  @override
+  Stream<List<PropertyModel>> getAllPropertiesStream() {
+    try {
+      return _firestore
+          .collection('properties')
+          .orderBy('created_at', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) => snapshot.docs
+                .map((doc) => PropertyModel.fromFirestore(doc))
+                .toList(),
+          );
+    } catch (e) {
+      return Stream.error(ServerFailure('Failed to stream all properties.'));
+    }
+  }
+
+  @override
+  Stream<List<UserModel>> getAllUsersStream() {
+    try {
+      return _firestore
+          .collection('users')
+          .orderBy('created_at', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) => snapshot.docs
+                .map((doc) => UserModel.fromSnapshot(doc))
+                .toList(),
+          );
+    } catch (e) {
+      return Stream.error(ServerFailure('Failed to stream all users.'));
     }
   }
 

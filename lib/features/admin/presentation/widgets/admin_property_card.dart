@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:homify/features/admin/domain/entities/property_with_user.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
-import 'package:homify/features/admin/domain/entities/property_with_user.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class PendingPropertyCard extends StatelessWidget {
+class AdminPropertyCard extends StatelessWidget {
   final PropertyWithUser propertyWithUser;
   final VoidCallback onTap;
 
-  const PendingPropertyCard({
+  const AdminPropertyCard({
     super.key,
     required this.propertyWithUser,
     required this.onTap,
@@ -26,6 +26,8 @@ class PendingPropertyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final property = propertyWithUser.property;
     final user = propertyWithUser.user;
+    final isApproved =
+        property.isVerified; // Assuming isVerified means approved
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -56,7 +58,7 @@ class PendingPropertyCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header - Responsive
+              // Header - Owner & Status
               Row(
                 children: [
                   Container(
@@ -93,47 +95,19 @@ class PendingPropertyCard extends StatelessWidget {
                     ),
                   ),
                   const Gap(8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: primary.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(LucideIcons.clock, size: 12, color: primary),
-                        const Gap(4),
-                        Text(
-                          'Pending',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildStatusBadge(context, isApproved),
                 ],
               ),
 
               const Gap(12),
 
-              // Submission time
+              // Submission time (if available, or just created at)
               Row(
                 children: [
                   Icon(LucideIcons.calendar, size: 14, color: textSecondary),
                   const Gap(6),
                   Text(
-                    'Submitted ${_timeAgo(property.createdAt)}',
+                    'Added ${_timeAgo(property.createdAt)}',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: textSecondary,
                       fontWeight: FontWeight.w600,
@@ -144,7 +118,7 @@ class PendingPropertyCard extends StatelessWidget {
 
               const Gap(16),
 
-              // Image - Fixed aspect ratio
+              // Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: AspectRatio(
@@ -167,7 +141,6 @@ class PendingPropertyCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            // Image count badge
                             if (property.imageUrls.length > 1)
                               Positioned(
                                 top: 12,
@@ -257,16 +230,12 @@ class PendingPropertyCard extends StatelessWidget {
               ),
 
               const Gap(16),
-
-              // Divider
               Container(height: 1, color: surface.withValues(alpha: 0.5)),
-
               const Gap(16),
 
-              // Bottom section - Price & Actions
+              // Bottom section
               Row(
                 children: [
-                  // Price
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +256,6 @@ class PendingPropertyCard extends StatelessWidget {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Philippine Peso Icon
                               Icon(
                                 LucideIcons.philippinePeso,
                                 size: 16,
@@ -314,10 +282,7 @@ class PendingPropertyCard extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const Gap(12),
-
-                  // Property type badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -326,41 +291,22 @@ class PendingPropertyCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: surface.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: primary.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
+                      border: Border.all(color: primary.withValues(alpha: 0.3)),
                     ),
-                    child: Text(
-                      _formatType(property.type),
-                      style: HomifyTypography.semibold(
-                        HomifyTypography.label2.copyWith(color: textPrimary),
-                      ),
+                    child: Row(
+                      children: [
+                        Text(
+                          'View Details',
+                          style: HomifyTypography.medium(
+                            HomifyTypography.label3.copyWith(color: primary),
+                          ),
+                        ),
+                        const Gap(4),
+                        Icon(LucideIcons.arrowRight, size: 16, color: primary),
+                      ],
                     ),
                   ),
                 ],
-              ),
-
-              const Gap(16),
-
-              // View details button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: onTap,
-                  icon: const Icon(LucideIcons.eye, size: 18),
-                  label: const Text('View Details'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: textPrimary,
-                    foregroundColor: Colors.white,
-                    elevation: 1,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    textStyle: HomifyTypography.bold(HomifyTypography.label1),
-                  ),
-                ),
               ),
             ],
           ),
@@ -369,21 +315,56 @@ class PendingPropertyCard extends StatelessWidget {
     );
   }
 
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()}w ago';
-    return '${(diff.inDays / 30).floor()}mo ago';
+  Widget _buildStatusBadge(BuildContext context, bool isApproved) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isApproved
+            ? Colors.green.withValues(alpha: 0.15)
+            : Colors.orange.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isApproved
+              ? Colors.green.withValues(alpha: 0.3)
+              : Colors.orange.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isApproved ? LucideIcons.circleCheck : LucideIcons.clock,
+            size: 12,
+            color: isApproved ? Colors.green : Colors.orange,
+          ),
+          const Gap(4),
+          Text(
+            isApproved ? 'Approved' : 'Pending',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: isApproved ? Colors.green : Colors.orange,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  String _formatType(PropertyType type) {
-    return type.name
-        .replaceAll('_', ' ')
-        .split(' ')
-        .map((e) => e[0].toUpperCase() + e.substring(1))
-        .join(' ');
+  String _timeAgo(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
+    if (difference.inDays > 365) {
+      return '${(difference.inDays / 365).floor()}y ago';
+    } else if (difference.inDays > 30) {
+      return '${(difference.inDays / 30).floor()}mo ago';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 }

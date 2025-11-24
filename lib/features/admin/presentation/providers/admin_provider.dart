@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:homify/features/admin/data/datasources/admin_remote_data_source.dart';
 import 'package:homify/features/admin/data/models/admin_stats_model.dart';
 import 'package:homify/features/admin/data/repositories/admin_repository_impl.dart';
+import 'package:homify/features/admin/domain/entities/property_with_user.dart';
 import 'package:homify/features/admin/domain/repositories/admin_repository.dart';
 import 'package:homify/features/admin/domain/usecases/get_admin_stats.dart';
 import 'package:homify/features/admin/domain/usecases/get_graph_data.dart';
+import 'package:homify/features/admin/domain/entities/chart_data.dart';
+import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
@@ -40,12 +43,6 @@ final getGraphDataUsecaseProvider = Provider<GetGraphData>((ref) {
   final repository = ref.watch(adminRepositoryProvider);
   return GetGraphData(repository);
 });
-
-class ChartData {
-  ChartData(this.day, this.users);
-  final String day;
-  final double users;
-}
 
 // -------------------------------------------------------------------
 // 2. Chart Filter Provider
@@ -108,4 +105,26 @@ final adminGraphDataProvider = FutureProvider<List<ChartData>>((ref) async {
       return chartData;
     },
   );
+});
+
+// -------------------------------------------------------------------
+// 5. All Properties Provider
+// -------------------------------------------------------------------
+
+final allPropertiesProvider = StreamProvider<List<PropertyWithUser>>((ref) {
+  final adminRepo = ref.watch(adminRepositoryProvider);
+  return adminRepo.getAllProperties().map((either) {
+    return either.fold((failure) => [], (properties) => properties);
+  });
+});
+
+// -------------------------------------------------------------------
+// 6. All Users Provider
+// -------------------------------------------------------------------
+
+final allUsersProvider = StreamProvider<List<UserEntity>>((ref) {
+  final adminRepo = ref.watch(adminRepositoryProvider);
+  return adminRepo.getAllUsers().map((either) {
+    return either.fold((failure) => [], (users) => users);
+  });
 });

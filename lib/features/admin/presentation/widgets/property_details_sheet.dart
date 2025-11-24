@@ -4,19 +4,21 @@ import 'package:homify/features/properties/domain/entities/property_entity.dart'
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
-import 'package:homify/features/properties/data/models/property_model.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PropertyDetailsSheet extends StatefulWidget {
-  final PropertyModel property;
+  final PropertyEntity property;
   final VoidCallback onApprove;
   final VoidCallback onReject;
+  final bool showActions;
 
   const PropertyDetailsSheet({
     super.key,
     required this.property,
     this.onApprove = _defaultApprove,
     this.onReject = _defaultReject,
+    this.showActions = true,
   });
 
   static void _defaultApprove() {}
@@ -567,58 +569,60 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                   const Gap(8),
 
                   // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            widget.onReject();
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(LucideIcons.x, size: 20),
-                          label: const Text('Reject'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red.shade700,
-                            side: BorderSide(
-                              color: Colors.red.shade400,
-                              width: 2,
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            textStyle: HomifyTypography.semibold(
-                              HomifyTypography.label1,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const Gap(16),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            widget.onApprove();
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(LucideIcons.check, size: 20),
-                          label: const Text('Approve'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primary,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            textStyle: HomifyTypography.bold(
-                              HomifyTypography.label1,
+                  if (widget.showActions) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              widget.onReject();
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(LucideIcons.x, size: 20),
+                            label: const Text('Reject'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red.shade700,
+                              side: BorderSide(
+                                color: Colors.red.shade400,
+                                width: 2,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              textStyle: HomifyTypography.semibold(
+                                HomifyTypography.label1,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const Gap(20),
+                        const Gap(16),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              widget.onApprove();
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(LucideIcons.check, size: 20),
+                            label: const Text('Approve'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              textStyle: HomifyTypography.bold(
+                                HomifyTypography.label1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Gap(20),
+                  ],
                 ],
               ),
             ),

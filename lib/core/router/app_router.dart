@@ -16,6 +16,9 @@ import 'package:homify/features/home/presentation/pages/home_page.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
 import 'package:homify/features/properties/presentation/pages/property_success_page.dart';
+import 'package:homify/features/admin/presentation/pages/approvals_screen.dart';
+import 'package:homify/features/admin/presentation/pages/all_properties_screen.dart';
+import 'package:homify/features/admin/presentation/pages/all_users_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -112,7 +115,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
         }
 
-        // 7. Default Home Redirect
+        // 7. Admin Guard
+        if (path.startsWith('/admin')) {
+          if (userModel?.accountType != AccountType.admin) {
+            debugPrint('Router: Non-admin attempted to access admin route');
+            return '/home';
+          }
+        }
+
+        // 8. Default Home Redirect
         final isAuthPage = [
           '/',
           '/login',
@@ -174,6 +185,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      // ADMIN ROUTES
+      GoRoute(
+        path: '/admin/approvals',
+        builder: (context, state) => const ApprovalsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/all-properties',
+        builder: (context, state) => const AllPropertiesScreen(),
+      ),
+      GoRoute(
+        path: '/admin/all-users',
+        builder: (context, state) {
+          final extra = state.extra as int? ?? 0;
+          return AllUsersScreen(initialIndex: extra);
+        },
       ),
     ],
   );

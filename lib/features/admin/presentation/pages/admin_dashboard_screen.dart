@@ -1,9 +1,11 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/admin/data/models/admin_stats_model.dart';
 import 'package:homify/features/admin/presentation/providers/admin_provider.dart';
 import 'package:homify/features/admin/presentation/widgets/admin_kpi_card.dart';
+import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
 import 'package:homify/features/admin/presentation/widgets/quick_action_card.dart';
 import 'package:homify/features/admin/presentation/widgets/registration_trend_card.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -69,6 +71,11 @@ class AdminDashboardScreen extends ConsumerWidget {
                             value: stats.pendingApprovals,
                             icon: LucideIcons.clock,
                             color: Colors.orange.shade700,
+                            onTap: () {
+                              // Switch to the "Approvals" tab (index 1)
+                              ref.read(bottomNavIndexProvider.notifier).state =
+                                  1;
+                            },
                           ),
                         ),
                         SizedBox(
@@ -78,6 +85,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                             value: stats.totalProperties,
                             icon: LucideIcons.house,
                             color: Colors.blue.shade700,
+                            onTap: () => context.push('/admin/all-properties'),
                           ),
                         ),
                         SizedBox(
@@ -87,6 +95,10 @@ class AdminDashboardScreen extends ConsumerWidget {
                             value: stats.totalTenants,
                             icon: LucideIcons.users,
                             color: Colors.green.shade700,
+                            onTap: () => context.push(
+                              '/admin/all-users',
+                              extra: 0, // 0 for Tenants tab
+                            ),
                           ),
                         ),
                         SizedBox(
@@ -96,6 +108,10 @@ class AdminDashboardScreen extends ConsumerWidget {
                             value: stats.totalOwners,
                             icon: LucideIcons.userCog,
                             color: Colors.purple.shade700,
+                            onTap: () => context.push(
+                              '/admin/all-users',
+                              extra: 1, // 1 for Owners tab
+                            ),
                           ),
                         ),
                       ],
@@ -120,17 +136,25 @@ class AdminDashboardScreen extends ConsumerWidget {
                     QuickActionCard(
                       label: "Review Properties",
                       icon: LucideIcons.circleCheckBig,
-                      onTap: () {},
+                      onTap: () {
+                        ref.read(bottomNavIndexProvider.notifier).state = 1;
+                      },
                     ),
                     QuickActionCard(
                       label: "Manage Users",
                       icon: LucideIcons.usersRound,
-                      onTap: () {},
+                      onTap: () => context.push('/admin/all-users'),
                     ),
                     QuickActionCard(
                       label: "View Reports",
                       icon: LucideIcons.chartColumnIncreasing,
-                      onTap: () {},
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Reports feature coming soon!'),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
