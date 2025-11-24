@@ -13,4 +13,6 @@ abstract class PropertyRepository {
   Future<Either<Failure, List<PropertyEntity>>> getPropertiesByOwner(
     String ownerUid,
   );
+
+  Future<Either<Failure, PropertyEntity>> getPropertyById(String id);
 }
