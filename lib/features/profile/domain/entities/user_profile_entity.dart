@@ -14,6 +14,10 @@ class UserProfile {
   final String? schoolId;
   final String? ownerId;
   final String? photoUrl;
+  final String? mobile;
+  final String? school;
+  final String? occupation;
+  final Map<String, dynamic>? preferences;
 
   const UserProfile({
     required this.uid,
@@ -28,6 +32,10 @@ class UserProfile {
     this.schoolId,
     this.ownerId,
     this.photoUrl,
+    this.mobile,
+    this.school,
+    this.occupation,
+    this.preferences,
   });
 
   String get fullName => '$firstName $lastName';
@@ -41,5 +49,12 @@ class UserProfile {
       case AccountType.tenant:
         return 'Tenant';
     }
+  }
+
+  String get displayOccupation {
+    if (role == AccountType.admin) {
+      return 'Administrator';
+    }
+    return occupation ?? 'N/A';
   }
 }

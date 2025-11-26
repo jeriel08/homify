@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/profile/domain/entities/user_profile_entity.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ProfileHeader extends StatelessWidget {
   final UserProfile profile;
+  final bool showEditButton;
+  final VoidCallback? onEditTap;
 
-  const ProfileHeader({super.key, required this.profile});
+  const ProfileHeader({
+    super.key,
+    required this.profile,
+    this.showEditButton = false,
+    this.onEditTap,
+  });
 
   // Brand colors
   static const Color primary = Color(0xFF32190D);
@@ -45,14 +53,30 @@ class ProfileHeader extends StatelessWidget {
         ),
         const Gap(16),
 
-        // Name
-        Text(
-          profile.fullName,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: textPrimary,
-          ),
-          textAlign: TextAlign.center,
+        // Name with edit button
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              profile.fullName,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (showEditButton) ...[
+              const Gap(8),
+              IconButton(
+                icon: const Icon(LucideIcons.pencil, size: 20),
+                color: primary,
+                onPressed: onEditTap,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ],
         ),
         const Gap(8),
 

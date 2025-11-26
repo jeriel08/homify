@@ -17,6 +17,10 @@ class UserProfileModel extends UserProfile {
     super.schoolId,
     super.ownerId,
     super.photoUrl,
+    super.mobile,
+    super.school,
+    super.occupation,
+    super.preferences,
   });
 
   /// Create model from Firestore document
@@ -36,6 +40,10 @@ class UserProfileModel extends UserProfile {
       schoolId: data['school'] as String?,
       ownerId: data['owner_id'] as String?,
       photoUrl: data['photo_url'] as String?,
+      mobile: data['mobile'] as String?,
+      school: data['school'] as String?,
+      occupation: data['occupation'] as String?,
+      preferences: data['preferences'] as Map<String, dynamic>?,
     );
   }
 
@@ -54,6 +62,10 @@ class UserProfileModel extends UserProfile {
       schoolId: entity.schoolId,
       ownerId: entity.ownerId,
       photoUrl: entity.photoUrl,
+      mobile: entity.mobile,
+      school: entity.school,
+      occupation: entity.occupation,
+      preferences: entity.preferences,
     );
   }
 

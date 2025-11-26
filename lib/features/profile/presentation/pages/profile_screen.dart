@@ -4,8 +4,10 @@ import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
+import 'package:homify/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:homify/features/profile/domain/usecases/ban_user.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
 import 'package:homify/features/profile/presentation/widgets/ban_user_dialog.dart';
@@ -13,6 +15,7 @@ import 'package:homify/features/profile/presentation/widgets/profile_header.dart
 import 'package:homify/features/profile/presentation/widgets/profile_info_section.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class ProfileScreen extends ConsumerWidget {
   final String userId;
@@ -36,7 +39,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: background,
       body: profileAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => _buildSkeletonLoading(context),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -69,14 +72,14 @@ class ProfileScreen extends ConsumerWidget {
                 onPressed: () => Navigator.of(context).pop(),
               ),
               actions: [
-                if (isOwnProfile)
+                if (!isOwnProfile)
                   IconButton(
-                    icon: const Icon(LucideIcons.pencil, color: primary),
+                    icon: const Icon(LucideIcons.flag, color: primary),
                     onPressed: () {
-                      // Navigate to edit profile
-                      Navigator.of(
-                        context,
-                      ).pushNamed('/profile/edit', arguments: profile);
+                      context.push(
+                        '/report',
+                        extra: {'targetId': userId, 'targetType': 'user'},
+                      );
                     },
                   ),
               ],
@@ -88,12 +91,18 @@ class ProfileScreen extends ConsumerWidget {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   // Header
-                  ProfileHeader(profile: profile),
+                  ProfileHeader(
+                    profile: profile,
+                    showEditButton: isOwnProfile,
+                    onEditTap: () {},
+                  ),
                   const Gap(32),
 
                   // Personal Information
                   ProfileInfoSection(
                     title: 'Personal Information',
+                    showEditButton: isOwnProfile,
+                    onEditTap: () {},
                     rows: [
                       InfoRow(
                         label: 'Email',
@@ -101,10 +110,22 @@ class ProfileScreen extends ConsumerWidget {
                         icon: LucideIcons.mail,
                       ),
                       InfoRow(
-                        label: 'Account Type',
-                        value: profile.displayRole,
-                        icon: LucideIcons.user,
+                        label: 'Occupation',
+                        value: profile.displayOccupation,
+                        icon: LucideIcons.briefcase,
                       ),
+                      if (profile.mobile != null)
+                        InfoRow(
+                          label: 'Mobile Number',
+                          value: profile.mobile!,
+                          icon: LucideIcons.phone,
+                        ),
+                      if (profile.school != null)
+                        InfoRow(
+                          label: 'School',
+                          value: profile.school!,
+                          icon: LucideIcons.school,
+                        ),
                       InfoRow(
                         label: 'Member Since',
                         value: DateFormat(
@@ -130,6 +151,38 @@ class ProfileScreen extends ConsumerWidget {
                               : 'Unknown',
                           icon: LucideIcons.shieldAlert,
                         ),
+                      ],
+                    ),
+                  ],
+
+                  // Preferences Section
+                  if (profile.preferences != null) ...[
+                    const Gap(24),
+                    ProfileInfoSection(
+                      title: 'Preferences',
+                      showEditButton: isOwnProfile,
+                      onEditTap: () {},
+                      rows: [
+                        if (profile.preferences!['dealbreakers'] != null &&
+                            (profile.preferences!['dealbreakers']
+                                    as List<dynamic>)
+                                .isNotEmpty)
+                          InfoRow(
+                            label: 'Dealbreakers',
+                            value:
+                                (profile.preferences!['dealbreakers']
+                                        as List<dynamic>)
+                                    .join(', '),
+                            icon: LucideIcons.shieldAlert,
+                          ),
+                        if (profile.preferences!['min_budget'] != null &&
+                            profile.preferences!['max_budget'] != null)
+                          InfoRow(
+                            label: 'Budget Range',
+                            value:
+                                '₱${NumberFormat('#,###').format(profile.preferences!['min_budget'])} - ₱${NumberFormat('#,###').format(profile.preferences!['max_budget'])}',
+                            icon: LucideIcons.wallet,
+                          ),
                       ],
                     ),
                   ],
@@ -289,5 +342,74 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ).show(context);
     }
+  }
+
+  Widget _buildSkeletonLoading(BuildContext context) {
+    return Skeletonizer(
+      enabled: true,
+      child: CustomScrollView(
+        slivers: [
+          // App Bar
+          SliverAppBar(
+            backgroundColor: background,
+            elevation: 0,
+            pinned: false,
+            floating: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: primary),
+              onPressed: () {},
+            ),
+          ),
+
+          // Content
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Header skeleton
+                ProfileHeader(
+                  profile: UserProfile(
+                    uid: 'skeleton',
+                    firstName: 'Loading',
+                    lastName: 'User',
+                    email: 'loading@example.com',
+                    role: AccountType.tenant,
+                    createdAt: DateTime.now(),
+                  ),
+                ),
+                const Gap(32),
+
+                // Personal Information skeleton
+                ProfileInfoSection(
+                  title: 'Personal Information',
+                  rows: [
+                    InfoRow(
+                      label: 'Email',
+                      value: 'loading@example.com',
+                      icon: LucideIcons.mail,
+                    ),
+                    InfoRow(
+                      label: 'Occupation',
+                      value: 'Loading...',
+                      icon: LucideIcons.briefcase,
+                    ),
+                    InfoRow(
+                      label: 'Mobile Number',
+                      value: '+63 XXX XXX XXXX',
+                      icon: LucideIcons.phone,
+                    ),
+                    InfoRow(
+                      label: 'Member Since',
+                      value: 'January 1, 2024',
+                      icon: LucideIcons.calendar,
+                    ),
+                  ],
+                ),
+              ]),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

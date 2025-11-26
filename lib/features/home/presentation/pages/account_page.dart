@@ -94,8 +94,8 @@ class AccountPage extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             children: [
               // ───── 1. DYNAMIC PROFILE HEADER ─────
+              // ───── 1. DYNAMIC PROFILE HEADER ─────
               Container(
-                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -107,40 +107,52 @@ class AccountPage extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundColor: Colors.grey.shade300,
-                      backgroundImage: avatarBackgroundImage,
-                      child: avatarChild,
-                    ),
-                    const SizedBox(width: 16),
-
-                    // --- Dynamic Name & Email ---
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      context.push('/profile/${user.uid}');
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
                         children: [
-                          // This now uses the user's actual name
-                          Text(
-                            fullname,
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF32190D),
-                            ),
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: Colors.grey.shade300,
+                            backgroundImage: avatarBackgroundImage,
+                            child: avatarChild,
                           ),
-                          // This now shows the user's email
-                          Text(
-                            user.email, // <-- DYNAMIC
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey.shade700,
+                          const SizedBox(width: 16),
+
+                          // --- Dynamic Name & Email ---
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // This now uses the user's actual name
+                                Text(
+                                  fullname,
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF32190D),
+                                  ),
+                                ),
+                                // This now shows the user's email
+                                Text(
+                                  user.email, // <-- DYNAMIC
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
