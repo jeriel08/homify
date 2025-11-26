@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
-import 'package:homify/features/properties/presentation/widgets/owner_property_card.dart';
+import 'package:homify/features/properties/presentation/widgets/owner/owner_property_card.dart';
+import 'package:homify/features/properties/presentation/widgets/owner/owner_property_details_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MyPropertiesScreen extends ConsumerWidget {
@@ -65,11 +66,21 @@ class MyPropertiesScreen extends ConsumerWidget {
                           final property = state.properties[index];
                           return OwnerPropertyCard(
                             property: property,
-                            onEdit: () {
-                              // Navigate to Edit Screen
-                            },
-                            onDelete: () {
-                              // Show Delete Confirmation Dialog
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) => OwnerPropertyDetailsSheet(
+                                  property: property,
+                                  onEdit: () {
+                                    // TODO: Navigate to edit screen
+                                  },
+                                  onDelete: () {
+                                    // TODO: Show delete confirmation
+                                  },
+                                ),
+                              );
                             },
                           );
                         },

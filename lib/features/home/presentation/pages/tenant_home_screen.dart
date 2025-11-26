@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/home/presentation/widgets/property_carousel.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
-import 'package:homify/features/properties/presentation/widgets/tenant_property_card.dart';
+import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_card.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class TenantHomeScreen extends StatefulWidget {
