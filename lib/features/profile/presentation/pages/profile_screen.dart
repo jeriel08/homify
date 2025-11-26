@@ -1,5 +1,6 @@
 import 'package:delightful_toast/delight_toast.dart';
 import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -204,6 +205,7 @@ class ProfileScreen extends ConsumerWidget {
         result.fold(
           (failure) {
             DelightToastBar(
+              position: DelightSnackbarPosition.top,
               snackbarDuration: const Duration(seconds: 3),
               builder: (context) => ToastCard(
                 color: Colors.red,
@@ -221,6 +223,7 @@ class ProfileScreen extends ConsumerWidget {
 
             DelightToastBar(
               snackbarDuration: const Duration(seconds: 3),
+              position: DelightSnackbarPosition.top,
               builder: (context) => const ToastCard(
                 color: Colors.green,
                 leading: Icon(Icons.check_circle, color: Colors.white),
@@ -242,6 +245,7 @@ class ProfileScreen extends ConsumerWidget {
         result.fold(
           (failure) {
             DelightToastBar(
+              position: DelightSnackbarPosition.top,
               snackbarDuration: const Duration(seconds: 3),
               builder: (context) => ToastCard(
                 color: Colors.red,
@@ -258,6 +262,7 @@ class ProfileScreen extends ConsumerWidget {
             ref.invalidate(userProfileProvider(userId));
 
             DelightToastBar(
+              position: DelightSnackbarPosition.top,
               snackbarDuration: const Duration(seconds: 3),
               builder: (context) => const ToastCard(
                 color: Colors.green,

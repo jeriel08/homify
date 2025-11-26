@@ -9,6 +9,7 @@ import 'package:homify/features/auth/presentation/pages/registration_page.dart';
 import 'package:homify/features/auth/presentation/pages/role_selection_page.dart';
 import 'package:homify/features/auth/presentation/pages/success_pages/pending_email_verification.dart';
 import 'package:homify/features/auth/presentation/pages/success_pages/tenant_success_page.dart';
+import 'package:homify/features/auth/presentation/pages/success_pages/user_banned_screen.dart';
 import 'package:homify/features/auth/presentation/pages/tenant_onboarding_page.dart';
 import 'package:homify/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:homify/features/home/presentation/pages/account_page.dart';
@@ -19,6 +20,7 @@ import 'package:homify/features/properties/presentation/pages/property_success_p
 import 'package:homify/features/admin/presentation/pages/approvals_screen.dart';
 import 'package:homify/features/admin/presentation/pages/all_properties_screen.dart';
 import 'package:homify/features/admin/presentation/pages/all_users_screen.dart';
+import 'package:homify/features/admin/presentation/pages/banned_users_screen.dart';
 import 'package:homify/features/reports/domain/entities/report_entity.dart';
 import 'package:homify/features/reports/presentation/pages/admin_reports_screen.dart';
 import 'package:homify/features/reports/presentation/pages/report_details_screen.dart';
@@ -86,6 +88,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           return '/verify-email';
         }
 
+        // 4. Banned User Check
+        if (userModel?.isBanned == true) {
+          if (path == '/user-banned') return null;
+          return '/user-banned';
+        }
+
         // 5. Onboarding Guard
         if (userModel != null && !userModel.onboardingComplete) {
           debugPrint(
@@ -116,6 +124,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             '/role-selection',
             '/verify-email',
             '/owner-onboarding',
+            '/user-banned',
           ];
           if (restrictedPaths.contains(path)) {
             return '/home';
@@ -159,6 +168,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegistrationPage(),
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+      GoRoute(
+        path: '/user-banned',
+        builder: (context, state) => const UserBannedScreen(),
+      ),
 
       // NEW ROUTES
       GoRoute(
@@ -208,6 +221,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           final extra = state.extra as int? ?? 0;
           return AllUsersScreen(initialIndex: extra);
         },
+      ),
+      GoRoute(
+        path: '/admin/banned-users',
+        builder: (context, state) => const BannedUsersScreen(),
       ),
       GoRoute(
         path: '/admin/reports',

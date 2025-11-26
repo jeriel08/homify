@@ -2,33 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/admin/presentation/providers/admin_provider.dart';
 import 'package:homify/features/admin/presentation/widgets/admin_search_bar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class AllUsersScreen extends ConsumerStatefulWidget {
-  final int initialIndex; // 0 for Tenants, 1 for Owners
-  const AllUsersScreen({super.key, this.initialIndex = 0});
+class BannedUsersScreen extends ConsumerStatefulWidget {
+  const BannedUsersScreen({super.key});
 
   @override
-  ConsumerState<AllUsersScreen> createState() => _AllUsersScreenState();
+  ConsumerState<BannedUsersScreen> createState() => _BannedUsersScreenState();
 }
 
-class _AllUsersScreenState extends ConsumerState<AllUsersScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _BannedUsersScreenState extends ConsumerState<BannedUsersScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-      length: 2,
-      vsync: this,
-      initialIndex: widget.initialIndex,
-    );
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -38,7 +29,6 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen>
 
   @override
   void dispose() {
-    _tabController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -49,7 +39,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen>
       backgroundColor: const Color(0xFFFFFAF5),
       appBar: AppBar(
         title: Text(
-          'Manage Users',
+          'Banned Users',
           style: Theme.of(
             context,
           ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
@@ -60,33 +50,6 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen>
         centerTitle: true,
         elevation: 5,
         shadowColor: Colors.black.withValues(alpha: 0.2),
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.push('/admin/banned-users');
-            },
-            icon: const Icon(LucideIcons.ban),
-            tooltip: 'Banned Users',
-          ),
-          const Gap(8),
-        ],
-
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: const Color(0xFFE05725),
-          labelColor: const Color(0xFFE05725),
-          unselectedLabelColor: const Color(0xFF6B4F3C),
-          labelStyle: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          unselectedLabelStyle: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400),
-          tabs: const [
-            Tab(text: 'Tenants'),
-            Tab(text: 'Owners'),
-          ],
-        ),
       ),
       body: Column(
         children: [
@@ -101,33 +64,23 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen>
                   _searchQuery = value.toLowerCase();
                 });
               },
-              hintText: 'Search users...',
+              hintText: 'Search banned users...',
             ),
           ),
           const Gap(16),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [_buildUserList('Tenants'), _buildUserList('Owners')],
-            ),
-          ),
+          Expanded(child: _buildUserList()),
         ],
       ),
     );
   }
 
-  Widget _buildUserList(String type) {
+  Widget _buildUserList() {
     final allUsersAsync = ref.watch(allUsersProvider);
 
     return allUsersAsync.when(
       data: (users) {
         final filteredUsers = users.where((user) {
-          final matchesType = type == 'Tenants'
-              ? user.accountType == AccountType.tenant
-              : user.accountType == AccountType.owner;
-
-          if (!matchesType) return false;
-          if (user.isBanned) return false; // Exclude banned users
+          if (!user.isBanned) return false;
 
           if (_searchQuery.isEmpty) return true;
 
@@ -141,10 +94,12 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(LucideIcons.users, size: 60, color: Colors.grey.shade400),
+                Icon(LucideIcons.ban, size: 60, color: Colors.grey.shade400),
                 const Gap(16),
                 Text(
-                  _searchQuery.isEmpty ? 'No $type found' : 'No results found',
+                  _searchQuery.isEmpty
+                      ? 'No banned users found'
+                      : 'No results found',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.grey.shade600,
                   ),
@@ -188,9 +143,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen>
                   children: [
                     CircleAvatar(
                       radius: 24,
-                      backgroundColor: const Color(
-                        0xFFE05725,
-                      ).withValues(alpha: 0.1),
+                      backgroundColor: Colors.red.withValues(alpha: 0.1),
                       backgroundImage: AssetImage(imageAsset),
                     ),
                     const Gap(16),
