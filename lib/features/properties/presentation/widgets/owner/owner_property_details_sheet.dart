@@ -6,6 +6,7 @@ import 'package:homify/features/properties/presentation/widgets/property_address
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:homify/features/properties/presentation/pages/edit_property_page.dart';
 
 class OwnerPropertyDetailsSheet extends StatefulWidget {
   final PropertyEntity property;
@@ -576,11 +577,12 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () {
-                            // TODO: Implement edit functionality
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Edit functionality coming soon'),
-                                duration: Duration(seconds: 2),
+                            Navigator.pop(context); // Close the sheet
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditPropertyPage(property: widget.property),
                               ),
                             );
                           },

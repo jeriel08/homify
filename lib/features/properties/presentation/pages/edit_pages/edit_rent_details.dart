@@ -1,0 +1,294 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
+
+class EditRentDetails extends StatefulWidget {
+  final PropertyEntity property;
+
+  const EditRentDetails({super.key, required this.property});
+
+  @override
+  State<EditRentDetails> createState() => _EditRentDetailsState();
+}
+
+class _EditRentDetailsState extends State<EditRentDetails> {
+  late final TextEditingController _rentCtrl;
+  late RentChargeMethod _selectedMethod;
+  bool _triedSave = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _rentCtrl = TextEditingController(
+      text: widget.property.rentAmount.toInt().toString(),
+    );
+    _selectedMethod = widget.property.rentChargeMethod;
+  }
+
+  @override
+  void dispose() {
+    _rentCtrl.dispose();
+    super.dispose();
+  }
+
+  String? _rentError() {
+    if (!_triedSave) return null;
+    final v = _rentCtrl.text.trim();
+    if (v.isEmpty) return 'Enter rent amount';
+    final amount = int.tryParse(v);
+    if (amount == null || amount <= 0) return 'Enter a valid amount';
+    return null;
+  }
+
+  Future<void> _save() async {
+    setState(() => _triedSave = true);
+
+    final rentError = _rentError();
+
+    if (rentError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid rent amount')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    // TODO: Implement update property use case
+    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      Navigator.pop(context, {
+        'rentAmount': double.parse(_rentCtrl.text.trim()),
+        'rentChargeMethod': _selectedMethod,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Rent details updated'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rentError = _rentError();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF8F0),
+      appBar: AppBar(
+        title: Text(
+          'Edit Rent Details',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF32190D),
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: const Color(0xFFF9E5C5),
+        foregroundColor: const Color(0xFF32190D),
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+
+                  // Header
+                  Text(
+                    "Update rent amount and charge method",
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF32190D),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  Text(
+                    "Set the monthly rent and how it's charged.",
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Rent Amount
+                  TextField(
+                    controller: _rentCtrl,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: 'Monthly rent amount',
+                      hintText: 'e.g. 8500',
+                      prefixText: '₱ ',
+                      errorText: rentError,
+                      errorStyle: const TextStyle(color: Colors.red),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF32190D),
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF32190D),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    cursorColor: const Color(0xFF32190D),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Charge Method Section
+                  Text(
+                    'Charge method',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF32190D),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Charge Method Radio Card
+                  Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      side: const BorderSide(
+                        color: Color(0xFF32190D),
+                        width: 2,
+                      ),
+                    ),
+                    color: const Color(0xFFFFEDD4),
+                    child: RadioGroup<RentChargeMethod>(
+                      groupValue: _selectedMethod,
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedMethod = value);
+                        }
+                      },
+                      child: Column(
+                        children: [
+                          ListTile(
+                            title: const Text(
+                              'Per Unit',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF32190D),
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Rent for the entire room/unit',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            trailing: Radio<RentChargeMethod>(
+                              value: RentChargeMethod.perUnit,
+                              activeColor: const Color(0xFF32190D),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 4,
+                            ),
+                          ),
+                          ListTile(
+                            title: const Text(
+                              'Per Bed',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF32190D),
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Rent per bed (shared room)',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            trailing: Radio<RentChargeMethod>(
+                              value: RentChargeMethod.perBed,
+                              activeColor: const Color(0xFF32190D),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+
+          // Save Button
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF32190D),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    : const Text(
+                        'Save Changes',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
