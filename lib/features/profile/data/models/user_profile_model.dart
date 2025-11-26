@@ -7,6 +7,7 @@ class UserProfileModel extends UserProfile {
   const UserProfileModel({
     required super.uid,
     required super.firstName,
+    super.middleName,
     required super.lastName,
     required super.email,
     required super.role,
@@ -21,6 +22,7 @@ class UserProfileModel extends UserProfile {
     super.school,
     super.occupation,
     super.preferences,
+    super.isEmailVerified,
   });
 
   /// Create model from Firestore document
@@ -30,6 +32,7 @@ class UserProfileModel extends UserProfile {
     return UserProfileModel(
       uid: doc.id,
       firstName: data['first_name'] as String? ?? '',
+      middleName: data['middle_name'] as String?,
       lastName: data['last_name'] as String? ?? '',
       email: data['email'] as String? ?? '',
       role: _parseAccountType(data['account_type'] as String?),
@@ -44,6 +47,7 @@ class UserProfileModel extends UserProfile {
       school: data['school'] as String?,
       occupation: data['occupation'] as String?,
       preferences: data['preferences'] as Map<String, dynamic>?,
+      isEmailVerified: data['email_verified'] as bool?,
     );
   }
 
@@ -52,6 +56,7 @@ class UserProfileModel extends UserProfile {
     return UserProfileModel(
       uid: entity.uid,
       firstName: entity.firstName,
+      middleName: entity.middleName,
       lastName: entity.lastName,
       email: entity.email,
       role: entity.role,
@@ -66,6 +71,7 @@ class UserProfileModel extends UserProfile {
       school: entity.school,
       occupation: entity.occupation,
       preferences: entity.preferences,
+      isEmailVerified: entity.isEmailVerified,
     );
   }
 

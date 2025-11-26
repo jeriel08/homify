@@ -94,7 +94,7 @@ class ProfileScreen extends ConsumerWidget {
                   ProfileHeader(
                     profile: profile,
                     showEditButton: isOwnProfile,
-                    onEditTap: () {},
+                    onEditTap: () => context.push('/profile/edit/name/$userId'),
                   ),
                   const Gap(32),
 
@@ -102,7 +102,9 @@ class ProfileScreen extends ConsumerWidget {
                   ProfileInfoSection(
                     title: 'Personal Information',
                     showEditButton: isOwnProfile,
-                    onEditTap: () {},
+                    onEditTap: () => context.push(
+                      '/profile/edit/personal-information/$userId',
+                    ),
                     rows: [
                       InfoRow(
                         label: 'Email',
@@ -161,7 +163,8 @@ class ProfileScreen extends ConsumerWidget {
                     ProfileInfoSection(
                       title: 'Preferences',
                       showEditButton: isOwnProfile,
-                      onEditTap: () {},
+                      onEditTap: () =>
+                          context.push('/profile/edit/preferences/$userId'),
                       rows: [
                         if (profile.preferences!['dealbreakers'] != null &&
                             (profile.preferences!['dealbreakers']

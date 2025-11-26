@@ -4,6 +4,7 @@ import 'package:homify/core/entities/user_entity.dart';
 class UserProfile {
   final String uid;
   final String firstName;
+  final String? middleName;
   final String lastName;
   final String email;
   final AccountType role;
@@ -18,10 +19,12 @@ class UserProfile {
   final String? school;
   final String? occupation;
   final Map<String, dynamic>? preferences;
+  final bool? isEmailVerified;
 
   const UserProfile({
     required this.uid,
     required this.firstName,
+    this.middleName,
     required this.lastName,
     required this.email,
     required this.role,
@@ -36,9 +39,15 @@ class UserProfile {
     this.school,
     this.occupation,
     this.preferences,
+    this.isEmailVerified,
   });
 
-  String get fullName => '$firstName $lastName';
+  String get fullName {
+    if (middleName != null && middleName!.isNotEmpty) {
+      return '$firstName $middleName $lastName';
+    }
+    return '$firstName $lastName';
+  }
 
   String get displayRole {
     switch (role) {

@@ -26,8 +26,9 @@ import 'package:homify/features/reports/presentation/pages/admin_reports_screen.
 import 'package:homify/features/reports/presentation/pages/report_details_screen.dart';
 import 'package:homify/features/reports/presentation/pages/submit_report_screen.dart';
 import 'package:homify/features/profile/presentation/pages/profile_screen.dart';
-import 'package:homify/features/profile/presentation/pages/edit_profile_screen.dart';
-import 'package:homify/features/profile/domain/entities/user_profile_entity.dart';
+import 'package:homify/features/profile/presentation/pages/edit_pages/edit_name.dart';
+import 'package:homify/features/profile/presentation/pages/edit_pages/edit_personal_information.dart';
+import 'package:homify/features/profile/presentation/pages/edit_pages/edit_preferences.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -249,19 +250,33 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      // PROFILE ROUTES
+      // PROFILE ROUTES - more specific routes first
+      GoRoute(
+        path: '/profile/edit/name/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return EditNamePage(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/profile/edit/personal-information/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return EditPersonalInformationPage(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/profile/edit/preferences/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return EditPreferencesPage(userId: userId);
+        },
+      ),
       GoRoute(
         path: '/profile/:userId',
         builder: (context, state) {
           final userId = state.pathParameters['userId']!;
           return ProfileScreen(userId: userId);
-        },
-      ),
-      GoRoute(
-        path: '/profile/edit',
-        builder: (context, state) {
-          final profile = state.extra as UserProfile;
-          return EditProfileScreen(profile: profile);
         },
       ),
     ],
