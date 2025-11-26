@@ -20,6 +20,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Either<Failure, Stream<UserProfile>> getUserProfileStream(String userId) {
+    try {
+      final stream = remoteDataSource.getUserProfileStream(userId);
+      return Right(stream);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> updateProfile(
     String userId,
     Map<String, dynamic> updates,

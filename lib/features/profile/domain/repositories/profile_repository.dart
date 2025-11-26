@@ -7,6 +7,9 @@ abstract class ProfileRepository {
   /// Get user profile by ID
   Future<Either<Failure, UserProfile>> getUserProfile(String userId);
 
+  /// Get user profile stream for real-time updates
+  Either<Failure, Stream<UserProfile>> getUserProfileStream(String userId);
+
   /// Update user profile (firstName, lastName)
   Future<Either<Failure, void>> updateProfile(
     String userId,

@@ -54,33 +54,38 @@ class ProfileHeader extends StatelessWidget {
         const Gap(16),
 
         // Name with edit button
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Text(
-                profile.fullName,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: textPrimary,
+        Center(
+          child: IntrinsicWidth(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    profile.fullName,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.visible,
-              ),
+                if (showEditButton) ...[
+                  const Gap(8),
+                  IconButton(
+                    icon: const Icon(LucideIcons.pencil, size: 20),
+                    color: primary,
+                    onPressed: onEditTap,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ],
             ),
-            if (showEditButton) ...[
-              const Gap(8),
-              IconButton(
-                icon: const Icon(LucideIcons.pencil, size: 20),
-                color: primary,
-                onPressed: onEditTap,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ],
+          ),
         ),
         const Gap(8),
 

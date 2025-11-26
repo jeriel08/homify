@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/profile/data/datasources/profile_remote_data_source.dart';
 import 'package:homify/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:homify/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:homify/features/profile/domain/repositories/profile_repository.dart';
 import 'package:homify/features/profile/domain/usecases/ban_user.dart';
 import 'package:homify/features/profile/domain/usecases/get_user_profile.dart';
+import 'package:homify/features/profile/domain/usecases/get_user_profile_stream.dart';
 import 'package:homify/features/profile/domain/usecases/unban_user.dart';
 import 'package:homify/features/profile/domain/usecases/update_profile.dart';
 
@@ -37,7 +39,13 @@ final unbanUserUseCaseProvider = Provider<UnbanUser>((ref) {
   return UnbanUser(ref.watch(profileRepositoryProvider));
 });
 
-/// User profile provider
+final getUserProfileStreamUseCaseProvider = Provider<GetUserProfileStream>((
+  ref,
+) {
+  return GetUserProfileStream(ref.watch(profileRepositoryProvider));
+});
+
+/// User profile provider (Future-based, one-time fetch)
 final userProfileProvider = FutureProvider.family.autoDispose((
   ref,
   String userId,
@@ -50,3 +58,15 @@ final userProfileProvider = FutureProvider.family.autoDispose((
     (profile) => profile,
   );
 });
+
+/// User profile stream provider for real-time updates
+final userProfileStreamProvider = StreamProvider.family
+    .autoDispose<UserProfile, String>((ref, String userId) {
+      final useCase = ref.watch(getUserProfileStreamUseCaseProvider);
+      final result = useCase(userId);
+
+      return result.fold(
+        (failure) => Stream.error(Exception(failure.message)),
+        (stream) => stream,
+      );
+    });

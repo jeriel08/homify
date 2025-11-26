@@ -33,7 +33,7 @@ class _EditNamePageState extends ConsumerState<EditNamePage> {
   }
 
   Future<void> _loadUserData() async {
-    final profileAsync = ref.read(userProfileProvider(widget.userId));
+    final profileAsync = ref.read(userProfileStreamProvider(widget.userId));
 
     profileAsync.when(
       data: (profile) {
@@ -96,8 +96,8 @@ class _EditNamePageState extends ConsumerState<EditNamePage> {
             'last_name': lastName,
           });
 
-      // Invalidate profile cache to refresh data
-      ref.invalidate(userProfileProvider(widget.userId));
+      // No need to invalidate - stream updates automatically
+      // ref.invalidate(userProfileStreamProvider(widget.userId));
 
       if (mounted) {
         DelightToastBar(

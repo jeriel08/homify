@@ -44,7 +44,7 @@ class _EditPreferencesPageState extends ConsumerState<EditPreferencesPage> {
   }
 
   Future<void> _loadUserData() async {
-    final profileAsync = ref.read(userProfileProvider(widget.userId));
+    final profileAsync = ref.read(userProfileStreamProvider(widget.userId));
 
     profileAsync.when(
       data: (profile) {
@@ -97,8 +97,8 @@ class _EditPreferencesPageState extends ConsumerState<EditPreferencesPage> {
           .doc(widget.userId)
           .update({'preferences': preferences});
 
-      // Invalidate profile cache
-      ref.invalidate(userProfileProvider(widget.userId));
+      // No need to invalidate - stream updates automatically
+      // ref.invalidate(userProfileStreamProvider(widget.userId));
 
       if (mounted) {
         DelightToastBar(

@@ -29,7 +29,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(userProfileProvider(userId));
+    final profileAsync = ref.watch(userProfileStreamProvider(userId));
     final currentUserAsync = ref.watch(currentUserProvider);
     final currentUser = currentUserAsync.asData?.value;
 

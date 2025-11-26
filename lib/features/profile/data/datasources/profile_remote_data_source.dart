@@ -4,6 +4,7 @@ import 'package:homify/features/profile/data/models/user_profile_model.dart';
 /// Remote data source for profile operations
 abstract class ProfileRemoteDataSource {
   Future<UserProfileModel> getUserProfile(String userId);
+  Stream<UserProfileModel> getUserProfileStream(String userId);
   Future<void> updateProfile(String userId, Map<String, dynamic> updates);
   Future<void> banUser(String userId, String bannedBy);
   Future<void> unbanUser(String userId);
@@ -27,6 +28,23 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     } catch (e) {
       throw Exception('Failed to fetch user profile: $e');
     }
+  }
+
+  @override
+  Stream<UserProfileModel> getUserProfileStream(String userId) {
+    return firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) {
+            throw Exception('User not found');
+          }
+          return UserProfileModel.fromFirestore(doc);
+        })
+        .handleError((e) {
+          throw Exception('Failed to stream user profile: $e');
+        });
   }
 
   @override
