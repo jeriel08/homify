@@ -38,6 +38,7 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
   bool _isLoadingProperty = false;
   String? _reporterName;
   String? _resolverName;
+  String? _targetUserName;
   bool _isLoadingUsers = false;
 
   @override
@@ -48,6 +49,9 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
     if (widget.report.targetType == 'property' &&
         widget.report.targetId != null) {
       _fetchTargetProperty();
+    } else if (widget.report.targetType == 'user' &&
+        widget.report.targetId != null) {
+      _fetchTargetUser();
     }
   }
 
@@ -107,6 +111,40 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
         result.fold((l) => null, (r) => _targetProperty = r);
       });
     }
+  }
+
+  Future<void> _fetchTargetUser() async {
+    setState(() {
+      _isLoadingProperty = true; // Reuse same loading state
+    });
+
+    final authRepo = ref.read(authRepositoryProvider);
+
+    try {
+      final targetUser = await authRepo.getUser(widget.report.targetId!);
+      if (mounted) {
+        setState(() {
+          _targetUserName = '${targetUser.firstName} ${targetUser.lastName}';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _targetUserName = widget.report.targetId;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingProperty = false;
+        });
+      }
+    }
+  }
+
+  void _showUserProfile() {
+    if (widget.report.targetId == null) return;
+    context.push('/profile/${widget.report.targetId}');
   }
 
   bool get _isResolved =>
@@ -360,6 +398,9 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
                       widget.report.targetType == 'property' &&
                           _targetProperty != null
                       ? _showPropertyDetails
+                      : widget.report.targetType == 'user' &&
+                            widget.report.targetId != null
+                      ? _showUserProfile
                       : null,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
@@ -404,9 +445,13 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
                               ),
                               const Gap(4),
                               Text(
-                                _targetProperty?.name ??
-                                    widget.report.targetId ??
-                                    'N/A',
+                                widget.report.targetType == 'property'
+                                    ? (_targetProperty?.name ??
+                                          widget.report.targetId ??
+                                          'N/A')
+                                    : (_targetUserName ??
+                                          widget.report.targetId ??
+                                          'N/A'),
                                 style: HomifyTypography.label1.copyWith(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.w600,
@@ -417,8 +462,10 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
                             ],
                           ),
                         ),
-                        if (widget.report.targetType == 'property' &&
-                            _targetProperty != null)
+                        if ((widget.report.targetType == 'property' &&
+                                _targetProperty != null) ||
+                            (widget.report.targetType == 'user' &&
+                                widget.report.targetId != null))
                           Icon(
                             LucideIcons.chevronRight,
                             size: 20,

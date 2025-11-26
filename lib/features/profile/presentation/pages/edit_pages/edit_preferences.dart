@@ -69,7 +69,7 @@ class _EditPreferencesPageState extends ConsumerState<EditPreferencesPage> {
         }
       },
       loading: () {},
-      error: (_, __) {
+      error: (_, _) {
         if (mounted) {
           setState(() => _isLoading = false);
         }

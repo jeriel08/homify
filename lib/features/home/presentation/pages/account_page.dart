@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:homify/core/widgets/loading_screen.dart';
 import 'package:homify/features/auth/presentation/controllers/account_controller.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
-import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
+import 'package:homify/core/entities/user_entity.dart';
+import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
 import 'package:lottie/lottie.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -16,7 +17,6 @@ class AccountPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(authStateProvider);
 
-    // This listener for the logout action is great. No changes needed.
     // Safe logout listener — only reacts when actually logging out
     ref.listen(logoutControllerProvider, (previous, next) {
       if (next.hasError && !next.isLoading) {
@@ -27,13 +27,10 @@ class AccountPage extends ConsumerWidget {
           ),
         );
       }
-      // Remove the auto-redirect entirely — let the logout button handle it
     });
 
     final logoutState = ref.watch(logoutControllerProvider);
     final isLoading = logoutState.isLoading;
-
-    // Use the theme for consistent text styling
     final textTheme = Theme.of(context).textTheme;
 
     return userAsync.when(
@@ -42,18 +39,20 @@ class AccountPage extends ConsumerWidget {
           return const Scaffold(body: LoadingPage());
         }
 
-        String fullname = "${user.firstName} ${user.lastName}";
+        // Use stream provider for real-time name updates
+        final profileAsync = ref.watch(userProfileStreamProvider(user.uid));
+        final fullname = profileAsync.maybeWhen(
+          data: (profile) => profile.fullName,
+          orElse: () => "${user.firstName} ${user.lastName}",
+        );
 
         ImageProvider? avatarBackgroundImage;
         Widget? avatarChild;
 
         if (user.photoUrl != null && user.photoUrl!.isNotEmpty) {
-          // 1. User has a real photo
           avatarBackgroundImage = NetworkImage(user.photoUrl!);
           avatarChild = null;
         } else {
-          // 2. User has NO photo, check gender for placeholder
-          // (I am assuming the gender string is 'Male' or 'Female')
           if (user.gender == 'male') {
             avatarBackgroundImage = const AssetImage(
               'assets/images/placeholder_male.png',
@@ -63,8 +62,7 @@ class AccountPage extends ConsumerWidget {
               'assets/images/placeholder_female.png',
             );
           } else {
-            // 3. Gender is null or 'Other', use icon fallback
-            avatarBackgroundImage = null; // No background image
+            avatarBackgroundImage = null;
             avatarChild = const Icon(
               Icons.person,
               size: 40,
@@ -93,8 +91,7 @@ class AccountPage extends ConsumerWidget {
           body: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             children: [
-              // ───── 1. DYNAMIC PROFILE HEADER ─────
-              // ───── 1. DYNAMIC PROFILE HEADER ─────
+              // ───── PROFILE HEADER ─────
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -125,13 +122,10 @@ class AccountPage extends ConsumerWidget {
                             child: avatarChild,
                           ),
                           const SizedBox(width: 16),
-
-                          // --- Dynamic Name & Email ---
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // This now uses the user's actual name
                                 Text(
                                   fullname,
                                   style: textTheme.titleMedium?.copyWith(
@@ -139,15 +133,19 @@ class AccountPage extends ConsumerWidget {
                                     color: const Color(0xFF32190D),
                                   ),
                                 ),
-                                // This now shows the user's email
                                 Text(
-                                  user.email, // <-- DYNAMIC
+                                  user.email,
                                   style: textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey.shade700,
                                   ),
                                 ),
                               ],
                             ),
+                          ),
+                          Icon(
+                            LucideIcons.chevronRight,
+                            color: Colors.grey.shade400,
+                            size: 20,
                           ),
                         ],
                       ),
@@ -157,9 +155,72 @@ class AccountPage extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
 
-              // ───── HOMIFY BANNER WITH CUSTOM IMAGE ─────
+              // ───── HOMIFY BANNER (OWNERS ONLY) ─────
+              if (user.accountType == AccountType.owner) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Lottie.asset(
+                            'assets/animations/GrowingHouse.json',
+                            height: 40,
+                            width: 40,
+                            repeat: false,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Homify your place',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF32190D),
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'It\'s simple to get set up and start earning',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF6B4E31),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // ───── SETTINGS SECTION ─────
+              const _SectionHeader(title: 'Settings'),
               Container(
-                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -171,120 +232,82 @@ class AccountPage extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    // Custom House Image
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        // color: const Color(0xFFF9E5C5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Lottie.asset(
-                          'assets/animations/GrowingHouse.json',
-                          height: 40,
-                          width: 40,
-                          repeat: false,
-                        ),
-                      ),
+                    _SettingsTile(
+                      icon: LucideIcons.bell,
+                      title: 'Notification Settings',
+                      onTap: () {
+                        /* TODO: Navigate to notification settings */
+                      },
                     ),
-                    const SizedBox(width: 16),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Homify your place',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF32190D),
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'It’s simple to get set up and start earning',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF6B4E31),
-                            ),
-                          ),
-                        ],
-                      ),
+                    const Divider(height: 1),
+                    _SettingsTile(
+                      icon: LucideIcons.circleQuestionMark,
+                      title: 'Help & Support',
+                      onTap: () {
+                        /* TODO: Navigate to help page */
+                      },
                     ),
                   ],
                 ),
               ),
-              ListTile(
-                leading: const Icon(LucideIcons.bell),
-                title: const Text('Notification Settings'),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () {
-                  /* TODO: Navigate to notification settings */
-                },
-              ),
-              ListTile(
-                leading: const Icon(LucideIcons.circleQuestionMark),
-                title: const Text('Help & Support'),
-                trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () {
-                  /* TODO: Navigate to help page */
-                },
-              ),
 
-              // ───── 3. CONDITIONAL ADMIN SECTION ─────
-              // This section will only appear if the user is an admin
-              if (user.accountType == AppUserRole.admin) ...[
+              const SizedBox(height: 20),
+
+              // ───── ADMIN PANEL (ADMIN ONLY) ─────
+              if (user.accountType == AccountType.admin) ...[
                 const _SectionHeader(title: 'Admin Panel'),
-                ListTile(
-                  leading: const Icon(Icons.approval),
-                  title: const Text('Review Pending Properties'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/pending-properties'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.group_outlined),
-                  title: const Text('Manage Users'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    /* TODO: Navigate to user management */
-                  },
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _SettingsTile(
+                        icon: Icons.approval,
+                        title: 'Review Pending Properties',
+                        onTap: () => context.push('/pending-properties'),
+                      ),
+                      const Divider(height: 1),
+                      _SettingsTile(
+                        icon: Icons.group_outlined,
+                        title: 'Manage Users',
+                        onTap: () {
+                          /* TODO: Navigate to user management */
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
 
-              Divider(radius: BorderRadiusGeometry.circular(20)),
-
-              const SizedBox(height: 12),
-
+              // ───── LOGOUT BUTTON ─────
               Padding(
-                // Add padding to give the button some space
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[700], // Danger color
-                    foregroundColor: Colors.white, // Text and icon color
-                    minimumSize: const Size(
-                      double.infinity,
-                      44,
-                    ), // Full width, standard height
+                    backgroundColor: Colors.red[700],
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 44),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25), // Softer edges
+                      borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-
-                  // 1. We disable the button by setting onPressed to null if it's loading
                   onPressed: isLoading
                       ? null
                       : () async {
-                          // 1. Capture the router BEFORE the async gap
                           final router = GoRouter.of(context);
-
-                          // 2. Show confirmation dialog
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (_) => AlertDialog(
@@ -306,19 +329,13 @@ class AccountPage extends ConsumerWidget {
                           );
                           if (confirm != true) return;
 
-                          // 3. Perform logout
                           await ref
                               .read(logoutControllerProvider.notifier)
                               .logout();
-
-                          // 4. Use the captured router to navigate
                           router.go('/');
                         },
-
-                  // 3. The 'child' of the button changes based on the 'isLoading' state
                   child: isLoading
                       ? const SizedBox(
-                          // Show progress indicator
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(
@@ -327,7 +344,6 @@ class AccountPage extends ConsumerWidget {
                           ),
                         )
                       : const Row(
-                          // Show icon and text
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(LucideIcons.logOut),
@@ -355,7 +371,7 @@ class AccountPage extends ConsumerWidget {
   }
 }
 
-// A simple helper widget to create section headers
+// Section header widget
 class _SectionHeader extends StatelessWidget {
   final String title;
   const _SectionHeader({required this.title});
@@ -363,13 +379,60 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 8),
+      padding: const EdgeInsets.only(top: 12, bottom: 12, left: 4),
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: Colors.brown.shade600,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+// Settings tile widget
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, color: const Color(0xFF32190D), size: 22),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF32190D),
+                  ),
+                ),
+              ),
+              Icon(
+                LucideIcons.chevronRight,
+                color: Colors.grey.shade400,
+                size: 18,
+              ),
+            ],
+          ),
         ),
       ),
     );

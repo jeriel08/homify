@@ -83,7 +83,7 @@ class _EditPersonalInformationPageState
         }
       },
       loading: () {},
-      error: (_, __) {
+      error: (_, _) {
         if (mounted) {
           setState(() => _isLoading = false);
         }
@@ -351,7 +351,7 @@ class _EditPersonalInformationPageState
                         const Divider(thickness: 1),
                         const Gap(24),
                         DropdownButtonFormField<String>(
-                          value: _selectedSchool,
+                          initialValue: _selectedSchool,
                           isExpanded: true,
                           borderRadius: BorderRadius.circular(16),
                           style: const TextStyle(
