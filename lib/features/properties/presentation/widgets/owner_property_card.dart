@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class OwnerPropertyCard extends StatelessWidget {
   final PropertyEntity property;
@@ -42,9 +43,21 @@ class OwnerPropertyCard extends StatelessWidget {
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
                   child: property.imageUrls.isNotEmpty
-                      ? Image.network(
-                          property.imageUrls.first,
+                      ? CachedNetworkImage(
+                          imageUrl: property.imageUrls.first,
                           fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[200],
+                            child: const Icon(LucideIcons.image),
+                          ),
                         )
                       : Container(
                           color: Colors.grey[200],

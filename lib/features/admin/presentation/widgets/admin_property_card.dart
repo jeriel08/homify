@@ -5,6 +5,7 @@ import 'package:homify/features/properties/domain/entities/property_entity.dart'
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class AdminPropertyCard extends StatelessWidget {
   final PropertyWithUser propertyWithUser;
@@ -127,10 +128,18 @@ class AdminPropertyCard extends StatelessWidget {
                       ? Stack(
                           fit: StackFit.expand,
                           children: [
-                            Image.network(
-                              property.imageUrls.first,
+                            CachedNetworkImage(
+                              imageUrl: property.imageUrls.first,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => Container(
+                              placeholder: (context, url) => Container(
+                                color: surface.withValues(alpha: 0.3),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Container(
                                 color: surface.withValues(alpha: 0.3),
                                 child: Center(
                                   child: Icon(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PropertyCarousel extends StatefulWidget {
   final List<PropertyEntity> properties;
@@ -69,7 +70,16 @@ class _PropertyCarouselState extends State<PropertyCarousel> {
           return Container(
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
             child: imageUrls.isNotEmpty
-                ? Image.network(imageUrls.first, fit: BoxFit.cover)
+                ? CachedNetworkImage(
+                    imageUrl: imageUrls.first,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    errorWidget: (context, url, error) => const Center(
+                      child: Text('No image'),
+                    ),
+                  )
                 : const Center(child: Text('No image')),
           );
         }),

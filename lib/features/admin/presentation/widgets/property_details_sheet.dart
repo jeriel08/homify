@@ -7,6 +7,7 @@ import 'package:homify/features/properties/presentation/widgets/property_address
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PropertyDetailsSheet extends StatefulWidget {
   final PropertyEntity property;
@@ -135,10 +136,18 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(20),
-                                    child: Image.network(
-                                      widget.property.imageUrls[i],
+                                    child: CachedNetworkImage(
+                                      imageUrl: widget.property.imageUrls[i],
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) => Container(
+                                      placeholder: (context, url) => Container(
+                                        color: surface.withValues(alpha: 0.3),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => Container(
                                         color: surface.withValues(alpha: 0.3),
                                         child: Center(
                                           child: Icon(
