@@ -1,19 +1,30 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
+import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
+import 'package:homify/features/properties/properties_providers.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 
-class EditPropertyImages extends StatefulWidget {
+class EditPropertyImages extends ConsumerStatefulWidget {
   final PropertyEntity property;
 
   const EditPropertyImages({super.key, required this.property});
 
   @override
-  State<EditPropertyImages> createState() => _EditPropertyImagesState();
+  ConsumerState<EditPropertyImages> createState() => _EditPropertyImagesState();
 }
 
-class _EditPropertyImagesState extends State<EditPropertyImages> {
+class _EditPropertyImagesState extends ConsumerState<EditPropertyImages> {
   late List<String> _imageUrls;
   bool _isSaving = false;
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -27,35 +38,152 @@ class _EditPropertyImagesState extends State<EditPropertyImages> {
     });
   }
 
-  void _addImage() {
-    // TODO: Implement image picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Image picker functionality coming soon')),
-    );
+  Future<void> _addImage() async {
+    if (_imageUrls.length >= 10) {
+      if (mounted) {
+        DelightToastBar(
+          position: DelightSnackbarPosition.top,
+          snackbarDuration: const Duration(seconds: 3),
+          autoDismiss: true,
+          builder: (context) => const ToastCard(
+            color: Colors.orange,
+            leading: Icon(Icons.warning, size: 28, color: Colors.white),
+            title: Text(
+              'Maximum 10 images allowed',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ).show(context);
+      }
+      return;
+    }
+
+    try {
+      // Pick image from gallery
+      final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+
+      setState(() => _isUploading = true);
+
+      // Get current user UID
+      final userState = ref.read(authStateProvider);
+      final ownerUid = userState.maybeWhen(
+        data: (user) => user?.uid ?? widget.property.ownerUid,
+        orElse: () => widget.property.ownerUid,
+      );
+
+      // Upload to Cloudinary
+      final dataSource = ref.read(propertyRemoteDataSourceProvider);
+      final urls = await dataSource.uploadImages([File(file.path)], ownerUid);
+
+      if (urls.isNotEmpty && mounted) {
+        setState(() {
+          _imageUrls.add(urls.first);
+          _isUploading = false;
+        });
+
+        DelightToastBar(
+          position: DelightSnackbarPosition.top,
+          snackbarDuration: const Duration(seconds: 3),
+          autoDismiss: true,
+          builder: (context) => const ToastCard(
+            color: Colors.green,
+            leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
+            title: Text(
+              'Image uploaded successfully',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ).show(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploading = false);
+        DelightToastBar(
+          position: DelightSnackbarPosition.top,
+          snackbarDuration: const Duration(seconds: 3),
+          autoDismiss: true,
+          builder: (context) => ToastCard(
+            color: Colors.red,
+            leading: const Icon(
+              Icons.error_outline,
+              size: 28,
+              color: Colors.white,
+            ),
+            title: Text(
+              'Failed to upload image: $e',
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ).show(context);
+      }
+    }
   }
 
   Future<void> _save() async {
     if (_imageUrls.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one image')),
-      );
+      if (mounted) {
+        DelightToastBar(
+          position: DelightSnackbarPosition.top,
+          snackbarDuration: const Duration(seconds: 3),
+          autoDismiss: true,
+          builder: (context) => const ToastCard(
+            color: Colors.orange,
+            leading: Icon(Icons.warning, size: 28, color: Colors.white),
+            title: Text(
+              'Please add at least one image',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ).show(context);
+      }
       return;
     }
 
     setState(() => _isSaving = true);
 
-    // TODO: Implement update property use case
-    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+    // Call update property from provider
+    await ref.read(ownerDashboardProvider.notifier).updateProperty(
+      widget.property.id,
+      {'imageUrls': _imageUrls},
+    );
 
     if (mounted) {
       setState(() => _isSaving = false);
-      Navigator.pop(context, {'imageUrls': _imageUrls});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Images updated'),
-          backgroundColor: Colors.green,
+      Navigator.pop(context);
+      DelightToastBar(
+        position: DelightSnackbarPosition.top,
+        snackbarDuration: const Duration(seconds: 3),
+        autoDismiss: true,
+        builder: (context) => const ToastCard(
+          color: Colors.green,
+          leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
+          title: Text(
+            'Images updated',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
         ),
-      );
+      ).show(context);
     }
   }
 
@@ -281,9 +409,19 @@ class _EditPropertyImagesState extends State<EditPropertyImages> {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: _addImage,
-                        icon: const Icon(LucideIcons.plus, size: 20),
-                        label: const Text('Add Image'),
+                        onPressed: _isUploading ? null : _addImage,
+                        icon: _isUploading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(LucideIcons.plus, size: 20),
+                        label: Text(
+                          _isUploading ? 'Uploading...' : 'Add Image',
+                        ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF32190D),
                           side: const BorderSide(

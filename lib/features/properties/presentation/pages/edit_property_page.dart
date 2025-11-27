@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
+import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
 import 'package:homify/features/properties/presentation/widgets/owner/property_info_section.dart';
 import 'package:homify/features/properties/presentation/pages/edit_pages/edit_property_information.dart';
 import 'package:homify/features/properties/presentation/pages/edit_pages/edit_property_images.dart';
@@ -25,6 +26,19 @@ class EditPropertyPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the provider to get real-time updates
+    final dashboardState = ref.watch(ownerDashboardProvider);
+
+    // Find the updated property in the list, or fallback to the passed property
+    PropertyEntity currentProperty;
+    try {
+      currentProperty = dashboardState.properties.firstWhere(
+        (p) => p.id == property.id,
+      );
+    } catch (_) {
+      currentProperty = property;
+    }
+
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
@@ -52,7 +66,7 @@ class EditPropertyPage extends ConsumerWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        EditPropertyInformation(property: property),
+                        EditPropertyInformation(property: currentProperty),
                   ),
                 );
               },
@@ -62,7 +76,7 @@ class EditPropertyPage extends ConsumerWidget {
                   _buildInfoRow(
                     context,
                     'Property Name',
-                    property.name,
+                    currentProperty.name,
                     LucideIcons.house,
                   ),
                   const Gap(12),
@@ -71,9 +85,9 @@ class EditPropertyPage extends ConsumerWidget {
                   _buildInfoRow(
                     context,
                     'Description',
-                    property.description.isEmpty
+                    currentProperty.description.isEmpty
                         ? 'No description'
-                        : property.description,
+                        : currentProperty.description,
                     LucideIcons.fileText,
                     maxLines: 3,
                   ),
@@ -91,7 +105,7 @@ class EditPropertyPage extends ConsumerWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        EditPropertyImages(property: property),
+                        EditPropertyImages(property: currentProperty),
                   ),
                 );
               },
@@ -103,7 +117,7 @@ class EditPropertyPage extends ConsumerWidget {
                       Icon(LucideIcons.images, size: 20, color: textSecondary),
                       const Gap(12),
                       Text(
-                        '${property.imageUrls.length} image${property.imageUrls.length != 1 ? 's' : ''}',
+                        '${currentProperty.imageUrls.length} image${currentProperty.imageUrls.length != 1 ? 's' : ''}',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: textPrimary,
                           fontWeight: FontWeight.w600,
@@ -111,14 +125,14 @@ class EditPropertyPage extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  if (property.imageUrls.isNotEmpty) ...[
+                  if (currentProperty.imageUrls.isNotEmpty) ...[
                     const Gap(12),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: AspectRatio(
                         aspectRatio: 16 / 9,
                         child: CachedNetworkImage(
-                          imageUrl: property.imageUrls.first,
+                          imageUrl: currentProperty.imageUrls.first,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
                             color: surface.withValues(alpha: 0.3),
@@ -153,14 +167,15 @@ class EditPropertyPage extends ConsumerWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditPropertyType(property: property),
+                    builder: (context) =>
+                        EditPropertyType(property: currentProperty),
                   ),
                 );
               },
               child: _buildInfoRow(
                 context,
                 'Type',
-                _formatType(property.type),
+                _formatType(currentProperty.type),
                 LucideIcons.building,
               ),
             ),
@@ -174,7 +189,8 @@ class EditPropertyPage extends ConsumerWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditRentDetails(property: property),
+                    builder: (context) =>
+                        EditRentDetails(property: currentProperty),
                   ),
                 );
               },
@@ -184,7 +200,7 @@ class EditPropertyPage extends ConsumerWidget {
                   _buildInfoRow(
                     context,
                     'Rent Amount',
-                    '₱${property.rentAmount.toInt().toString()}',
+                    '₱${currentProperty.rentAmount.toInt().toString()}',
                     LucideIcons.philippinePeso,
                   ),
                   const Gap(12),
@@ -193,7 +209,7 @@ class EditPropertyPage extends ConsumerWidget {
                   _buildInfoRow(
                     context,
                     'Charge Method',
-                    property.rentChargeMethod == RentChargeMethod.perUnit
+                    currentProperty.rentChargeMethod == RentChargeMethod.perUnit
                         ? 'Per Unit'
                         : 'Per Bed',
                     LucideIcons.calculator,
@@ -211,11 +227,12 @@ class EditPropertyPage extends ConsumerWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditAmenities(property: property),
+                    builder: (context) =>
+                        EditAmenities(property: currentProperty),
                   ),
                 );
               },
-              child: property.amenities.isEmpty
+              child: currentProperty.amenities.isEmpty
                   ? Row(
                       children: [
                         Icon(
@@ -234,7 +251,7 @@ class EditPropertyPage extends ConsumerWidget {
                   : Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: property.amenities
+                      children: currentProperty.amenities
                           .map(
                             (amenity) => Container(
                               padding: const EdgeInsets.symmetric(

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
+import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 
-class EditRentDetails extends StatefulWidget {
+class EditRentDetails extends ConsumerStatefulWidget {
   final PropertyEntity property;
 
   const EditRentDetails({super.key, required this.property});
 
   @override
-  State<EditRentDetails> createState() => _EditRentDetailsState();
+  ConsumerState<EditRentDetails> createState() => _EditRentDetailsState();
 }
 
-class _EditRentDetailsState extends State<EditRentDetails> {
+class _EditRentDetailsState extends ConsumerState<EditRentDetails> {
   late final TextEditingController _rentCtrl;
   late RentChargeMethod _selectedMethod;
   bool _triedSave = false;
@@ -47,29 +52,58 @@ class _EditRentDetailsState extends State<EditRentDetails> {
     final rentError = _rentError();
 
     if (rentError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid rent amount')),
-      );
+      if (mounted) {
+        DelightToastBar(
+          position: DelightSnackbarPosition.top,
+          snackbarDuration: const Duration(seconds: 3),
+          autoDismiss: true,
+          builder: (context) => const ToastCard(
+            color: Colors.orange,
+            leading: Icon(Icons.warning, size: 28, color: Colors.white),
+            title: Text(
+              'Please enter a valid rent amount',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ).show(context);
+      }
       return;
     }
 
     setState(() => _isSaving = true);
 
-    // TODO: Implement update property use case
-    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+    // Call update property from provider
+    await ref
+        .read(ownerDashboardProvider.notifier)
+        .updateProperty(widget.property.id, {
+          'rentAmount': double.parse(_rentCtrl.text.trim()),
+          'rentChargeMethod': _selectedMethod.name,
+        });
 
     if (mounted) {
       setState(() => _isSaving = false);
-      Navigator.pop(context, {
-        'rentAmount': double.parse(_rentCtrl.text.trim()),
-        'rentChargeMethod': _selectedMethod,
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Rent details updated'),
-          backgroundColor: Colors.green,
+      Navigator.pop(context);
+      DelightToastBar(
+        position: DelightSnackbarPosition.top,
+        snackbarDuration: const Duration(seconds: 3),
+        autoDismiss: true,
+        builder: (context) => const ToastCard(
+          color: Colors.green,
+          leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
+          title: Text(
+            'Rent details updated',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
         ),
-      );
+      ).show(context);
     }
   }
 

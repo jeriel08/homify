@@ -12,6 +12,13 @@ abstract class PropertyRemoteDataSource {
   Future<List<PropertyModel>> getVerifiedProperties();
   Future<List<PropertyModel>> getPropertiesByOwner(String ownerUid);
   Future<PropertyModel> getPropertyById(String id);
+  Future<PropertyModel> updateProperty(
+    String propertyId,
+    Map<String, dynamic> updates,
+  );
+
+  /// Upload images to Cloudinary
+  Future<List<String>> uploadImages(List<File> images, String ownerUid);
 }
 
 class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
@@ -44,7 +51,7 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
 
       await newDocRef.set(tempProperty.toFirestore());
 
-      final imageUrls = await _uploadImages(images, propertyData.ownerUid);
+      final imageUrls = await uploadImages(images, propertyData.ownerUid);
 
       await newDocRef.update({
         'image_urls': imageUrls,
@@ -57,8 +64,8 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
     }
   }
 
-  /// Helper function to upload images to Cloudinary
-  Future<List<String>> _uploadImages(List<File> images, String ownerUid) async {
+  @override
+  Future<List<String>> uploadImages(List<File> images, String ownerUid) async {
     try {
       // We create a list of futures to upload all images in parallel
       final uploadTasks = images.map((image) {
@@ -128,6 +135,34 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
       return PropertyModel.fromFirestore(doc);
     } catch (e) {
       throw Exception('Failed to fetch property: $e');
+    }
+  }
+
+  @override
+  Future<PropertyModel> updateProperty(
+    String propertyId,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      // Update the document in Firestore
+      await _firestore.collection('properties').doc(propertyId).update({
+        ...updates,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+
+      // Fetch and return the updated property
+      final doc = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .get();
+
+      if (!doc.exists) {
+        throw Exception('Property not found after update');
+      }
+
+      return PropertyModel.fromFirestore(doc);
+    } catch (e) {
+      throw Exception('Failed to update property: $e');
     }
   }
 }

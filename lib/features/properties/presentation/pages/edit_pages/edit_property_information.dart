@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
+import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 
-class EditPropertyInformation extends StatefulWidget {
+class EditPropertyInformation extends ConsumerStatefulWidget {
   final PropertyEntity property;
 
   const EditPropertyInformation({super.key, required this.property});
 
   @override
-  State<EditPropertyInformation> createState() =>
+  ConsumerState<EditPropertyInformation> createState() =>
       _EditPropertyInformationState();
 }
 
-class _EditPropertyInformationState extends State<EditPropertyInformation> {
+class _EditPropertyInformationState
+    extends ConsumerState<EditPropertyInformation> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _descCtrl;
   bool _triedSave = false;
@@ -58,21 +64,32 @@ class _EditPropertyInformationState extends State<EditPropertyInformation> {
 
     setState(() => _isSaving = true);
 
-    // TODO: Implement update property use case
-    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+    // Call update property from provider
+    await ref.read(ownerDashboardProvider.notifier).updateProperty(
+      widget.property.id,
+      {'name': _nameCtrl.text.trim(), 'description': _descCtrl.text.trim()},
+    );
 
     if (mounted) {
       setState(() => _isSaving = false);
-      Navigator.pop(context, {
-        'name': _nameCtrl.text.trim(),
-        'description': _descCtrl.text.trim(),
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Property information updated'),
-          backgroundColor: Colors.green,
+      Navigator.pop(context);
+      DelightToastBar(
+        position: DelightSnackbarPosition.top,
+        snackbarDuration: const Duration(seconds: 3),
+        autoDismiss: true,
+        builder: (context) => const ToastCard(
+          color: Colors.green,
+          leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
+          title: Text(
+            'Property information updated',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
         ),
-      );
+      ).show(context);
     }
   }
 

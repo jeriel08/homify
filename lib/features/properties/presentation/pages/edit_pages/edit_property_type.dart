@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
+import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 
-class EditPropertyType extends StatefulWidget {
+class EditPropertyType extends ConsumerStatefulWidget {
   final PropertyEntity property;
 
   const EditPropertyType({super.key, required this.property});
 
   @override
-  State<EditPropertyType> createState() => _EditPropertyTypeState();
+  ConsumerState<EditPropertyType> createState() => _EditPropertyTypeState();
 }
 
-class _EditPropertyTypeState extends State<EditPropertyType> {
+class _EditPropertyTypeState extends ConsumerState<EditPropertyType> {
   late PropertyType _selectedType;
   bool _isSaving = false;
 
@@ -23,18 +28,32 @@ class _EditPropertyTypeState extends State<EditPropertyType> {
   Future<void> _save() async {
     setState(() => _isSaving = true);
 
-    // TODO: Implement update property use case
-    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+    // Call update property from provider
+    await ref.read(ownerDashboardProvider.notifier).updateProperty(
+      widget.property.id,
+      {'type': _selectedType.name},
+    );
 
     if (mounted) {
       setState(() => _isSaving = false);
-      Navigator.pop(context, {'type': _selectedType});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Property type updated'),
-          backgroundColor: Colors.green,
+      Navigator.pop(context);
+      DelightToastBar(
+        position: DelightSnackbarPosition.top,
+        snackbarDuration: const Duration(seconds: 3),
+        autoDismiss: true,
+        builder: (context) => const ToastCard(
+          color: Colors.green,
+          leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
+          title: Text(
+            'Property type updated',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
         ),
-      );
+      ).show(context);
     }
   }
 

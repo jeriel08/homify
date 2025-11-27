@@ -15,4 +15,9 @@ abstract class PropertyRepository {
   );
 
   Future<Either<Failure, PropertyEntity>> getPropertyById(String id);
+
+  Future<Either<Failure, PropertyEntity>> updateProperty(
+    String propertyId,
+    Map<String, dynamic> updates,
+  );
 }

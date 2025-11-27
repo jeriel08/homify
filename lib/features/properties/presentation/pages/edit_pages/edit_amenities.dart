@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
+import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 
 /// All possible amenities – grouped by category
 final Map<String, List<String>> _amenityGroups = {
@@ -42,16 +47,16 @@ final Map<String, List<String>> _amenityGroups = {
   ],
 };
 
-class EditAmenities extends StatefulWidget {
+class EditAmenities extends ConsumerStatefulWidget {
   final PropertyEntity property;
 
   const EditAmenities({super.key, required this.property});
 
   @override
-  State<EditAmenities> createState() => _EditAmenitiesState();
+  ConsumerState<EditAmenities> createState() => _EditAmenitiesState();
 }
 
-class _EditAmenitiesState extends State<EditAmenities> {
+class _EditAmenitiesState extends ConsumerState<EditAmenities> {
   final Set<String> _selected = {};
   bool _triedSave = false;
   bool _isSaving = false;
@@ -77,26 +82,56 @@ class _EditAmenitiesState extends State<EditAmenities> {
     setState(() => _triedSave = true);
 
     if (_selected.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one amenity')),
-      );
+      if (mounted) {
+        DelightToastBar(
+          position: DelightSnackbarPosition.top,
+          snackbarDuration: const Duration(seconds: 3),
+          autoDismiss: true,
+          builder: (context) => const ToastCard(
+            color: Colors.orange,
+            leading: Icon(Icons.warning, size: 28, color: Colors.white),
+            title: Text(
+              'Please select at least one amenity',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ).show(context);
+      }
       return;
     }
 
     setState(() => _isSaving = true);
 
-    // TODO: Implement update property use case
-    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+    // Call update property from provider
+    await ref.read(ownerDashboardProvider.notifier).updateProperty(
+      widget.property.id,
+      {'amenities': _selected.toList()},
+    );
 
     if (mounted) {
       setState(() => _isSaving = false);
-      Navigator.pop(context, {'amenities': _selected.toList()});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Amenities updated'),
-          backgroundColor: Colors.green,
+      Navigator.pop(context);
+      DelightToastBar(
+        position: DelightSnackbarPosition.top,
+        snackbarDuration: const Duration(seconds: 3),
+        autoDismiss: true,
+        builder: (context) => const ToastCard(
+          color: Colors.green,
+          leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
+          title: Text(
+            'Amenities updated',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
         ),
-      );
+      ).show(context);
     }
   }
 
