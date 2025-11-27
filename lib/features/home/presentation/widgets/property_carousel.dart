@@ -6,8 +6,13 @@ import 'package:homify/features/properties/presentation/widgets/property_address
 
 class PropertyCarousel extends StatefulWidget {
   final List<PropertyEntity> properties;
+  final Function(PropertyEntity) onTap;
 
-  const PropertyCarousel({super.key, required this.properties});
+  const PropertyCarousel({
+    super.key,
+    required this.properties,
+    required this.onTap,
+  });
 
   @override
   State<PropertyCarousel> createState() => _PropertyCarouselState();
@@ -104,97 +109,101 @@ class _PropertyCarouselState extends State<PropertyCarousel> {
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.grey[200],
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          // Image
-                          imageUrls.isNotEmpty
-                              ? CachedNetworkImage(
-                                  imageUrl: imageUrls.first,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => const Center(
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
+                    child: GestureDetector(
+                      onTap: () => widget.onTap(property),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey[200],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // Image
+                            imageUrls.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: imageUrls.first,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => const Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        const Center(
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            color: Colors.grey,
+                                            size: 40,
+                                          ),
+                                        ),
+                                  )
+                                : const Center(
+                                    child: Icon(
+                                      Icons.home,
+                                      color: Colors.grey,
+                                      size: 40,
                                     ),
                                   ),
-                                  errorWidget: (context, url, error) =>
-                                      const Center(
-                                        child: Icon(
-                                          Icons.broken_image,
-                                          color: Colors.grey,
-                                          size: 40,
-                                        ),
-                                      ),
-                                )
-                              : const Center(
-                                  child: Icon(
-                                    Icons.home,
-                                    color: Colors.grey,
-                                    size: 40,
-                                  ),
-                                ),
 
-                          // Gradient Overlay
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.7),
-                                  ],
-                                  stops: const [0.6, 1.0],
+                            // Gradient Overlay
+                            Positioned.fill(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.7),
+                                    ],
+                                    stops: const [0.6, 1.0],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
 
-                          // Text Content
-                          Positioned(
-                            bottom: 12,
-                            left: 12,
-                            right: 12,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  property.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                            // Text Content
+                            Positioned(
+                              bottom: 12,
+                              left: 12,
+                              right: 12,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    property.name,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                PropertyAddressWidget(
-                                  latitude: property.latitude,
-                                  longitude: property.longitude,
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                    fontSize: 12,
+                                  const SizedBox(height: 4),
+                                  PropertyAddressWidget(
+                                    latitude: property.latitude,
+                                    longitude: property.longitude,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
                 },
               ),
-
               // Navigation Arrows
               Positioned(
                 left: 10,

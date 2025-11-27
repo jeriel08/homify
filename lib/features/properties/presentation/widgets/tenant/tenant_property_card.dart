@@ -220,25 +220,6 @@ class TenantPropertyCard extends StatelessWidget {
                         ),
                       ),
                     ),
-
-                    const Gap(12),
-
-                    // Check it out Button
-                    ElevatedButton(
-                      onPressed: onTap,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: textPrimary,
-                        foregroundColor: Colors.white,
-                        // CRITICAL FIX: Override global theme infinite width
-                        minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text('Check it out'),
-                    ),
                   ],
                 ),
               ],

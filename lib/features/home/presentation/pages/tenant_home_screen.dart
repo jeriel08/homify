@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/home/presentation/providers/tenant_home_provider.dart';
 import 'package:homify/features/home/presentation/widgets/property_carousel.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_card.dart';
+import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_details_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class TenantHomeScreen extends ConsumerStatefulWidget {
@@ -75,7 +77,10 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                       if (state.nearbyProperties.isNotEmpty) ...[
                         _buildHeader(context, "Near You"),
                         const Gap(16),
-                        PropertyCarousel(properties: state.nearbyProperties),
+                        PropertyCarousel(
+                          properties: state.nearbyProperties,
+                          onTap: _showPropertyDetails,
+                        ),
                         const Gap(24),
                       ],
 
@@ -95,9 +100,7 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                             onFavorite: () {
                               // TODO: Toggle favorite logic
                             },
-                            onTap: () {
-                              // TODO: Go to details page
-                            },
+                            onTap: () => _showPropertyDetails(property),
                           );
                         },
                       ),
@@ -117,6 +120,15 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
         fontWeight: FontWeight.bold,
         fontSize: 20,
       ),
+    );
+  }
+
+  void _showPropertyDetails(PropertyEntity property) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => TenantPropertyDetailsSheet(property: property),
     );
   }
 }
