@@ -4,7 +4,6 @@ import 'package:homify/core/entities/user_entity.dart';
 
 class UserModel extends UserEntity {
   final String? school;
-  final Map<String, dynamic>? preferences;
   final String? occupation;
 
   const UserModel({
@@ -23,9 +22,9 @@ class UserModel extends UserEntity {
     super.bannedAt,
     super.bannedBy,
     this.school,
-    this.preferences,
+    Map<String, dynamic>? preferences,
     this.occupation,
-  });
+  }) : super(preferences: preferences);
 
   /// Convert Firestore document → UserModel
   factory UserModel.fromSnapshot(DocumentSnapshot doc) {
