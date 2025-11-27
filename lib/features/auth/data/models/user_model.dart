@@ -22,9 +22,9 @@ class UserModel extends UserEntity {
     super.bannedAt,
     super.bannedBy,
     this.school,
-    Map<String, dynamic>? preferences,
+    super.preferences,
     this.occupation,
-  }) : super(preferences: preferences);
+  });
 
   /// Convert Firestore document → UserModel
   factory UserModel.fromSnapshot(DocumentSnapshot doc) {

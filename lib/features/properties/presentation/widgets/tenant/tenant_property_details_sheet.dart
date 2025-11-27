@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
@@ -22,367 +23,751 @@ class TenantPropertyDetailsSheet extends ConsumerStatefulWidget {
 
 class _TenantPropertyDetailsSheetState
     extends ConsumerState<TenantPropertyDetailsSheet> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  // Brand colors
+  static const Color primary = Color(0xFFE05725);
+  static const Color surface = Color(0xFFF9E5C5);
+  static const Color textPrimary = Color(0xFF32190D);
+  static const Color textSecondary = Color(0xFF6B4F3C);
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final maxHeight = screenHeight - topPadding - 60;
+
     final property = widget.property;
     final ownerAsync = ref.watch(userProfileProvider(property.ownerUid));
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.9,
+      initialChildSize: 0.92,
       minChildSize: 0.5,
-      maxChildSize: 0.95,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              // Handle Bar
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+      maxChildSize: (maxHeight / screenHeight).clamp(0.5, 0.98),
+      builder: (_, controller) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Drag handle
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
               ),
+            ),
+            const Gap(8),
 
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                  children: [
-                    // 1. Images
-                    SizedBox(
-                      height: 250,
-                      child: property.imageUrls.isNotEmpty
-                          ? PageView.builder(
-                              itemCount: property.imageUrls.length,
-                              itemBuilder: (context, index) {
-                                return ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: CachedNetworkImage(
-                                    imageUrl: property.imageUrls[index],
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        const Icon(Icons.error),
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.home,
-                                  size: 64,
-                                  color: Colors.grey,
-                                ),
-                              ),
+            Expanded(
+              child: ListView(
+                controller: controller,
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                children: [
+                  // Image Carousel
+                  SizedBox(
+                    height: 280,
+                    child: property.imageUrls.isEmpty
+                        ? Container(
+                            decoration: BoxDecoration(
+                              color: surface.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: surface, width: 2),
                             ),
-                    ),
-                    const Gap(24),
-
-                    // 2. Title & Address
-                    Text(
-                      property.name,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF32190D),
-                          ),
-                    ),
-                    const Gap(8),
-                    Row(
-                      children: [
-                        const Icon(
-                          LucideIcons.mapPin,
-                          size: 16,
-                          color: Color(0xFFE05725),
-                        ),
-                        const Gap(4),
-                        Expanded(
-                          child: PropertyAddressWidget(
-                            latitude: property.latitude,
-                            longitude: property.longitude,
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Gap(24),
-
-                    // 3. Price
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9E5C5).withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: const Color(0xFFE05725).withValues(alpha: 0.1),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Rent per month',
-                            style: TextStyle(
-                              color: const Color(
-                                0xFF32190D,
-                              ).withValues(alpha: 0.7),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const Icon(
-                                LucideIcons.philippinePeso,
-                                size: 20,
-                                color: Color(0xFFE05725),
-                              ),
-                              Text(
-                                '${property.rentAmount.toInt()}',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFE05725),
-                                ),
-                              ),
-                              Text(
-                                ' / ${property.rentChargeMethod.name == 'perUnit' ? 'unit' : 'bed'}',
-                                style: TextStyle(
-                                  color: const Color(
-                                    0xFF32190D,
-                                  ).withValues(alpha: 0.7),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Gap(24),
-
-                    // 4. Owner Info
-                    Text(
-                      'Property Owner',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF32190D),
-                      ),
-                    ),
-                    const Gap(12),
-                    InkWell(
-                      onTap: () {
-                        context.push('/profile/${property.ownerUid}');
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[200]!),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            ownerAsync.when(
-                              data: (owner) {
-                                final isMale =
-                                    owner.gender?.toLowerCase() == 'male';
-                                final placeholder = isMale
-                                    ? 'assets/images/placeholder_male.png'
-                                    : 'assets/images/placeholder_female.png';
-
-                                return CircleAvatar(
-                                  radius: 24,
-                                  backgroundImage: owner.photoUrl != null
-                                      ? NetworkImage(owner.photoUrl!)
-                                      : AssetImage(placeholder)
-                                            as ImageProvider,
-                                );
-                              },
-                              loading: () => const CircleAvatar(
-                                radius: 24,
-                                child: CircularProgressIndicator(),
-                              ),
-                              error: (_, __) => const CircleAvatar(
-                                radius: 24,
-                                child: Icon(Icons.error),
-                              ),
-                            ),
-                            const Gap(12),
-                            Expanded(
+                            child: Center(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  ownerAsync.when(
-                                    data: (owner) => Text(
-                                      '${owner.firstName} ${owner.lastName}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    loading: () => Container(
-                                      width: 100,
-                                      height: 16,
-                                      color: Colors.grey[200],
-                                    ),
-                                    error: (_, __) =>
-                                        const Text('Error loading owner'),
+                                  Icon(
+                                    LucideIcons.image,
+                                    size: 64,
+                                    color: textSecondary.withValues(alpha: 0.4),
                                   ),
-                                  const Text(
-                                    'View Profile',
-                                    style: TextStyle(
-                                      color: Color(0xFFE05725),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
+                                  const Gap(12),
+                                  Text(
+                                    'No images available',
+                                    style: HomifyTypography.medium(
+                                      HomifyTypography.body2.copyWith(
+                                        color: textSecondary,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right, color: Colors.grey),
-                          ],
+                          )
+                        : Stack(
+                            children: [
+                              // Image PageView
+                              PageView.builder(
+                                controller: _pageController,
+                                itemCount: property.imageUrls.length,
+                                onPageChanged: (index) {
+                                  setState(() {
+                                    _currentPage = index;
+                                  });
+                                },
+                                itemBuilder: (_, i) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: CachedNetworkImage(
+                                      imageUrl: property.imageUrls[i],
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => Container(
+                                        color: surface.withValues(alpha: 0.3),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          Container(
+                                            color: surface.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                LucideIcons.imageOff,
+                                                size: 60,
+                                                color: textSecondary.withValues(
+                                                  alpha: 0.4,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Navigation arrows (if multiple images)
+                              if (property.imageUrls.length > 1) ...[
+                                // Left arrow
+                                if (_currentPage > 0)
+                                  Positioned(
+                                    left: 12,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: Center(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.6,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: IconButton(
+                                          onPressed: () {
+                                            _pageController.previousPage(
+                                              duration: const Duration(
+                                                milliseconds: 300,
+                                              ),
+                                              curve: Curves.easeInOut,
+                                            );
+                                          },
+                                          icon: const Icon(
+                                            LucideIcons.chevronLeft,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                // Right arrow
+                                if (_currentPage <
+                                    property.imageUrls.length - 1)
+                                  Positioned(
+                                    right: 12,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: Center(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.6,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: IconButton(
+                                          onPressed: () {
+                                            _pageController.nextPage(
+                                              duration: const Duration(
+                                                milliseconds: 300,
+                                              ),
+                                              curve: Curves.easeInOut,
+                                            );
+                                          },
+                                          icon: const Icon(
+                                            LucideIcons.chevronRight,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                // Page indicator
+                                Positioned(
+                                  bottom: 16,
+                                  left: 0,
+                                  right: 0,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      property.imageUrls.length,
+                                      (index) => AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        width: _currentPage == index ? 24 : 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: _currentPage == index
+                                              ? primary
+                                              : Colors.white.withValues(
+                                                  alpha: 0.6,
+                                                ),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.3,
+                                              ),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                // Image counter
+                                Positioned(
+                                  top: 16,
+                                  right: 16,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      '${_currentPage + 1}/${property.imageUrls.length}',
+                                      style: HomifyTypography.semibold(
+                                        HomifyTypography.label3.copyWith(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                  ),
+
+                  const Gap(24),
+
+                  // Property type badge
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: surface.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: primary.withValues(alpha: 0.3),
+                          width: 1.5,
                         ),
                       ),
-                    ),
-                    const Gap(16),
-                    ContactOwnerButton(ownerUid: property.ownerUid),
-                    const Gap(24),
-
-                    // 5. Description
-                    Text(
-                      'Description',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF32190D),
-                      ),
-                    ),
-                    const Gap(8),
-                    Text(
-                      property.description,
-                      style: TextStyle(color: Colors.grey[600], height: 1.5),
-                    ),
-                    const Gap(24),
-
-                    // 6. Amenities
-                    if (property.amenities.isNotEmpty) ...[
-                      Text(
-                        'Amenities',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF32190D),
-                            ),
-                      ),
-                      const Gap(12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: property.amenities.map((amenity) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              amenity,
-                              style: TextStyle(
-                                color: Colors.grey[800],
-                                fontSize: 12,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(LucideIcons.house, size: 16, color: primary),
+                          const Gap(6),
+                          Text(
+                            _formatType(property.type),
+                            style: HomifyTypography.semibold(
+                              HomifyTypography.label2.copyWith(
+                                color: textPrimary,
                               ),
                             ),
-                          );
-                        }).toList(),
+                          ),
+                        ],
                       ),
-                      const Gap(24),
-                    ],
-                  ],
-                ),
-              ),
-
-              // Bottom Actions
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -4),
                     ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // Favorite Button
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(12),
+                  ),
+
+                  const Gap(16),
+
+                  // Title
+                  Text(
+                    property.name,
+                    style: HomifyTypography.bold(
+                      HomifyTypography.heading5.copyWith(color: textPrimary),
+                    ),
+                  ),
+
+                  const Gap(12),
+
+                  // Price
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: primary.withValues(alpha: 0.3),
+                        width: 1.5,
                       ),
-                      child: IconButton(
-                        onPressed: () {
-                          // TODO: Implement favorite toggle
-                        },
-                        icon: const Icon(LucideIcons.heart),
-                        color: const Color(0xFF32190D),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.banknote, color: primary, size: 24),
+                        const Gap(12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Rent Price',
+                              style: HomifyTypography.medium(
+                                HomifyTypography.label3.copyWith(
+                                  color: textSecondary,
+                                ),
+                              ),
+                            ),
+                            const Gap(4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    LucideIcons.philippinePeso,
+                                    size: 16,
+                                    color: textPrimary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    property.rentAmount.toInt().toString(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: textPrimary,
+                                        ),
+                                  ),
+                                  Text(
+                                    ' / ${property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                    style: HomifyTypography.body3.copyWith(
+                                      color: textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Gap(20),
+
+                  // Location
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: surface.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            LucideIcons.mapPin,
+                            color: primary,
+                            size: 20,
+                          ),
+                        ),
+                        const Gap(12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Location',
+                                style: HomifyTypography.medium(
+                                  HomifyTypography.label3.copyWith(
+                                    color: textSecondary,
+                                  ),
+                                ),
+                              ),
+                              const Gap(4),
+                              PropertyAddressWidget(
+                                latitude: property.latitude,
+                                longitude: property.longitude,
+                                style: HomifyTypography.medium(
+                                  HomifyTypography.body3.copyWith(
+                                    color: textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Gap(24),
+
+                  // Divider
+                  Container(height: 1, color: surface.withValues(alpha: 0.5)),
+
+                  const Gap(24),
+
+                  // Description
+                  Row(
+                    children: [
+                      Icon(LucideIcons.fileText, size: 20, color: primary),
+                      const Gap(8),
+                      Text(
+                        'Description',
+                        style: HomifyTypography.semibold(
+                          HomifyTypography.heading6.copyWith(
+                            color: textPrimary,
+                          ),
+                        ),
                       ),
+                    ],
+                  ),
+                  const Gap(12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: surface.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      property.description.isEmpty
+                          ? 'No description provided.'
+                          : property.description,
+                      style: HomifyTypography.body2.copyWith(
+                        color: textPrimary,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+
+                  const Gap(24),
+
+                  // Amenities
+                  if (property.amenities.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        Icon(LucideIcons.sparkles, size: 20, color: primary),
+                        const Gap(8),
+                        Text(
+                          'Amenities',
+                          style: HomifyTypography.semibold(
+                            HomifyTypography.heading6.copyWith(
+                              color: textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const Gap(12),
-                    // Show Direction Button
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context); // Close sheet
-                          // Switch to Explore tab (Index 1)
-                          ref.read(bottomNavIndexProvider.notifier).state = 1;
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE05725),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: property.amenities
+                          .map(
+                            (a) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: surface, width: 2),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    LucideIcons.check,
+                                    size: 14,
+                                    color: primary,
+                                  ),
+                                  const Gap(6),
+                                  Text(
+                                    a,
+                                    style: HomifyTypography.medium(
+                                      HomifyTypography.label2.copyWith(
+                                        color: textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const Gap(24),
+                  ],
+
+                  // Owner Info
+                  Row(
+                    children: [
+                      Icon(LucideIcons.user, size: 20, color: primary),
+                      const Gap(8),
+                      Text(
+                        'Property Owner',
+                        style: HomifyTypography.semibold(
+                          HomifyTypography.heading6.copyWith(
+                            color: textPrimary,
                           ),
-                          elevation: 0,
                         ),
-                        icon: const Icon(LucideIcons.map),
-                        label: const Text(
-                          'Show Direction',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
+                  InkWell(
+                    onTap: () {
+                      context.push('/profile/${property.ownerUid}');
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: surface, width: 2),
+                      ),
+                      child: Row(
+                        children: [
+                          ownerAsync.when(
+                            data: (owner) {
+                              final isMale =
+                                  owner.gender?.toLowerCase() == 'male';
+                              final placeholder = isMale
+                                  ? 'assets/images/placeholder_male.png'
+                                  : 'assets/images/placeholder_female.png';
+
+                              return CircleAvatar(
+                                radius: 24,
+                                backgroundImage: owner.photoUrl != null
+                                    ? NetworkImage(owner.photoUrl!)
+                                    : AssetImage(placeholder) as ImageProvider,
+                              );
+                            },
+                            loading: () => const CircleAvatar(
+                              radius: 24,
+                              child: CircularProgressIndicator(),
+                            ),
+                            error: (_, _) => const CircleAvatar(
+                              radius: 24,
+                              child: Icon(Icons.error),
+                            ),
+                          ),
+                          const Gap(12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ownerAsync.when(
+                                  data: (owner) => Text(
+                                    '${owner.firstName} ${owner.lastName}',
+                                    style: HomifyTypography.semibold(
+                                      HomifyTypography.body2.copyWith(
+                                        color: textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  loading: () => Container(
+                                    width: 100,
+                                    height: 16,
+                                    color: Colors.grey[200],
+                                  ),
+                                  error: (_, _) =>
+                                      const Text('Error loading owner'),
+                                ),
+                                Text(
+                                  'View Profile',
+                                  style: HomifyTypography.medium(
+                                    HomifyTypography.label3.copyWith(
+                                      color: primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            LucideIcons.chevronRight,
+                            color: textSecondary.withValues(alpha: 0.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Gap(16),
+                  ContactOwnerButton(ownerUid: property.ownerUid),
+
+                  const Gap(20),
+
+                  // Report Issue Button
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        context.push(
+                          '/report',
+                          extra: {
+                            'targetId': property.id,
+                            'targetType': 'property',
+                          },
+                        );
+                      },
+                      icon: Icon(
+                        LucideIcons.flag,
+                        size: 16,
+                        color: textSecondary.withValues(alpha: 0.6),
+                      ),
+                      label: Text(
+                        'Report Issue',
+                        style: HomifyTypography.medium(
+                          HomifyTypography.label3.copyWith(
+                            color: textSecondary.withValues(alpha: 0.6),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const Gap(20),
+                ],
               ),
-            ],
-          ),
-        );
-      },
+            ),
+
+            // Bottom Action Bar
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Favorite Button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: surface.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        // TODO: Implement favorite toggle
+                      },
+                      icon: const Icon(LucideIcons.heart),
+                      color: textPrimary,
+                      padding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                  const Gap(12),
+                  // Show Direction Button
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context); // Close sheet
+                        // Switch to Explore tab (Index 1)
+                        ref.read(bottomNavIndexProvider.notifier).state = 1;
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                        textStyle: HomifyTypography.semibold(
+                          HomifyTypography.label1,
+                        ),
+                      ),
+                      icon: const Icon(LucideIcons.map),
+                      label: const Text('Show Direction'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  String _formatType(PropertyType type) {
+    return type.name
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((e) => e[0].toUpperCase() + e.substring(1))
+        .join(' ');
   }
 }

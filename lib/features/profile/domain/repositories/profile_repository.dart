@@ -17,7 +17,11 @@ abstract class ProfileRepository {
   );
 
   /// Ban a user (admin only)
-  Future<Either<Failure, void>> banUser(String userId, String bannedBy);
+  Future<Either<Failure, void>> banUser(
+    String userId,
+    String bannedBy,
+    String reason,
+  );
 
   /// Unban a user (admin only)
   Future<Either<Failure, void>> unbanUser(String userId);

@@ -6,11 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/entities/user_entity.dart';
+import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
+import 'package:homify/core/theme/app_colors.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:homify/features/profile/domain/usecases/ban_user.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
-import 'package:homify/features/profile/presentation/widgets/ban_user_dialog.dart';
 import 'package:homify/features/profile/presentation/widgets/profile_header.dart';
 import 'package:homify/features/profile/presentation/widgets/profile_info_section.dart';
 import 'package:intl/intl.dart';
@@ -197,22 +198,74 @@ class ProfileScreen extends ConsumerWidget {
                       width: double.infinity,
                       child: FilledButton.icon(
                         onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => BanUserDialog(
-                              userName: profile.fullName,
-                              isBanned: profile.isBanned,
-                              onConfirm: () {
-                                _handleBanUnban(
-                                  context,
-                                  ref,
-                                  userId,
-                                  profile.isBanned,
-                                  currentUser!.uid,
-                                );
-                              },
-                            ),
-                          );
+                          if (profile.isBanned) {
+                            // Unban confirmation (simple dialog)
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Unban User?'),
+                                content: Text(
+                                  'Are you sure you want to unban ${profile.fullName}? They will regain access to the platform.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      _handleBanUnban(
+                                        context,
+                                        ref,
+                                        userId,
+                                        profile.isBanned,
+                                        currentUser!.uid,
+                                        null,
+                                      );
+                                    },
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                    ),
+                                    child: const Text('Unban'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            // Ban confirmation (reason sheet)
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => ConfirmationReasonSheet(
+                                title: 'Ban User',
+                                subtitle:
+                                    'Why are you banning ${profile.fullName}? This action will sign them out immediately.',
+                                reasons: const [
+                                  'Violation of Terms of Service',
+                                  'Inappropriate Behavior',
+                                  'Spam / Fake Account',
+                                  'Fraudulent Activity',
+                                  'Other',
+                                ],
+                                confirmLabel: 'Ban User',
+                                confirmIcon: LucideIcons.shieldAlert,
+                                confirmColor: AppColors.error,
+                                onConfirm: (reason) {
+                                  Navigator.pop(context);
+                                  _handleBanUnban(
+                                    context,
+                                    ref,
+                                    userId,
+                                    profile.isBanned,
+                                    currentUser!.uid,
+                                    reason,
+                                  );
+                                },
+                              ),
+                            );
+                          }
                         },
                         icon: Icon(
                           profile.isBanned
@@ -251,6 +304,7 @@ class ProfileScreen extends ConsumerWidget {
     String userId,
     bool isBanned,
     String adminId,
+    String? reason,
   ) async {
     try {
       if (isBanned) {
@@ -297,9 +351,10 @@ class ProfileScreen extends ConsumerWidget {
         );
       } else {
         // Ban user
+        if (reason == null) return;
         final banUseCase = ref.read(banUserUseCaseProvider);
         final result = await banUseCase(
-          BanUserParams(userId: userId, bannedBy: adminId),
+          BanUserParams(userId: userId, bannedBy: adminId, reason: reason),
         );
 
         result.fold(

@@ -499,11 +499,15 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
                       ),
                     ),
                     const Gap(12),
-                    Text(
-                      _reporterName ?? widget.report.reporterId,
-                      style: HomifyTypography.body2.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Text(
+                        _reporterName ?? widget.report.reporterId,
+                        style: HomifyTypography.body2.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

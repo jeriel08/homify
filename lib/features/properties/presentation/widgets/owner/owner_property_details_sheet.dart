@@ -12,6 +12,7 @@ import 'package:homify/features/properties/presentation/providers/owner_dashboar
 import 'package:delightful_toast/delight_toast.dart';
 import 'package:delightful_toast/toast/components/toast_card.dart';
 import 'package:delightful_toast/toast/utils/enums.dart';
+import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
 
 class OwnerPropertyDetailsSheet extends StatefulWidget {
   final PropertyEntity property;
@@ -50,7 +51,7 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final topPadding = MediaQuery.of(context).padding.top;
-    final maxHeight = screenHeight - topPadding;
+    final maxHeight = screenHeight - topPadding - 60;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -608,24 +609,30 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
                       ),
                       const Gap(16),
                       Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            _showDeleteConfirmation(context);
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            return ElevatedButton.icon(
+                              onPressed: () {
+                                _showDeleteConfirmation(context, ref);
+                              },
+                              icon: const Icon(LucideIcons.trash2, size: 20),
+                              label: const Text('Delete'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red.shade50,
+                                foregroundColor: Colors.red,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                textStyle: HomifyTypography.semibold(
+                                  HomifyTypography.label1,
+                                ),
+                              ),
+                            );
                           },
-                          icon: const Icon(LucideIcons.trash2, size: 20),
-                          label: const Text('Delete'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade50,
-                            foregroundColor: Colors.red,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            textStyle: HomifyTypography.semibold(
-                              HomifyTypography.label1,
-                            ),
-                          ),
                         ),
                       ),
                     ],
@@ -669,12 +676,83 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context) {
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _DeleteReasonSheet(propertyId: widget.property.id),
+      builder: (context) => ConfirmationReasonSheet(
+        title: 'Delete Property',
+        subtitle: 'Why are you deleting this property?',
+        reasons: const [
+          'Sold / Rented Out',
+          'No longer available',
+          'Duplicate listing',
+          'Other',
+        ],
+        confirmLabel: 'Delete Property',
+        confirmIcon: LucideIcons.trash2,
+        confirmColor: Colors.red,
+        onConfirm: (reason) async {
+          try {
+            Navigator.pop(context); // Close reason sheet
+
+            await ref
+                .read(ownerDashboardProvider.notifier)
+                .deleteProperty(widget.property.id, reason);
+
+            if (context.mounted) {
+              Navigator.pop(context); // Close details sheet
+
+              DelightToastBar(
+                position: DelightSnackbarPosition.top,
+                snackbarDuration: const Duration(seconds: 3),
+                autoDismiss: true,
+                builder: (context) => const ToastCard(
+                  color: Colors.green,
+                  leading: Icon(
+                    Icons.check_circle,
+                    size: 28,
+                    color: Colors.white,
+                  ),
+                  title: Text(
+                    'Property deleted successfully',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ).show(context);
+            }
+          } catch (e) {
+            if (context.mounted) {
+              DelightToastBar(
+                position: DelightSnackbarPosition.top,
+                snackbarDuration: const Duration(seconds: 3),
+                autoDismiss: true,
+                builder: (context) => ToastCard(
+                  color: Colors.red,
+                  leading: const Icon(
+                    Icons.error_outline,
+                    size: 28,
+                    color: Colors.white,
+                  ),
+                  title: Text(
+                    'Failed to delete property: $e',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ).show(context);
+            }
+          }
+        },
+      ),
     );
   }
 
@@ -684,184 +762,5 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
         .split(' ')
         .map((e) => e[0].toUpperCase() + e.substring(1))
         .join(' ');
-  }
-}
-
-class _DeleteReasonSheet extends ConsumerStatefulWidget {
-  final String propertyId;
-
-  const _DeleteReasonSheet({required this.propertyId});
-
-  @override
-  ConsumerState<_DeleteReasonSheet> createState() => _DeleteReasonSheetState();
-}
-
-class _DeleteReasonSheetState extends ConsumerState<_DeleteReasonSheet> {
-  String? _selectedReason;
-  bool _isDeleting = false;
-
-  final List<String> _reasons = [
-    'Sold / Rented Out',
-    'No longer available',
-    'Duplicate listing',
-    'Other',
-  ];
-
-  Future<void> _deleteProperty() async {
-    if (_selectedReason == null) return;
-
-    setState(() => _isDeleting = true);
-
-    try {
-      await ref
-          .read(ownerDashboardProvider.notifier)
-          .deleteProperty(widget.propertyId, _selectedReason!);
-
-      if (mounted) {
-        Navigator.pop(context); // Close delete sheet
-        Navigator.pop(context); // Close details sheet
-
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => const ToastCard(
-            color: Colors.green,
-            leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
-            title: Text(
-              'Property deleted successfully',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isDeleting = false);
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => ToastCard(
-            color: Colors.red,
-            leading: const Icon(
-              Icons.error_outline,
-              size: 28,
-              color: Colors.white,
-            ),
-            title: Text(
-              'Failed to delete property: $e',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        24,
-        16,
-        24,
-        MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const Gap(24),
-          Text(
-            'Why are you deleting this property?',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF32190D),
-            ),
-          ),
-          const Gap(8),
-          Text(
-            'This action cannot be undone. Please tell us why you are removing this listing.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
-          ),
-          const Gap(24),
-          ..._reasons.map(
-            (reason) => RadioListTile<String>(
-              title: Text(
-                reason,
-                style: const TextStyle(
-                  color: Color(0xFF32190D),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              value: reason,
-              groupValue: _selectedReason,
-              activeColor: const Color(0xFFE05725),
-              contentPadding: EdgeInsets.zero,
-              onChanged: (value) => setState(() => _selectedReason = value),
-            ),
-          ),
-          const Gap(24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: (_selectedReason != null && !_isDeleting)
-                  ? _deleteProperty
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                disabledBackgroundColor: Colors.red.withValues(alpha: 0.3),
-              ),
-              child: _isDeleting
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Text(
-                      'Delete Property',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
