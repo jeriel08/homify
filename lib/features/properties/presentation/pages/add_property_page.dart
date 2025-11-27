@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:homify/core/widgets/step_progress_bar.dart';
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/auth/presentation/providers/registration_flow_provider.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 // import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
@@ -100,14 +101,47 @@ class _AddPropertyPageState extends ConsumerState<AddPropertyPage> {
       }
     });
 
+    // Check if user is already onboarded
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final isOnboarding = currentUserAsync.value?.onboardingComplete == false;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
         if (state.currentStep == 0) {
-          // If on the first step, show the exit dialog
-          _showExitConfirmDialog(context);
+          if (isOnboarding) {
+            // If onboarding, show the strict exit dialog
+            _showExitConfirmDialog(context);
+          } else {
+            // If just adding a property, confirm discard
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Discard Property?'),
+                content: const Text(
+                  'Are you sure you want to discard this new property?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close dialog
+                      context.pop(); // Go back
+                    },
+                    child: const Text(
+                      'Discard',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
         } else {
           // Otherwise, just go back one step
           controller.back();
