@@ -3,7 +3,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:homify/core/services/location_service.dart';
 import 'package:homify/features/properties/domain/usecases/get_verified_properties.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
-// Import your dependency injection or repository providers
 import 'package:homify/features/properties/properties_providers.dart';
 
 // 1. Define the State State
@@ -46,36 +45,47 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
   }
 
   Future<void> loadMapData() async {
+    if (!mounted) return;
     state = state.copyWith(isLoading: true);
 
     // Step A: Get User Location
-    final locationData = await LocationService.getSavedLocation();
     LatLng userPos;
-    if (locationData != null) {
-      userPos = LatLng(locationData.latitude, locationData.longitude);
-    } else {
+    try {
+      final locationData = await LocationService.getSavedLocation();
+      if (locationData != null) {
+        userPos = LatLng(locationData.latitude, locationData.longitude);
+      } else {
+        userPos = const LatLng(14.5995, 120.9842); // Default to Manila
+      }
+    } catch (e) {
+      // Fallback if location service fails (e.g. permission denied)
       userPos = const LatLng(14.5995, 120.9842); // Default to Manila
     }
 
     // Step B: Fetch Properties
     final result = await _getVerifiedProperties();
 
+    if (!mounted) return;
+
     result.fold(
       (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          initialPosition: userPos,
-          errorMessage: failure
-              .toString(), // Ensure your Failure class has a toString or message field
-        );
+        if (mounted) {
+          state = state.copyWith(
+            isLoading: false,
+            initialPosition: userPos,
+            errorMessage: failure.toString(),
+          );
+        }
       },
       (properties) {
         final markers = _generateMarkers(properties);
-        state = state.copyWith(
-          isLoading: false,
-          initialPosition: userPos,
-          markers: markers,
-        );
+        if (mounted) {
+          state = state.copyWith(
+            isLoading: false,
+            initialPosition: userPos,
+            markers: markers,
+          );
+        }
       },
     );
   }
@@ -101,8 +111,6 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 final exploreProvider = StateNotifierProvider<ExploreNotifier, ExploreState>((
   ref,
 ) {
-  // You need to expose your UseCase via a provider as well.
-  // Assuming you have a provider for the repository:
   final repository = ref.watch(propertyRepositoryProvider);
   return ExploreNotifier(
     getVerifiedProperties: GetVerifiedProperties(repository),

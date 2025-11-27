@@ -11,6 +11,7 @@ import 'package:homify/features/messages/presentation/pages/messages_screen.dart
 import 'package:homify/features/admin/presentation/pages/admin_dashboard_screen.dart';
 import 'package:homify/features/admin/presentation/pages/approvals_screen.dart';
 import 'package:homify/features/admin/presentation/pages/reports_screen.dart';
+import 'package:homify/features/home/presentation/pages/about_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 // Define the colors for our nav bar (same as before)
@@ -98,8 +99,9 @@ final navigationLogicProvider = Provider<NavigationModel>((ref) {
         tabs: [
           _buildTab(LucideIcons.house, 'Home'),
           _buildTab(LucideIcons.mapPinHouse, 'Explore'),
+          _buildTab(LucideIcons.info, 'About'),
         ],
-        screens: const [TenantHomeScreen(), ExploreScreen()],
+        screens: const [TenantHomeScreen(), ExploreScreen(), AboutScreen()],
       );
   }
 });
