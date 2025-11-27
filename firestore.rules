@@ -44,6 +44,12 @@ service cloud.firestore {
       allow delete: if request.auth != null &&
                        request.auth.uid == get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_uid;
     }
+
+    match /deleted_properties/{propertyId} {
+      allow create: if request.auth != null &&
+                       request.auth.uid == request.resource.data.owner_uid;
+      allow read: if isUserAdmin();
+    }
     
     match /properties {
       allow list: if isUserAdmin();

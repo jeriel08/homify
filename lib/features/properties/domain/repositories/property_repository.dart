@@ -20,4 +20,9 @@ abstract class PropertyRepository {
     String propertyId,
     Map<String, dynamic> updates,
   );
+
+  Future<Either<Failure, void>> deleteProperty(
+    String propertyId,
+    String reason,
+  );
 }

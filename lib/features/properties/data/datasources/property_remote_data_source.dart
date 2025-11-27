@@ -19,6 +19,9 @@ abstract class PropertyRemoteDataSource {
 
   /// Upload images to Cloudinary
   Future<List<String>> uploadImages(List<File> images, String ownerUid);
+
+  /// Delete property and archive it
+  Future<void> deleteProperty(String propertyId, String reason);
 }
 
 class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
@@ -163,6 +166,41 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
       return PropertyModel.fromFirestore(doc);
     } catch (e) {
       throw Exception('Failed to update property: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteProperty(String propertyId, String reason) async {
+    try {
+      final docRef = _firestore.collection('properties').doc(propertyId);
+      final docSnapshot = await docRef.get();
+
+      if (!docSnapshot.exists) {
+        throw Exception('Property not found');
+      }
+
+      final data = docSnapshot.data()!;
+
+      // Create a batch for atomicity
+      final batch = _firestore.batch();
+
+      // 1. Add to deleted_properties collection
+      final deletedRef = _firestore
+          .collection('deleted_properties')
+          .doc(propertyId);
+      batch.set(deletedRef, {
+        ...data,
+        'deletion_reason': reason,
+        'deleted_at': FieldValue.serverTimestamp(),
+      });
+
+      // 2. Delete from properties collection
+      batch.delete(docRef);
+
+      // Commit the batch
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Failed to delete property: $e');
     }
   }
 }

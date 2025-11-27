@@ -96,4 +96,17 @@ class PropertyRepositoryImpl implements PropertyRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> deleteProperty(
+    String propertyId,
+    String reason,
+  ) async {
+    try {
+      await remoteDataSource.deleteProperty(propertyId, reason);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }
