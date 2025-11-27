@@ -137,46 +137,56 @@ class TenantHomeNotifier extends StateNotifier<TenantHomeState> {
     final userAsync = ref.read(currentUserProvider);
     final user = userAsync.value;
 
-    if (user == null || user.preferences == null) {
-      return;
+    // If user has preferences, try to get recommendations
+    if (user != null && user.preferences != null) {
+      final prefs = user.preferences!;
+      final minBudget = (prefs['min_budget'] as num?)?.toDouble() ?? 0;
+      final maxBudget = (prefs['max_budget'] as num?)?.toDouble() ?? 100000;
+      final dealbreakers = List<String>.from(prefs['dealbreakers'] ?? []);
+
+      final result = await _getRecommendedProperties(
+        GetRecommendedPropertiesParams(
+          minBudget: minBudget,
+          maxBudget: maxBudget,
+          dealbreakers: dealbreakers,
+        ),
+      );
+
+      if (!mounted) return;
+
+      bool recommendationsFound = false;
+      await result.fold(
+        (failure) async {
+          // If recommendation fails, fall through to fallback
+        },
+        (properties) async {
+          if (!mounted) return;
+
+          if (properties.isNotEmpty) {
+            state = state.copyWith(
+              allRecommendedProperties: properties,
+              displayedRecommendedCount: 10, // Reset count
+            );
+            recommendationsFound = true;
+          }
+        },
+      );
+
+      if (recommendationsFound) return;
     }
 
-    final prefs = user.preferences!;
-    final minBudget = (prefs['min_budget'] as num?)?.toDouble() ?? 0;
-    final maxBudget = (prefs['max_budget'] as num?)?.toDouble() ?? 100000;
-    final dealbreakers = List<String>.from(prefs['dealbreakers'] ?? []);
+    // FALLBACK: If no user, no preferences, or no recommendations found/failed
+    if (!mounted) return;
 
-    final result = await _getRecommendedProperties(
-      GetRecommendedPropertiesParams(
-        minBudget: minBudget,
-        maxBudget: maxBudget,
-        dealbreakers: dealbreakers,
-      ),
-    );
+    final repo = ref.read(propertyRepositoryProvider);
+    final allPropertiesResult = await repo.getVerifiedProperties();
 
     if (!mounted) return;
 
-    await result.fold((failure) async => null, (properties) async {
-      if (!mounted) return;
-
-      if (properties.isEmpty) {
-        // FALLBACK: If no recommendations, fetch ALL verified properties
-        final repo = ref.read(propertyRepositoryProvider);
-        final allPropertiesResult = await repo.getVerifiedProperties();
-
-        if (!mounted) return;
-
-        allPropertiesResult.fold((failure) => null, (allProps) {
-          if (mounted) {
-            state = state.copyWith(
-              allRecommendedProperties: allProps,
-              displayedRecommendedCount: 10, // Reset count
-            );
-          }
-        });
-      } else {
+    allPropertiesResult.fold((failure) => null, (allProps) {
+      if (mounted) {
         state = state.copyWith(
-          allRecommendedProperties: properties,
+          allRecommendedProperties: allProps,
           displayedRecommendedCount: 10, // Reset count
         );
       }
