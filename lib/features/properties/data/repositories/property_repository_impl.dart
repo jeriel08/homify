@@ -109,4 +109,20 @@ class PropertyRepositoryImpl implements PropertyRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<PropertyEntity>>> searchProperties({
+    String? query,
+    PropertyType? type,
+  }) async {
+    try {
+      final properties = await remoteDataSource.searchProperties(
+        query: query,
+        type: type,
+      );
+      return Right(properties);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

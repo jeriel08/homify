@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloudinary_public/cloudinary_public.dart';
 import 'package:flutter/material.dart';
 import 'package:homify/features/properties/data/models/property_model.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
 
 abstract class PropertyRemoteDataSource {
   Future<PropertyModel> addProperty(
@@ -22,6 +23,12 @@ abstract class PropertyRemoteDataSource {
 
   /// Delete property and archive it
   Future<void> deleteProperty(String propertyId, String reason);
+
+  /// Search properties
+  Future<List<PropertyModel>> searchProperties({
+    String? query,
+    PropertyType? type,
+  });
 }
 
 class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
@@ -201,6 +208,53 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
       await batch.commit();
     } catch (e) {
       throw Exception('Failed to delete property: $e');
+    }
+  }
+
+  @override
+  Future<List<PropertyModel>> searchProperties({
+    String? query,
+    PropertyType? type,
+  }) async {
+    try {
+      // 1. Base query: Get all verified properties
+      // Note: For a larger app, we'd use Algolia/Elasticsearch or more complex Firestore queries
+      // But for now, client-side filtering of verified properties is acceptable
+      Query queryRef = _firestore
+          .collection('properties')
+          .where('is_verified', isEqualTo: true);
+
+      // 2. If filtering by type ONLY (no text query), we can do it on the server
+      // However, if we have a text query, we'll fetch all and filter in Dart
+      // to avoid composite index issues for every combination
+      if (type != null && (query == null || query.isEmpty)) {
+        queryRef = queryRef.where('type', isEqualTo: type.name);
+      }
+
+      final snapshot = await queryRef.get();
+      var properties = snapshot.docs
+          .map((doc) => PropertyModel.fromFirestore(doc))
+          .toList();
+
+      // 3. Client-side filtering
+      if (query != null && query.isNotEmpty) {
+        final lowerQuery = query.toLowerCase();
+        properties = properties.where((p) {
+          final matchesName = p.name.toLowerCase().contains(lowerQuery);
+          final matchesDesc = p.description.toLowerCase().contains(lowerQuery);
+          final matchesType = type != null ? p.type == type : true;
+          return (matchesName || matchesDesc) && matchesType;
+        }).toList();
+      } else if (type != null) {
+        // If we didn't filter by type on server (e.g. if we decided to fetch all), do it here
+        // But the server query above handles the type-only case.
+        // This block is just a fallback or for consistency if logic changes.
+        // Currently, if query is empty, we already filtered by type on server.
+      }
+
+      return properties;
+    } catch (e) {
+      throw Exception('Search failed: $e');
     }
   }
 }

@@ -25,4 +25,9 @@ abstract class PropertyRepository {
     String propertyId,
     String reason,
   );
+
+  Future<Either<Failure, List<PropertyEntity>>> searchProperties({
+    String? query,
+    PropertyType? type,
+  });
 }
