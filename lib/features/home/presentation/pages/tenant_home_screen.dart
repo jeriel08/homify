@@ -20,6 +20,27 @@ class TenantHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(tenantHomeProvider.notifier).loadMoreRecommendations();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(tenantHomeProvider);
@@ -33,6 +54,7 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
           child: RefreshIndicator(
             onRefresh: () => ref.read(tenantHomeProvider.notifier).loadData(),
             child: SingleChildScrollView(
+              controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(
                 20,
                 20,
@@ -102,7 +124,7 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                   ],
 
                   // 3. You Might Like Feed
-                  if (state.recommendedProperties.isNotEmpty ||
+                  if (state.allRecommendedProperties.isNotEmpty ||
                       state.isLoading) ...[
                     _buildHeader(context, "You might like"),
                     const Gap(16),
@@ -111,10 +133,11 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: state.isLoading
                           ? 3
-                          : state.recommendedProperties.length,
+                          : state.displayedRecommendedProperties.length +
+                                (state.hasMoreRecommendations ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (state.isLoading) {
-                          if (state.recommendedProperties.isEmpty) {
+                          if (state.allRecommendedProperties.isEmpty) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 16),
                               child: Skeleton.leaf(
@@ -130,7 +153,29 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                             );
                           }
                         }
-                        final property = state.recommendedProperties[index];
+
+                        // Check if this is the loading indicator item
+                        if (!state.isLoading &&
+                            index ==
+                                state.displayedRecommendedProperties.length) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Skeletonizer(
+                              enabled: true,
+                              child: TenantPropertyCard(
+                                property: state
+                                    .displayedRecommendedProperties
+                                    .last, // Use last property as template
+                                isFavorite: false,
+                                onFavorite: () {},
+                                onTap: () {},
+                              ),
+                            ),
+                          );
+                        }
+
+                        final property =
+                            state.displayedRecommendedProperties[index];
                         return TenantPropertyCard(
                           property: property,
                           isFavorite:

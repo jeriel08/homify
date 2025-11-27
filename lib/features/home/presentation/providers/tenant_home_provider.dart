@@ -10,27 +10,38 @@ import 'package:homify/features/properties/properties_providers.dart';
 class TenantHomeState {
   final bool isLoading;
   final List<PropertyEntity> nearbyProperties;
-  final List<PropertyEntity> recommendedProperties;
+  final List<PropertyEntity> allRecommendedProperties;
+  final int displayedRecommendedCount;
   final String? error;
 
   const TenantHomeState({
     this.isLoading = false,
     this.nearbyProperties = const [],
-    this.recommendedProperties = const [],
+    this.allRecommendedProperties = const [],
+    this.displayedRecommendedCount = 10,
     this.error,
   });
+
+  List<PropertyEntity> get displayedRecommendedProperties =>
+      allRecommendedProperties.take(displayedRecommendedCount).toList();
+
+  bool get hasMoreRecommendations =>
+      displayedRecommendedCount < allRecommendedProperties.length;
 
   TenantHomeState copyWith({
     bool? isLoading,
     List<PropertyEntity>? nearbyProperties,
-    List<PropertyEntity>? recommendedProperties,
+    List<PropertyEntity>? allRecommendedProperties,
+    int? displayedRecommendedCount,
     String? error,
   }) {
     return TenantHomeState(
       isLoading: isLoading ?? this.isLoading,
       nearbyProperties: nearbyProperties ?? this.nearbyProperties,
-      recommendedProperties:
-          recommendedProperties ?? this.recommendedProperties,
+      allRecommendedProperties:
+          allRecommendedProperties ?? this.allRecommendedProperties,
+      displayedRecommendedCount:
+          displayedRecommendedCount ?? this.displayedRecommendedCount,
       error: error,
     );
   }
@@ -48,6 +59,7 @@ class TenantHomeNotifier extends StateNotifier<TenantHomeState> {
   ) : super(const TenantHomeState());
 
   Future<void> loadData() async {
+    if (!mounted) return;
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -57,9 +69,22 @@ class TenantHomeNotifier extends StateNotifier<TenantHomeState> {
       // 2. Fetch Recommended Properties
       await _loadRecommendedProperties();
 
-      state = state.copyWith(isLoading: false);
+      if (mounted) {
+        state = state.copyWith(isLoading: false);
+      }
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      if (mounted) {
+        state = state.copyWith(isLoading: false, error: e.toString());
+      }
+    }
+  }
+
+  void loadMoreRecommendations() {
+    if (!mounted) return;
+    if (state.hasMoreRecommendations) {
+      state = state.copyWith(
+        displayedRecommendedCount: state.displayedRecommendedCount + 10,
+      );
     }
   }
 
@@ -96,10 +121,14 @@ class TenantHomeNotifier extends StateNotifier<TenantHomeState> {
       ),
     );
 
+    if (!mounted) return;
+
     result.fold(
       (failure) => null, // Handle error silently or log
       (properties) {
-        state = state.copyWith(nearbyProperties: properties);
+        if (mounted) {
+          state = state.copyWith(nearbyProperties: properties);
+        }
       },
     );
   }
@@ -125,16 +154,31 @@ class TenantHomeNotifier extends StateNotifier<TenantHomeState> {
       ),
     );
 
-    result.fold((failure) => null, (properties) async {
+    if (!mounted) return;
+
+    await result.fold((failure) async => null, (properties) async {
+      if (!mounted) return;
+
       if (properties.isEmpty) {
         // FALLBACK: If no recommendations, fetch ALL verified properties
         final repo = ref.read(propertyRepositoryProvider);
         final allPropertiesResult = await repo.getVerifiedProperties();
+
+        if (!mounted) return;
+
         allPropertiesResult.fold((failure) => null, (allProps) {
-          state = state.copyWith(recommendedProperties: allProps);
+          if (mounted) {
+            state = state.copyWith(
+              allRecommendedProperties: allProps,
+              displayedRecommendedCount: 10, // Reset count
+            );
+          }
         });
       } else {
-        state = state.copyWith(recommendedProperties: properties);
+        state = state.copyWith(
+          allRecommendedProperties: properties,
+          displayedRecommendedCount: 10, // Reset count
+        );
       }
     });
   }
