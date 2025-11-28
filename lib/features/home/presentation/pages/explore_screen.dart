@@ -52,6 +52,18 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
           ref.read(bottomNavVisibilityProvider.notifier).state = !isSelected;
         });
       }
+
+      // Show error message as a SnackBar if it changes and is not null
+      if (previous?.errorMessage != next.errorMessage &&
+          next.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     });
 
     return Scaffold(
@@ -65,6 +77,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
               zoom: 14.0,
             ),
             markers: exploreState.markers,
+            polylines: exploreState.polylines,
             myLocationEnabled: true,
             myLocationButtonEnabled: false, // We use a custom one
             zoomControlsEnabled: false,

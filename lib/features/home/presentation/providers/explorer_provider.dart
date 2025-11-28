@@ -1,14 +1,19 @@
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:homify/core/services/location_service.dart';
 import 'package:homify/features/properties/domain/usecases/get_verified_properties.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/properties_providers.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:homify/core/constants/app_constants.dart';
 
 // 1. Define the State State
 class ExploreState {
   final bool isLoading;
   final Set<Marker> markers;
+  final Set<Polyline> polylines;
   final LatLng? initialPosition;
   final String? errorMessage;
   final PropertyEntity? selectedProperty;
@@ -16,6 +21,7 @@ class ExploreState {
   ExploreState({
     this.isLoading = true,
     this.markers = const {},
+    this.polylines = const {},
     this.initialPosition,
     this.errorMessage,
     this.selectedProperty,
@@ -24,6 +30,7 @@ class ExploreState {
   ExploreState copyWith({
     bool? isLoading,
     Set<Marker>? markers,
+    Set<Polyline>? polylines,
     LatLng? initialPosition,
     String? errorMessage,
     PropertyEntity? selectedProperty,
@@ -32,10 +39,12 @@ class ExploreState {
     return ExploreState(
       isLoading: isLoading ?? this.isLoading,
       markers: markers ?? this.markers,
+      polylines: polylines ?? this.polylines,
       initialPosition: initialPosition ?? this.initialPosition,
       errorMessage: errorMessage ?? this.errorMessage,
-      selectedProperty:
-          resetSelectedProperty ? null : (selectedProperty ?? this.selectedProperty),
+      selectedProperty: resetSelectedProperty
+          ? null
+          : (selectedProperty ?? this.selectedProperty),
     );
   }
 }
@@ -115,7 +124,94 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 
   void clearSelectedProperty() {
     if (state.selectedProperty != null) {
-      state = state.copyWith(resetSelectedProperty: true);
+      state = state.copyWith(
+        resetSelectedProperty: true,
+        polylines: {}, // Clear polylines when closing sheet
+      );
+    }
+  }
+
+  Future<void> showDirection(PropertyEntity property) async {
+    final currentPos = await LocationService.getCurrentPosition();
+    if (currentPos == null) return;
+
+    final userLatLng = PointLatLng(currentPos.latitude, currentPos.longitude);
+    final propertyLatLng = PointLatLng(property.latitude, property.longitude);
+
+    PolylinePoints polylinePoints = PolylinePoints(
+      apiKey: AppConstants.googleMapsApiKey,
+    );
+
+    // 1. Try Routes API (v2)
+    try {
+      RoutesApiRequest request = RoutesApiRequest(
+        origin: userLatLng,
+        destination: propertyLatLng,
+        travelMode: TravelMode.driving,
+        routingPreference: RoutingPreference.trafficAware,
+      );
+
+      RoutesApiResponse result = await polylinePoints
+          .getRouteBetweenCoordinatesV2(request: request);
+
+      if (result.routes.isNotEmpty) {
+        final route = result.routes.first;
+        final points = route.polylinePoints ?? [];
+        final List<LatLng> polylineCoordinates = points
+            .map((point) => LatLng(point.latitude, point.longitude))
+            .toList();
+
+        _setPolyline(polylineCoordinates);
+        return;
+      }
+    } catch (e) {
+      debugPrint('Routes API Error: $e');
+      // Ignore error and try legacy API
+    }
+
+    // 2. Fallback to Legacy Directions API
+    try {
+      // ignore: deprecated_member_use
+      PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+        request: PolylineRequest(
+          origin: userLatLng,
+          destination: propertyLatLng,
+          mode: TravelMode.driving,
+        ),
+      );
+
+      if (result.points.isNotEmpty) {
+        final List<LatLng> polylineCoordinates = result.points
+            .map((point) => LatLng(point.latitude, point.longitude))
+            .toList();
+
+        _setPolyline(polylineCoordinates);
+        return;
+      }
+    } catch (e) {
+      debugPrint('Legacy API Error: $e');
+      // Ignore error and use straight line fallback
+    }
+
+    // 3. Fallback: Show error if both APIs fail
+    if (mounted) {
+      state = state.copyWith(
+        errorMessage:
+            'Error connecting route. Please check your internet connection.',
+      );
+    }
+  }
+
+  void _setPolyline(List<LatLng> points) {
+    final polyline = Polyline(
+      polylineId: const PolylineId('direction_path'),
+      color: const Color(0xFFE05725), // Primary color
+      width: 5,
+      points: points,
+    );
+
+    if (mounted) {
+      state = state.copyWith(polylines: {polyline});
     }
   }
 }
