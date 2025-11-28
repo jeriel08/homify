@@ -43,9 +43,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, void>> banUser(String userId, String bannedBy) async {
+  Future<Either<Failure, void>> banUser(
+    String userId,
+    String bannedBy,
+    String reason,
+  ) async {
     try {
-      await remoteDataSource.banUser(userId, bannedBy);
+      await remoteDataSource.banUser(userId, bannedBy, reason);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

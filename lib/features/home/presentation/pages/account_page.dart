@@ -9,6 +9,7 @@ import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
 import 'package:lottie/lottie.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class AccountPage extends ConsumerWidget {
   const AccountPage({super.key});
@@ -50,7 +51,7 @@ class AccountPage extends ConsumerWidget {
         Widget? avatarChild;
 
         if (user.photoUrl != null && user.photoUrl!.isNotEmpty) {
-          avatarBackgroundImage = NetworkImage(user.photoUrl!);
+          avatarBackgroundImage = CachedNetworkImageProvider(user.photoUrl!);
           avatarChild = null;
         } else {
           if (user.gender == 'male') {

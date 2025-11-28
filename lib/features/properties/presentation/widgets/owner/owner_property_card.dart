@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:homify/features/admin/domain/entities/property_with_user.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class AdminPropertyCard extends StatelessWidget {
-  final PropertyWithUser propertyWithUser;
+class OwnerPropertyCard extends StatelessWidget {
+  final PropertyEntity property;
   final VoidCallback onTap;
 
-  const AdminPropertyCard({
+  const OwnerPropertyCard({
     super.key,
-    required this.propertyWithUser,
+    required this.property,
     required this.onTap,
   });
 
@@ -25,10 +24,7 @@ class AdminPropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final property = propertyWithUser.property;
-    final user = propertyWithUser.user;
-    final isApproved =
-        property.isVerified; // Assuming isVerified means approved
+    final isApproved = property.isVerified;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -59,16 +55,22 @@ class AdminPropertyCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header - Owner & Status
+              // Header - Favorites & Status
               Row(
                 children: [
+                  // Favorites count
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: surface.withValues(alpha: 0.5),
+                      color: Colors.red.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(LucideIcons.user, size: 20, color: primary),
+                    child: Icon(
+                      LucideIcons.heart,
+                      size: 20,
+                      color: Colors.red,
+                      fill: 1.0,
+                    ),
                   ),
                   const Gap(12),
                   Expanded(
@@ -77,20 +79,18 @@ class AdminPropertyCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Owner',
+                          'Favorites',
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(color: textSecondary),
                         ),
                         const Gap(2),
                         Text(
-                          user.fullName,
+                          '${property.favoritesCount}',
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
                                 color: textPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -102,7 +102,7 @@ class AdminPropertyCard extends StatelessWidget {
 
               const Gap(12),
 
-              // Submission time (if available, or just created at)
+              // Timestamp
               Row(
                 children: [
                   Icon(LucideIcons.calendar, size: 14, color: textSecondary),
@@ -150,6 +150,7 @@ class AdminPropertyCard extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            // Image count badge
                             if (property.imageUrls.length > 1)
                               Positioned(
                                 top: 12,
@@ -242,7 +243,7 @@ class AdminPropertyCard extends StatelessWidget {
               Container(height: 1, color: surface.withValues(alpha: 0.5)),
               const Gap(16),
 
-              // Bottom section
+              // Bottom section - Price & View Details
               Row(
                 children: [
                   Expanded(
@@ -349,7 +350,7 @@ class AdminPropertyCard extends StatelessWidget {
           ),
           const Gap(4),
           Text(
-            isApproved ? 'Approved' : 'Pending',
+            isApproved ? 'Live' : 'Pending',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: isApproved ? Colors.green : Colors.orange,
               fontWeight: FontWeight.w600,

@@ -6,7 +6,7 @@ abstract class ProfileRemoteDataSource {
   Future<UserProfileModel> getUserProfile(String userId);
   Stream<UserProfileModel> getUserProfileStream(String userId);
   Future<void> updateProfile(String userId, Map<String, dynamic> updates);
-  Future<void> banUser(String userId, String bannedBy);
+  Future<void> banUser(String userId, String bannedBy, String reason);
   Future<void> unbanUser(String userId);
 }
 
@@ -69,12 +69,13 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<void> banUser(String userId, String bannedBy) async {
+  Future<void> banUser(String userId, String bannedBy, String reason) async {
     try {
       await firestore.collection('users').doc(userId).update({
         'is_banned': true,
         'banned_at': FieldValue.serverTimestamp(),
         'banned_by': bannedBy,
+        'ban_reason': reason,
         'updated_at': FieldValue.serverTimestamp(),
       });
     } catch (e) {

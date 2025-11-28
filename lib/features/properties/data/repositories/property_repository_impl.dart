@@ -80,4 +80,49 @@ class PropertyRepositoryImpl implements PropertyRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, PropertyEntity>> updateProperty(
+    String propertyId,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      final property = await remoteDataSource.updateProperty(
+        propertyId,
+        updates,
+      );
+      return Right(property);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteProperty(
+    String propertyId,
+    String reason,
+  ) async {
+    try {
+      await remoteDataSource.deleteProperty(propertyId, reason);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<PropertyEntity>>> searchProperties({
+    String? query,
+    PropertyType? type,
+  }) async {
+    try {
+      final properties = await remoteDataSource.searchProperties(
+        query: query,
+        type: type,
+      );
+      return Right(properties);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

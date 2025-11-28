@@ -16,6 +16,7 @@ class UserEntity {
   final bool isBanned;
   final DateTime? bannedAt;
   final String? bannedBy; // Admin UID who banned the user
+  final Map<String, dynamic>? preferences;
 
   String get fullName => '$firstName $lastName';
 
@@ -35,5 +36,6 @@ class UserEntity {
     this.bannedAt,
     this.bannedBy,
     this.photoUrl,
+    this.preferences,
   });
 }

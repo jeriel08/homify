@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 
@@ -61,10 +62,18 @@ class TenantPropertyCard extends StatelessWidget {
                       child: AspectRatio(
                         aspectRatio: 16 / 10,
                         child: property.imageUrls.isNotEmpty
-                            ? Image.network(
-                                property.imageUrls.first,
+                            ? CachedNetworkImage(
+                                imageUrl: property.imageUrls.first,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => Container(
+                                placeholder: (context, url) => Container(
+                                  color: surface.withValues(alpha: 0.3),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
                                   color: surface.withValues(alpha: 0.3),
                                   child: const Icon(
                                     LucideIcons.house,
@@ -210,25 +219,6 @@ class TenantPropertyCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ),
-
-                    const Gap(12),
-
-                    // Check it out Button
-                    ElevatedButton(
-                      onPressed: onTap,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: textPrimary,
-                        foregroundColor: Colors.white,
-                        // CRITICAL FIX: Override global theme infinite width
-                        minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text('Check it out'),
                     ),
                   ],
                 ),

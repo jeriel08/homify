@@ -8,13 +8,22 @@ class BanUser {
   BanUser(this.repository);
 
   Future<Either<Failure, void>> call(BanUserParams params) async {
-    return await repository.banUser(params.userId, params.bannedBy);
+    return await repository.banUser(
+      params.userId,
+      params.bannedBy,
+      params.reason,
+    );
   }
 }
 
 class BanUserParams {
   final String userId;
   final String bannedBy; // Admin UID
+  final String reason;
 
-  const BanUserParams({required this.userId, required this.bannedBy});
+  const BanUserParams({
+    required this.userId,
+    required this.bannedBy,
+    required this.reason,
+  });
 }

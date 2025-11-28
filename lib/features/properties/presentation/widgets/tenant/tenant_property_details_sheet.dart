@@ -1,36 +1,28 @@
-import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
-import 'package:homify/features/properties/domain/entities/property_entity.dart';
-import 'package:homify/core/theme/typography.dart';
-import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
-import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
-
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:homify/core/theme/typography.dart';
+import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
+import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
+import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
+import 'package:homify/features/properties/domain/entities/property_entity.dart';
+import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class PropertyDetailsSheet extends StatefulWidget {
+class TenantPropertyDetailsSheet extends ConsumerStatefulWidget {
   final PropertyEntity property;
-  final VoidCallback onApprove;
-  final VoidCallback onReject;
-  final bool showActions;
 
-  const PropertyDetailsSheet({
-    super.key,
-    required this.property,
-    this.onApprove = _defaultApprove,
-    this.onReject = _defaultReject,
-    this.showActions = true,
-  });
-
-  static void _defaultApprove() {}
-  static void _defaultReject() {}
+  const TenantPropertyDetailsSheet({super.key, required this.property});
 
   @override
-  State<PropertyDetailsSheet> createState() => _PropertyDetailsSheetState();
+  ConsumerState<TenantPropertyDetailsSheet> createState() =>
+      _TenantPropertyDetailsSheetState();
 }
 
-class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
+class _TenantPropertyDetailsSheetState
+    extends ConsumerState<TenantPropertyDetailsSheet> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -50,7 +42,10 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final topPadding = MediaQuery.of(context).padding.top;
-    final maxHeight = screenHeight - topPadding - 60; // 20px margin from top
+    final maxHeight = screenHeight - topPadding - 60;
+
+    final property = widget.property;
+    final ownerAsync = ref.watch(userProfileProvider(property.ownerUid));
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -87,10 +82,10 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                 controller: controller,
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                 children: [
-                  // Image Carousel with indicator
+                  // Image Carousel
                   SizedBox(
                     height: 280,
-                    child: widget.property.imageUrls.isEmpty
+                    child: property.imageUrls.isEmpty
                         ? Container(
                             decoration: BoxDecoration(
                               color: surface.withValues(alpha: 0.3),
@@ -124,7 +119,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                               // Image PageView
                               PageView.builder(
                                 controller: _pageController,
-                                itemCount: widget.property.imageUrls.length,
+                                itemCount: property.imageUrls.length,
                                 onPageChanged: (index) {
                                   setState(() {
                                     _currentPage = index;
@@ -137,7 +132,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(20),
                                     child: CachedNetworkImage(
-                                      imageUrl: widget.property.imageUrls[i],
+                                      imageUrl: property.imageUrls[i],
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) => Container(
                                         color: surface.withValues(alpha: 0.3),
@@ -147,25 +142,28 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                           ),
                                         ),
                                       ),
-                                      errorWidget: (context, url, error) => Container(
-                                        color: surface.withValues(alpha: 0.3),
-                                        child: Center(
-                                          child: Icon(
-                                            LucideIcons.imageOff,
-                                            size: 60,
-                                            color: textSecondary.withValues(
-                                              alpha: 0.4,
+                                      errorWidget: (context, url, error) =>
+                                          Container(
+                                            color: surface.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                LucideIcons.imageOff,
+                                                size: 60,
+                                                color: textSecondary.withValues(
+                                                  alpha: 0.4,
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ),
                                     ),
                                   ),
                                 ),
                               ),
 
                               // Navigation arrows (if multiple images)
-                              if (widget.property.imageUrls.length > 1) ...[
+                              if (property.imageUrls.length > 1) ...[
                                 // Left arrow
                                 if (_currentPage > 0)
                                   Positioned(
@@ -200,7 +198,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                                 // Right arrow
                                 if (_currentPage <
-                                    widget.property.imageUrls.length - 1)
+                                    property.imageUrls.length - 1)
                                   Positioned(
                                     right: 12,
                                     top: 0,
@@ -239,7 +237,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: List.generate(
-                                      widget.property.imageUrls.length,
+                                      property.imageUrls.length,
                                       (index) => AnimatedContainer(
                                         duration: const Duration(
                                           milliseconds: 300,
@@ -288,7 +286,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(
-                                      '${_currentPage + 1}/${widget.property.imageUrls.length}',
+                                      '${_currentPage + 1}/${property.imageUrls.length}',
                                       style: HomifyTypography.semibold(
                                         HomifyTypography.label3.copyWith(
                                           color: Colors.white,
@@ -326,7 +324,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                           Icon(LucideIcons.house, size: 16, color: primary),
                           const Gap(6),
                           Text(
-                            _formatType(widget.property.type),
+                            _formatType(property.type),
                             style: HomifyTypography.semibold(
                               HomifyTypography.label2.copyWith(
                                 color: textPrimary,
@@ -342,7 +340,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                   // Title
                   Text(
-                    widget.property.name,
+                    property.name,
                     style: HomifyTypography.bold(
                       HomifyTypography.heading5.copyWith(color: textPrimary),
                     ),
@@ -384,7 +382,6 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // Philippine Peso Icon
                                   Icon(
                                     LucideIcons.philippinePeso,
                                     size: 16,
@@ -392,9 +389,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    widget.property.rentAmount
-                                        .toInt()
-                                        .toString(),
+                                    property.rentAmount.toInt().toString(),
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
@@ -404,7 +399,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                         ),
                                   ),
                                   Text(
-                                    ' / ${widget.property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                    ' / ${property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
                                     style: HomifyTypography.body3.copyWith(
                                       color: textSecondary,
                                     ),
@@ -457,8 +452,8 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                               ),
                               const Gap(4),
                               PropertyAddressWidget(
-                                latitude: widget.property.latitude,
-                                longitude: widget.property.longitude,
+                                latitude: property.latitude,
+                                longitude: property.longitude,
                                 style: HomifyTypography.medium(
                                   HomifyTypography.body3.copyWith(
                                     color: textPrimary,
@@ -476,10 +471,6 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                   // Divider
                   Container(height: 1, color: surface.withValues(alpha: 0.5)),
-
-                  const Gap(24),
-
-                  ContactOwnerButton(ownerUid: widget.property.ownerUid),
 
                   const Gap(24),
 
@@ -506,9 +497,9 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      widget.property.description.isEmpty
+                      property.description.isEmpty
                           ? 'No description provided.'
-                          : widget.property.description,
+                          : property.description,
                       style: HomifyTypography.body2.copyWith(
                         color: textPrimary,
                         height: 1.6,
@@ -519,7 +510,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                   const Gap(24),
 
                   // Amenities
-                  if (widget.property.amenities.isNotEmpty) ...[
+                  if (property.amenities.isNotEmpty) ...[
                     Row(
                       children: [
                         Icon(LucideIcons.sparkles, size: 20, color: primary),
@@ -538,7 +529,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: widget.property.amenities
+                      children: property.amenities
                           .map(
                             (a) => Container(
                               padding: const EdgeInsets.symmetric(
@@ -576,63 +567,105 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                     const Gap(24),
                   ],
 
-                  const Gap(8),
+                  // Owner Info
+                  Row(
+                    children: [
+                      Icon(LucideIcons.user, size: 20, color: primary),
+                      const Gap(8),
+                      Text(
+                        'Property Owner',
+                        style: HomifyTypography.semibold(
+                          HomifyTypography.heading6.copyWith(
+                            color: textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
+                  InkWell(
+                    onTap: () {
+                      context.push('/profile/${property.ownerUid}');
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: surface, width: 2),
+                      ),
+                      child: Row(
+                        children: [
+                          ownerAsync.when(
+                            data: (owner) {
+                              final isMale =
+                                  owner.gender?.toLowerCase() == 'male';
+                              final placeholder = isMale
+                                  ? 'assets/images/placeholder_male.png'
+                                  : 'assets/images/placeholder_female.png';
 
-                  // Action Buttons
-                  if (widget.showActions) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              widget.onReject();
-                              Navigator.pop(context);
+                              return CircleAvatar(
+                                radius: 24,
+                                backgroundImage: owner.photoUrl != null
+                                    ? NetworkImage(owner.photoUrl!)
+                                    : AssetImage(placeholder) as ImageProvider,
+                              );
                             },
-                            icon: const Icon(LucideIcons.x, size: 20),
-                            label: const Text('Reject'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red.shade700,
-                              side: BorderSide(
-                                color: Colors.red.shade400,
-                                width: 2,
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              textStyle: HomifyTypography.semibold(
-                                HomifyTypography.label1,
-                              ),
+                            loading: () => const CircleAvatar(
+                              radius: 24,
+                              child: CircularProgressIndicator(),
+                            ),
+                            error: (_, _) => const CircleAvatar(
+                              radius: 24,
+                              child: Icon(Icons.error),
                             ),
                           ),
-                        ),
-                        const Gap(16),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              widget.onApprove();
-                              Navigator.pop(context);
-                            },
-                            icon: const Icon(LucideIcons.check, size: 20),
-                            label: const Text('Approve'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primary,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              textStyle: HomifyTypography.bold(
-                                HomifyTypography.label1,
-                              ),
+                          const Gap(12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ownerAsync.when(
+                                  data: (owner) => Text(
+                                    '${owner.firstName} ${owner.lastName}',
+                                    style: HomifyTypography.semibold(
+                                      HomifyTypography.body2.copyWith(
+                                        color: textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  loading: () => Container(
+                                    width: 100,
+                                    height: 16,
+                                    color: Colors.grey[200],
+                                  ),
+                                  error: (_, _) =>
+                                      const Text('Error loading owner'),
+                                ),
+                                Text(
+                                  'View Profile',
+                                  style: HomifyTypography.medium(
+                                    HomifyTypography.label3.copyWith(
+                                      color: primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                      ],
+                          Icon(
+                            LucideIcons.chevronRight,
+                            color: textSecondary.withValues(alpha: 0.5),
+                          ),
+                        ],
+                      ),
                     ),
-                    const Gap(20),
-                  ],
+                  ),
+                  const Gap(16),
+                  ContactOwnerButton(ownerUid: property.ownerUid),
+
+                  const Gap(20),
 
                   // Report Issue Button
                   Center(
@@ -641,7 +674,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                         context.push(
                           '/report',
                           extra: {
-                            'targetId': widget.property.id,
+                            'targetId': property.id,
                             'targetType': 'property',
                           },
                         );
@@ -662,6 +695,65 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                     ),
                   ),
                   const Gap(20),
+                ],
+              ),
+            ),
+
+            // Bottom Action Bar
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Favorite Button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: surface.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        // TODO: Implement favorite toggle
+                      },
+                      icon: const Icon(LucideIcons.heart),
+                      color: textPrimary,
+                      padding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                  const Gap(12),
+                  // Show Direction Button
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context); // Close sheet
+                        // Switch to Explore tab (Index 1)
+                        ref.read(bottomNavIndexProvider.notifier).state = 1;
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                        textStyle: HomifyTypography.semibold(
+                          HomifyTypography.label1,
+                        ),
+                      ),
+                      icon: const Icon(LucideIcons.map),
+                      label: const Text('Show Direction'),
+                    ),
+                  ),
                 ],
               ),
             ),

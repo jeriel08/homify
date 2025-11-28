@@ -1,36 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
-import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
-
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:homify/features/properties/presentation/pages/edit_property_page.dart';
+import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
+import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
 
-class PropertyDetailsSheet extends StatefulWidget {
+class OwnerPropertyDetailsSheet extends StatefulWidget {
   final PropertyEntity property;
-  final VoidCallback onApprove;
-  final VoidCallback onReject;
-  final bool showActions;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
-  const PropertyDetailsSheet({
+  const OwnerPropertyDetailsSheet({
     super.key,
     required this.property,
-    this.onApprove = _defaultApprove,
-    this.onReject = _defaultReject,
-    this.showActions = true,
+    this.onEdit,
+    this.onDelete,
   });
 
-  static void _defaultApprove() {}
-  static void _defaultReject() {}
-
   @override
-  State<PropertyDetailsSheet> createState() => _PropertyDetailsSheetState();
+  State<OwnerPropertyDetailsSheet> createState() =>
+      _OwnerPropertyDetailsSheetState();
 }
 
-class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
+class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -50,7 +51,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final topPadding = MediaQuery.of(context).padding.top;
-    final maxHeight = screenHeight - topPadding - 60; // 20px margin from top
+    final maxHeight = screenHeight - topPadding - 60;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -87,7 +88,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                 controller: controller,
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                 children: [
-                  // Image Carousel with indicator
+                  // Image Carousel
                   SizedBox(
                     height: 280,
                     child: widget.property.imageUrls.isEmpty
@@ -147,18 +148,21 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                           ),
                                         ),
                                       ),
-                                      errorWidget: (context, url, error) => Container(
-                                        color: surface.withValues(alpha: 0.3),
-                                        child: Center(
-                                          child: Icon(
-                                            LucideIcons.imageOff,
-                                            size: 60,
-                                            color: textSecondary.withValues(
-                                              alpha: 0.4,
+                                      errorWidget: (context, url, error) =>
+                                          Container(
+                                            color: surface.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                LucideIcons.imageOff,
+                                                size: 60,
+                                                color: textSecondary.withValues(
+                                                  alpha: 0.4,
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ),
                                     ),
                                   ),
                                 ),
@@ -384,7 +388,6 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // Philippine Peso Icon
                                   Icon(
                                     LucideIcons.philippinePeso,
                                     size: 16,
@@ -476,10 +479,6 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                   // Divider
                   Container(height: 1, color: surface.withValues(alpha: 0.5)),
-
-                  const Gap(24),
-
-                  ContactOwnerButton(ownerUid: widget.property.ownerUid),
 
                   const Gap(24),
 
@@ -578,61 +577,67 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                   const Gap(8),
 
-                  // Action Buttons
-                  if (widget.showActions) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              widget.onReject();
-                              Navigator.pop(context);
-                            },
-                            icon: const Icon(LucideIcons.x, size: 20),
-                            label: const Text('Reject'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red.shade700,
-                              side: BorderSide(
-                                color: Colors.red.shade400,
-                                width: 2,
+                  // Edit & Delete Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context); // Close the sheet
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditPropertyPage(property: widget.property),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              textStyle: HomifyTypography.semibold(
-                                HomifyTypography.label1,
-                              ),
+                            );
+                          },
+                          icon: const Icon(LucideIcons.pencil, size: 20),
+                          label: const Text('Edit'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: primary,
+                            side: BorderSide(color: primary, width: 2),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            textStyle: HomifyTypography.semibold(
+                              HomifyTypography.label1,
                             ),
                           ),
                         ),
-                        const Gap(16),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              widget.onApprove();
-                              Navigator.pop(context);
-                            },
-                            icon: const Icon(LucideIcons.check, size: 20),
-                            label: const Text('Approve'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primary,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                      ),
+                      const Gap(16),
+                      Expanded(
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            return ElevatedButton.icon(
+                              onPressed: () {
+                                _showDeleteConfirmation(context, ref);
+                              },
+                              icon: const Icon(LucideIcons.trash2, size: 20),
+                              label: const Text('Delete'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red.shade50,
+                                foregroundColor: Colors.red,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                textStyle: HomifyTypography.semibold(
+                                  HomifyTypography.label1,
+                                ),
                               ),
-                              textStyle: HomifyTypography.bold(
-                                HomifyTypography.label1,
-                              ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                      ],
-                    ),
-                    const Gap(20),
-                  ],
+                      ),
+                    ],
+                  ),
+                  const Gap(20),
 
                   // Report Issue Button
                   Center(
@@ -667,6 +672,86 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ConfirmationReasonSheet(
+        title: 'Delete Property',
+        subtitle: 'Why are you deleting this property?',
+        reasons: const [
+          'Sold / Rented Out',
+          'No longer available',
+          'Duplicate listing',
+          'Other',
+        ],
+        confirmLabel: 'Delete Property',
+        confirmIcon: LucideIcons.trash2,
+        confirmColor: Colors.red,
+        onConfirm: (reason) async {
+          try {
+            Navigator.pop(context); // Close reason sheet
+
+            await ref
+                .read(ownerDashboardProvider.notifier)
+                .deleteProperty(widget.property.id, reason);
+
+            if (context.mounted) {
+              Navigator.pop(context); // Close details sheet
+
+              DelightToastBar(
+                position: DelightSnackbarPosition.top,
+                snackbarDuration: const Duration(seconds: 3),
+                autoDismiss: true,
+                builder: (context) => const ToastCard(
+                  color: Colors.green,
+                  leading: Icon(
+                    Icons.check_circle,
+                    size: 28,
+                    color: Colors.white,
+                  ),
+                  title: Text(
+                    'Property deleted successfully',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ).show(context);
+            }
+          } catch (e) {
+            if (context.mounted) {
+              DelightToastBar(
+                position: DelightSnackbarPosition.top,
+                snackbarDuration: const Duration(seconds: 3),
+                autoDismiss: true,
+                builder: (context) => ToastCard(
+                  color: Colors.red,
+                  leading: const Icon(
+                    Icons.error_outline,
+                    size: 28,
+                    color: Colors.white,
+                  ),
+                  title: Text(
+                    'Failed to delete property: $e',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ).show(context);
+            }
+          }
+        },
       ),
     );
   }

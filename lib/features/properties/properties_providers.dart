@@ -5,6 +5,7 @@ import 'package:homify/features/properties/data/repositories/property_repository
 import 'package:homify/features/properties/domain/repositories/property_repository.dart';
 import 'package:homify/features/properties/domain/usecases/add_property.dart';
 import 'package:homify/features/properties/domain/usecases/get_property_by_id.dart';
+import 'package:homify/features/properties/domain/usecases/update_property.dart';
 
 // --- DATA LAYER ---
 
@@ -40,4 +41,10 @@ final addPropertyUseCaseProvider = Provider<AddProperty>((ref) {
 final getPropertyByIdUseCaseProvider = Provider<GetPropertyById>((ref) {
   final repository = ref.watch(propertyRepositoryProvider);
   return GetPropertyById(repository);
+});
+
+/// Provides the UpdateProperty Use Case
+final updatePropertyUseCaseProvider = Provider<UpdateProperty>((ref) {
+  final repository = ref.watch(propertyRepositoryProvider);
+  return UpdateProperty(repository);
 });

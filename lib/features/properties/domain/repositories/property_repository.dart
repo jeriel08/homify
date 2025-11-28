@@ -15,4 +15,19 @@ abstract class PropertyRepository {
   );
 
   Future<Either<Failure, PropertyEntity>> getPropertyById(String id);
+
+  Future<Either<Failure, PropertyEntity>> updateProperty(
+    String propertyId,
+    Map<String, dynamic> updates,
+  );
+
+  Future<Either<Failure, void>> deleteProperty(
+    String propertyId,
+    String reason,
+  );
+
+  Future<Either<Failure, List<PropertyEntity>>> searchProperties({
+    String? query,
+    PropertyType? type,
+  });
 }

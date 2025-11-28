@@ -196,6 +196,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AddPropertyPage(),
       ),
       GoRoute(
+        path: '/add-property',
+        builder: (context, state) => const AddPropertyPage(),
+      ),
+      GoRoute(
         path: '/account',
         builder: (context, state) => const AccountPage(),
       ),

@@ -19,6 +19,7 @@ class UserProfile {
   final String? school;
   final String? occupation;
   final Map<String, dynamic>? preferences;
+  final String? gender;
   final bool? isEmailVerified;
 
   const UserProfile({
@@ -39,6 +40,7 @@ class UserProfile {
     this.school,
     this.occupation,
     this.preferences,
+    this.gender,
     this.isEmailVerified,
   });
 
