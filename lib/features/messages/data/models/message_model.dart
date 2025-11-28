@@ -10,6 +10,8 @@ class MessageModel extends MessageEntity {
     required super.isRead,
     super.imageUrl,
     super.reactions,
+    super.messageType = 'text',
+    super.propertyData,
   });
 
   factory MessageModel.fromFirestore(DocumentSnapshot doc) {
@@ -25,6 +27,8 @@ class MessageModel extends MessageEntity {
       imageUrl: data['image_url'] as String?,
       reactions: (data['reactions'] as Map<String, dynamic>?)
           ?.map((k, v) => MapEntry(k, v as String)),
+      messageType: data['message_type'] as String? ?? 'text',
+      propertyData: data['property_data'] as Map<String, dynamic>?,
     );
   }
 
@@ -36,6 +40,8 @@ class MessageModel extends MessageEntity {
       'is_read': isRead,
       if (imageUrl != null) 'image_url': imageUrl,
       if (reactions != null) 'reactions': reactions,
+      'message_type': messageType,
+      if (propertyData != null) 'property_data': propertyData,
     };
   }
 }

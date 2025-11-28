@@ -6,6 +6,8 @@ class MessageEntity {
   final bool isRead;
   final String? imageUrl;
   final Map<String, String>? reactions; // key: userId, value: emoji
+  final String? messageType; // 'text', 'image', 'property'
+  final Map<String, dynamic>? propertyData; // For shared properties
 
   const MessageEntity({
     required this.id,
@@ -15,5 +17,7 @@ class MessageEntity {
     required this.isRead,
     this.imageUrl,
     this.reactions,
+    this.messageType = 'text',
+    this.propertyData,
   });
 }

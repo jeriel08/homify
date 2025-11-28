@@ -14,6 +14,11 @@ abstract class MessageRemoteDataSource {
     required String senderId,
     required String imagePath,
   });
+  Future<void> sendPropertyMessage({
+    required String conversationId,
+    required String senderId,
+    required Map<String, dynamic> propertyData,
+  });
   Future<void> toggleReaction({
     required String conversationId,
     required String messageId,
@@ -152,6 +157,28 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   }
 
   @override
+  Future<void> sendPropertyMessage({
+    required String conversationId,
+    required String senderId,
+    required Map<String, dynamic> propertyData,
+  }) async {
+    // Create a special property message
+    final message = MessageModel(
+      id: '',
+      senderId: senderId,
+      content: 'Shared a property',
+      timestamp: DateTime.now(),
+      isRead: false,
+      messageType: 'property',
+      propertyData: propertyData,
+      reactions: const {},
+    );
+
+    // Store it like a normal message
+    await sendMessage(conversationId, message);
+  }
+
+  @override
   Future<void> toggleReaction({
     required String conversationId,
     required String messageId,
@@ -166,7 +193,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
     await _firestore.runTransaction((txn) async {
       final snap = await txn.get(msgRef);
-      final data = snap.data() as Map<String, dynamic>? ?? {};
+      final data = snap.data() ?? <String, dynamic>{};
       final reactions = Map<String, dynamic>.from(data['reactions'] ?? {});
 
       if (reactions[userId] == emoji) {

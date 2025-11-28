@@ -6,28 +6,31 @@ import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/properties/data/models/property_model.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
+import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class PropertyDetailsSheet extends StatefulWidget {
+class PropertyDetailsSheet extends ConsumerStatefulWidget {
   final PropertyModel property;
   final VoidCallback onApprove;
   final VoidCallback onReject;
+  final bool showApprovalButtons;
 
   const PropertyDetailsSheet({
     super.key,
     required this.property,
     this.onApprove = _defaultApprove,
     this.onReject = _defaultReject,
+    this.showApprovalButtons = true,
   });
 
   static void _defaultApprove() {}
   static void _defaultReject() {}
 
   @override
-  State<PropertyDetailsSheet> createState() => _PropertyDetailsSheetState();
+  ConsumerState<PropertyDetailsSheet> createState() => _PropertyDetailsSheetState();
 }
 
-class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
+class _PropertyDetailsSheetState extends ConsumerState<PropertyDetailsSheet> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -564,23 +567,61 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                       ),
                       const Gap(12),
                       Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            // TODO: Implement favorites action
+                        child: Consumer(
+                          builder: (context, ref, _) {
+                            final isFav = ref.watch(favoritesProvider).contains(widget.property.id);
+                            return OutlinedButton.icon(
+                              onPressed: () {
+                                // Convert PropertyModel to PropertyEntity for favorites
+                                final propertyEntity = PropertyEntity(
+                                  id: widget.property.id,
+                                  ownerUid: widget.property.ownerUid,
+                                  name: widget.property.name,
+                                  description: widget.property.description,
+                                  type: widget.property.type,
+                                  rentChargeMethod: widget.property.rentChargeMethod,
+                                  rentAmount: widget.property.rentAmount,
+                                  amenities: widget.property.amenities,
+                                  latitude: widget.property.latitude,
+                                  longitude: widget.property.longitude,
+                                  imageUrls: widget.property.imageUrls,
+                                  createdAt: widget.property.createdAt,
+                                  isVerified: widget.property.isVerified,
+                                  favoritesCount: widget.property.favoritesCount,
+                                );
+                                ref.read(favoritesProvider.notifier).toggle(propertyEntity);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      isFav 
+                                        ? 'Removed from favorites'
+                                        : 'Added to favorites',
+                                    ),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                              icon: Icon(
+                                isFav ? LucideIcons.heart : LucideIcons.heart,
+                                color: isFav ? Colors.red : null,
+                              ),
+                              label: Text(isFav ? 'Favorited' : 'Favorites'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                side: BorderSide(
+                                  color: isFav ? Colors.red : primary.withValues(alpha: 0.5),
+                                  width: 2,
+                                ),
+                                foregroundColor: isFav ? Colors.red : primary,
+                                textStyle: HomifyTypography.semibold(
+                                  HomifyTypography.label1,
+                                ),
+                              ),
+                            );
                           },
-                          icon: const Icon(LucideIcons.heart),
-                          label: const Text('Favorites'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            side: BorderSide(color: primary.withValues(alpha: 0.5), width: 2),
-                            foregroundColor: primary,
-                            textStyle: HomifyTypography.semibold(
-                              HomifyTypography.label1,
-                            ),
-                          ),
                         ),
                       ),
                     ],
@@ -588,58 +629,59 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                   const Gap(8),
 
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            widget.onReject();
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(LucideIcons.x, size: 20),
-                          label: const Text('Reject'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red.shade700,
-                            side: BorderSide(
-                              color: Colors.red.shade400,
-                              width: 2,
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            textStyle: HomifyTypography.semibold(
-                              HomifyTypography.label1,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const Gap(16),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            widget.onApprove();
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(LucideIcons.check, size: 20),
-                          label: const Text('Approve'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primary,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            textStyle: HomifyTypography.bold(
-                              HomifyTypography.label1,
+                  // Action Buttons (only show if showApprovalButtons is true)
+                  if (widget.showApprovalButtons)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              widget.onReject();
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(LucideIcons.x, size: 20),
+                            label: const Text('Reject'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red.shade700,
+                              side: BorderSide(
+                                color: Colors.red.shade400,
+                                width: 2,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              textStyle: HomifyTypography.semibold(
+                                HomifyTypography.label1,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                        const Gap(16),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              widget.onApprove();
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(LucideIcons.check, size: 20),
+                            label: const Text('Approve'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              textStyle: HomifyTypography.bold(
+                                HomifyTypography.label1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   const Gap(20),
                 ],
               ),

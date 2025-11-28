@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:homify/features/home/presentation/providers/explorer_provider.dart';
+import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/home/presentation/widgets/image_gallery_viewer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
@@ -15,10 +17,24 @@ class ExploreScreen extends ConsumerStatefulWidget {
   ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
 }
 
-class _DraggablePropertySheet extends StatelessWidget {
+class _DraggablePropertySheet extends StatefulWidget {
   final PropertyEntity property;
   final VoidCallback onClose;
   const _DraggablePropertySheet({required this.property, required this.onClose});
+
+  @override
+  State<_DraggablePropertySheet> createState() => _DraggablePropertySheetState();
+}
+
+class _DraggablePropertySheetState extends State<_DraggablePropertySheet> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +44,7 @@ class _DraggablePropertySheet extends StatelessWidget {
     const Color brand = Color(0xFFE05725);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.6,
+      initialChildSize: 0.80,
       minChildSize: 0.4,
       maxChildSize: 0.92,
       snap: true,
@@ -49,17 +65,18 @@ class _DraggablePropertySheet extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
+              // Scrollable indicator
               Center(
                 child: Container(
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: Colors.black.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
 
               // Pinned header: name + price + close
               Container(
@@ -79,8 +96,8 @@ class _DraggablePropertySheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            property.name,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            widget.property.name,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: textPrimary,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -89,7 +106,7 @@ class _DraggablePropertySheet extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '₱ ${property.rentAmount.toStringAsFixed(0)}',
+                            '₱ ${widget.property.rentAmount.toStringAsFixed(0)}',
                             style: const TextStyle(
                               color: brand,
                               fontSize: 20,
@@ -101,7 +118,7 @@ class _DraggablePropertySheet extends StatelessWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: textSecondary),
-                      onPressed: onClose,
+                      onPressed: widget.onClose,
                     ),
                   ],
                 ),
@@ -116,35 +133,89 @@ class _DraggablePropertySheet extends StatelessWidget {
                   ),
                   children: [
                     const SizedBox(height: 8),
-                    // Header image (tap to open fullscreen gallery)
+                    // Image carousel (match Home's style using CarouselView)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: AspectRatio(
                           aspectRatio: 16 / 9,
-                          child: GestureDetector(
-                            onTap: () {
-                              if (property.imageUrls.isEmpty) return;
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ImageGalleryViewer(
-                                    imageUrls: property.imageUrls,
+                          child: Stack(
+                            children: [
+                              if (widget.property.imageUrls.isEmpty)
+                                Container(
+                                  color: const Color(0xFFF9E5C5),
+                                  child: const Center(
+                                    child: Icon(Icons.home, color: brand, size: 40),
                                   ),
-                                ),
-                              );
-                            },
-                            child: property.imageUrls.isNotEmpty
-                                ? Image.network(
-                                    property.imageUrls.first,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Container(
-                                    color: const Color(0xFFF9E5C5),
-                                    child: const Center(
-                                      child: Icon(Icons.home, color: brand, size: 40),
+                                )
+                              else
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ImageGalleryViewer(
+                                          imageUrls: widget.property.imageUrls,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: PageView.builder(
+                                    controller: _pageController,
+                                    itemCount: widget.property.imageUrls.length,
+                                    onPageChanged: (i) => setState(() => _currentPage = i),
+                                    itemBuilder: (_, i) => CachedNetworkImage(
+                                      imageUrl: widget.property.imageUrls[i],
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => Container(
+                                        color: const Color(0xFFF9E5C5),
+                                        child: const Center(
+                                          child: SizedBox(
+                                            width: 28,
+                                            height: 28,
+                                            child: CircularProgressIndicator(strokeWidth: 2.4),
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => const Center(
+                                        child: Icon(Icons.broken_image, color: brand, size: 40),
+                                      ),
                                     ),
                                   ),
+                                ),
+
+                              // Page indicator
+                              if (widget.property.imageUrls.length > 1)
+                                Positioned(
+                                  bottom: 12,
+                                  left: 0,
+                                  right: 0,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      widget.property.imageUrls.length,
+                                      (index) => AnimatedContainer(
+                                        duration: const Duration(milliseconds: 250),
+                                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                                        width: _currentPage == index ? 22 : 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: _currentPage == index
+                                              ? brand
+                                              : Colors.white.withValues(alpha: 0.7),
+                                          borderRadius: BorderRadius.circular(4),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.25),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ),
@@ -163,15 +234,15 @@ class _DraggablePropertySheet extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            property.description.isEmpty
+                            widget.property.description.isEmpty
                                 ? 'No description provided.'
-                                : property.description,
+                                : widget.property.description,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: textSecondary,
                                 ),
                           ),
-                          if (property.amenities.isNotEmpty) const SizedBox(height: 12),
-                          if (property.amenities.isNotEmpty)
+                          if (widget.property.amenities.isNotEmpty) const SizedBox(height: 12),
+                          if (widget.property.amenities.isNotEmpty)
                             Text(
                               'Amenities',
                               style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -179,12 +250,12 @@ class _DraggablePropertySheet extends StatelessWidget {
                                     fontWeight: FontWeight.w800,
                                   ),
                             ),
-                          if (property.amenities.isNotEmpty) const SizedBox(height: 6),
-                          if (property.amenities.isNotEmpty)
+                          if (widget.property.amenities.isNotEmpty) const SizedBox(height: 6),
+                          if (widget.property.amenities.isNotEmpty)
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: property.amenities
+                              children: widget.property.amenities
                                   .map((a) => Container(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 10, vertical: 8),
@@ -252,22 +323,35 @@ class _DraggablePropertySheet extends StatelessWidget {
                           // Buttons Row
                           Row(
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: brand),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: IconButton(
-                                  onPressed: () {
-                                    // TODO: add favorite logic
-                                  },
-                                  icon: const Icon(Icons.favorite_border, color: brand),
-                                  padding: const EdgeInsets.all(12),
-                                ),
+                              Consumer(
+                                builder: (context, ref, _) {
+                                  final isFav = ref.watch(favoritesProvider).contains(widget.property.id);
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: brand),
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: isFav ? Colors.red.withValues(alpha: 0.08) : null,
+                                    ),
+                                    child: IconButton(
+                                      onPressed: () {
+                                        ref.read(favoritesProvider.notifier).toggle(widget.property);
+                                        final msg = isFav ? 'Removed from favorites' : 'Added to favorites';
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('$msg: ${widget.property.name}')),
+                                        );
+                                      },
+                                      icon: Icon(
+                                        isFav ? Icons.favorite : Icons.favorite_border,
+                                        color: isFav ? Colors.red : brand,
+                                      ),
+                                      padding: const EdgeInsets.all(12),
+                                    ),
+                                  );
+                                },
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: ContactOwnerButton(ownerUid: property.ownerUid),
+                                child: ContactOwnerButton(ownerUid: widget.property.ownerUid),
                               ),
                             ],
                           ),
