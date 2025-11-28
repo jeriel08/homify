@@ -67,6 +67,8 @@ class OwnerDashboardNotifier extends StateNotifier<OwnerDashboardState> {
 
     final result = await _getOwnerProperties(_userId);
 
+    if (!mounted) return;
+
     result.fold(
       (failure) => state = state.copyWith(
         isLoading: false,
@@ -115,6 +117,8 @@ class OwnerDashboardNotifier extends StateNotifier<OwnerDashboardState> {
 
     final result = await _updateProperty(params);
 
+    if (!mounted) return;
+
     result.fold(
       (failure) => state = state.copyWith(error: failure.toString()),
       (updatedProperty) {
@@ -140,6 +144,8 @@ class OwnerDashboardNotifier extends StateNotifier<OwnerDashboardState> {
   Future<void> deleteProperty(String propertyId, String reason) async {
     final params = DeletePropertyParams(propertyId: propertyId, reason: reason);
     final result = await _deleteProperty(params);
+
+    if (!mounted) return;
 
     result.fold(
       (failure) => state = state.copyWith(error: failure.toString()),
