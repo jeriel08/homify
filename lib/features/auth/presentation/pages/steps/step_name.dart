@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../controllers/registration_controller.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 /// Step 2 – First & Last Name
 RegistrationStep stepName() {
@@ -81,7 +82,7 @@ class _NameStepState extends ConsumerState<_NameStep> {
             'What’s your name?',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF32190D),
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 24),
@@ -117,7 +118,7 @@ class _NameStepState extends ConsumerState<_NameStep> {
               padding: EdgeInsets.only(top: 8),
               child: Text(
                 'Both first and last name are required.',
-                style: TextStyle(color: Colors.red, fontSize: 12),
+                style: TextStyle(color: AppColors.error, fontSize: 12),
               ),
             ),
 
@@ -153,7 +154,7 @@ class _NameStepState extends ConsumerState<_NameStep> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF32190D),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         minimumSize: const Size.fromHeight(44),
                       ),
@@ -174,8 +175,8 @@ class _NameStepState extends ConsumerState<_NameStep> {
                       child: OutlinedButton(
                         onPressed: controller.back,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF32190D),
-                          side: const BorderSide(color: Color(0xFF32190D)),
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
                           minimumSize: const Size.fromHeight(44),
                         ),
                         child: const Text(
@@ -214,27 +215,27 @@ Widget _buildField(
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
         borderSide: BorderSide(
-          color: hasError ? Colors.red : const Color(0xFF32190D),
+          color: hasError ? AppColors.error : AppColors.primary,
           width: hasError ? 2 : 1,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
         borderSide: BorderSide(
-          color: hasError ? Colors.red : const Color(0xFF32190D),
+          color: hasError ? AppColors.error : AppColors.primary,
           width: 2,
         ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Colors.red, width: 2),
+        borderSide: const BorderSide(color: AppColors.error, width: 2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Colors.red, width: 2),
+        borderSide: const BorderSide(color: AppColors.error, width: 2),
       ),
     ),
-    cursorColor: const Color(0xFF32190D),
+    cursorColor: AppColors.primary,
     onChanged: onChanged,
   );
 }

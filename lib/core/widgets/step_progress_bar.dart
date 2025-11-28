@@ -29,14 +29,19 @@ class StepProgressBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          LinearProgressIndicator(
-            value: showIndeterminate ? null : progress,
-            color: const Color(0xFF32190D), // Active fill
-            backgroundColor: const Color(
-              0xFF32190D,
-            ).withValues(alpha: 0.2), // Inactive track (fixed opacity)
-            minHeight: 4, // Thicker bar
-            borderRadius: BorderRadius.circular(4),
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            tween: Tween<double>(begin: 0, end: progress),
+            builder: (context, value, _) => LinearProgressIndicator(
+              value: showIndeterminate ? null : value,
+              color: Theme.of(context).colorScheme.primary, // Active fill
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2), // Inactive track
+              minHeight: 4, // Thicker bar
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
           const SizedBox(height: 8),
         ],

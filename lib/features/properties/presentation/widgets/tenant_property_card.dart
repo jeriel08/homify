@@ -3,6 +3,8 @@ import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
+
 class TenantPropertyCard extends StatelessWidget {
   final PropertyEntity property;
   final VoidCallback onTap;
@@ -134,10 +136,9 @@ class TenantPropertyCard extends StatelessWidget {
                     ),
                     const Gap(4),
                     Expanded(
-                      child: Text(
-                        '${property.latitude}, ${property.longitude}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      child: PropertyAddressWidget(
+                        latitude: property.latitude,
+                        longitude: property.longitude,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),

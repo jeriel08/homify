@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
-import 'package:homify/features/auth/presentation/providers/registration_flow_provider.dart';
 import 'package:lottie/lottie.dart';
 
 class TenantRegistrationSuccess extends ConsumerWidget {
@@ -24,7 +22,7 @@ class TenantRegistrationSuccess extends ConsumerWidget {
               width: 250,
             ),
             Text(
-              'Welcome to Homify!',
+              'You\'re All Set!',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF32190D),
@@ -33,7 +31,7 @@ class TenantRegistrationSuccess extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Your tenant account has been created successfully.',
+              'Your preferences have been saved. We will show you the best boarding houses that match your needs.',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
@@ -43,17 +41,13 @@ class TenantRegistrationSuccess extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  ref.invalidate(authStateProvider);
-                  ref.read(justRegisteredProvider.notifier).state = false;
-                  context.go('/home');
-                },
+                onPressed: () => context.go('/home'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF32190D),
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(44),
                 ),
-                child: const Text('Go to Dashboard'),
+                child: const Text('Start Exploring'),
               ),
             ),
           ],

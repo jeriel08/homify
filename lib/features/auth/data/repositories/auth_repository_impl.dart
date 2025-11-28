@@ -114,4 +114,15 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception(e.toString());
     }
   }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await remoteDataSource.sendPasswordResetEmail(email);
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Auth Error: ${e.message}');
+    } catch (e) {
+      throw Exception('An unknown error occurred.');
+    }
+  }
 }
