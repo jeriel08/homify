@@ -11,6 +11,7 @@ abstract class PropertyRemoteDataSource {
   );
   Future<List<PropertyModel>> getVerifiedProperties();
   Future<List<PropertyModel>> getPropertiesByOwner(String ownerUid);
+  Future<PropertyModel> getPropertyById(String id);
 }
 
 class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
@@ -112,6 +113,21 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch owner properties: $e');
+    }
+  }
+
+  @override
+  Future<PropertyModel> getPropertyById(String id) async {
+    try {
+      final doc = await _firestore.collection('properties').doc(id).get();
+
+      if (!doc.exists) {
+        throw Exception('Property not found');
+      }
+
+      return PropertyModel.fromFirestore(doc);
+    } catch (e) {
+      throw Exception('Failed to fetch property: $e');
     }
   }
 }

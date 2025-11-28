@@ -9,6 +9,7 @@ import 'package:homify/features/auth/presentation/pages/registration_page.dart';
 import 'package:homify/features/auth/presentation/pages/role_selection_page.dart';
 import 'package:homify/features/auth/presentation/pages/success_pages/pending_email_verification.dart';
 import 'package:homify/features/auth/presentation/pages/success_pages/tenant_success_page.dart';
+import 'package:homify/features/auth/presentation/pages/success_pages/user_banned_screen.dart';
 import 'package:homify/features/auth/presentation/pages/tenant_onboarding_page.dart';
 import 'package:homify/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:homify/features/home/presentation/pages/account_page.dart';
@@ -16,6 +17,18 @@ import 'package:homify/features/home/presentation/pages/home_page.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
 import 'package:homify/features/properties/presentation/pages/property_success_page.dart';
+import 'package:homify/features/admin/presentation/pages/approvals_screen.dart';
+import 'package:homify/features/admin/presentation/pages/all_properties_screen.dart';
+import 'package:homify/features/admin/presentation/pages/all_users_screen.dart';
+import 'package:homify/features/admin/presentation/pages/banned_users_screen.dart';
+import 'package:homify/features/reports/domain/entities/report_entity.dart';
+import 'package:homify/features/reports/presentation/pages/admin_reports_screen.dart';
+import 'package:homify/features/reports/presentation/pages/report_details_screen.dart';
+import 'package:homify/features/reports/presentation/pages/submit_report_screen.dart';
+import 'package:homify/features/profile/presentation/pages/profile_screen.dart';
+import 'package:homify/features/profile/presentation/pages/edit_pages/edit_name.dart';
+import 'package:homify/features/profile/presentation/pages/edit_pages/edit_personal_information.dart';
+import 'package:homify/features/profile/presentation/pages/edit_pages/edit_preferences.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -76,6 +89,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           return '/verify-email';
         }
 
+        // 4. Banned User Check
+        if (userModel?.isBanned == true) {
+          if (path == '/user-banned') return null;
+          return '/user-banned';
+        }
+
         // 5. Onboarding Guard
         if (userModel != null && !userModel.onboardingComplete) {
           debugPrint(
@@ -106,13 +125,22 @@ final routerProvider = Provider<GoRouter>((ref) {
             '/role-selection',
             '/verify-email',
             '/owner-onboarding',
+            '/user-banned',
           ];
           if (restrictedPaths.contains(path)) {
             return '/home';
           }
         }
 
-        // 7. Default Home Redirect
+        // 7. Admin Guard
+        if (path.startsWith('/admin')) {
+          if (userModel?.accountType != AccountType.admin) {
+            debugPrint('Router: Non-admin attempted to access admin route');
+            return '/home';
+          }
+        }
+
+        // 8. Default Home Redirect
         final isAuthPage = [
           '/',
           '/login',
@@ -141,6 +169,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegistrationPage(),
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+      GoRoute(
+        path: '/user-banned',
+        builder: (context, state) => const UserBannedScreen(),
+      ),
 
       // NEW ROUTES
       GoRoute(
@@ -174,6 +206,78 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      // ADMIN ROUTES
+      GoRoute(
+        path: '/admin/approvals',
+        builder: (context, state) => const ApprovalsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/all-properties',
+        builder: (context, state) => const AllPropertiesScreen(),
+      ),
+      GoRoute(
+        path: '/admin/all-users',
+        builder: (context, state) {
+          final extra = state.extra as int? ?? 0;
+          return AllUsersScreen(initialIndex: extra);
+        },
+      ),
+      GoRoute(
+        path: '/admin/banned-users',
+        builder: (context, state) => const BannedUsersScreen(),
+      ),
+      GoRoute(
+        path: '/admin/reports',
+        builder: (context, state) => const AdminReportsScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final report = state.extra as ReportEntity;
+              return ReportDetailsScreen(report: report);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/report',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return SubmitReportScreen(
+            targetId: extra['targetId'] as String?,
+            targetType: extra['targetType'] as String,
+          );
+        },
+      ),
+      // PROFILE ROUTES - more specific routes first
+      GoRoute(
+        path: '/profile/edit/name/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return EditNamePage(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/profile/edit/personal-information/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return EditPersonalInformationPage(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/profile/edit/preferences/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return EditPreferencesPage(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/profile/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return ProfileScreen(userId: userId);
+        },
       ),
     ],
   );

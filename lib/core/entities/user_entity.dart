@@ -13,6 +13,9 @@ class UserEntity {
   final String? photoUrl;
   final bool onboardingComplete;
   final bool emailVerified;
+  final bool isBanned;
+  final DateTime? bannedAt;
+  final String? bannedBy; // Admin UID who banned the user
 
   String get fullName => '$firstName $lastName';
 
@@ -28,6 +31,9 @@ class UserEntity {
     required this.createdAt,
     required this.onboardingComplete,
     this.emailVerified = false,
+    this.isBanned = false,
+    this.bannedAt,
+    this.bannedBy,
     this.photoUrl,
   });
 }

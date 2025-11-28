@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:homify/core/error/failure.dart';
 import 'package:homify/features/admin/domain/repositories/admin_repository.dart';
-import 'package:homify/features/admin/presentation/providers/admin_provider.dart';
+import 'package:homify/features/admin/domain/entities/chart_data.dart';
 
 class GetGraphData {
   final AdminRepository repository;
