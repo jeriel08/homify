@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/admin/presentation/pages/admin_dashboard_screen.dart';
+import 'package:homify/features/admin/domain/entities/chart_data.dart';
 import 'package:homify/features/admin/presentation/providers/admin_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
