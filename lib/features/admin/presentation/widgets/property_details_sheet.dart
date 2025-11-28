@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
-import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
-
+import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class PropertyDetailsSheet extends StatefulWidget {
+class PropertyDetailsSheet extends ConsumerStatefulWidget {
   final PropertyEntity property;
   final VoidCallback onApprove;
   final VoidCallback onReject;
@@ -27,10 +27,11 @@ class PropertyDetailsSheet extends StatefulWidget {
   static void _defaultReject() {}
 
   @override
-  State<PropertyDetailsSheet> createState() => _PropertyDetailsSheetState();
+  ConsumerState<PropertyDetailsSheet> createState() =>
+      _PropertyDetailsSheetState();
 }
 
-class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
+class _PropertyDetailsSheetState extends ConsumerState<PropertyDetailsSheet> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -51,11 +52,12 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
     final screenHeight = MediaQuery.of(context).size.height;
     final topPadding = MediaQuery.of(context).padding.top;
     final maxHeight = screenHeight - topPadding - 60; // 20px margin from top
+    final expandedSize = (maxHeight / screenHeight).clamp(0.5, 0.98);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.92,
+      initialChildSize: expandedSize,
       minChildSize: 0.5,
-      maxChildSize: (maxHeight / screenHeight).clamp(0.5, 0.98),
+      maxChildSize: expandedSize,
       builder: (_, controller) => Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -87,6 +89,63 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                 controller: controller,
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                 children: [
+                  // Header: Name, Price, Close
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.property.name,
+                              style: HomifyTypography.bold(
+                                HomifyTypography.heading6.copyWith(
+                                  color: textPrimary,
+                                ),
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const Gap(6),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  LucideIcons.philippinePeso,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  widget.property.rentAmount.toInt().toString(),
+                                  style: HomifyTypography.bold(
+                                    HomifyTypography.title3.copyWith(
+                                      color: textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  ' / ${widget.property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                  style: HomifyTypography.body3.copyWith(
+                                    color: textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Gap(8),
+                      IconButton(
+                        tooltip: 'Close',
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(LucideIcons.x),
+                      ),
+                    ],
+                  ),
+
+                  const Gap(12),
+
                   // Image Carousel with indicator
                   SizedBox(
                     height: 280,
@@ -147,18 +206,21 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                           ),
                                         ),
                                       ),
-                                      errorWidget: (context, url, error) => Container(
-                                        color: surface.withValues(alpha: 0.3),
-                                        child: Center(
-                                          child: Icon(
-                                            LucideIcons.imageOff,
-                                            size: 60,
-                                            color: textSecondary.withValues(
-                                              alpha: 0.4,
+                                      errorWidget: (context, url, error) =>
+                                          Container(
+                                            color: surface.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                LucideIcons.imageOff,
+                                                size: 60,
+                                                color: textSecondary.withValues(
+                                                  alpha: 0.4,
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ),
                                     ),
                                   ),
                                 ),
@@ -340,86 +402,6 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                   const Gap(16),
 
-                  // Title
-                  Text(
-                    widget.property.name,
-                    style: HomifyTypography.bold(
-                      HomifyTypography.heading5.copyWith(color: textPrimary),
-                    ),
-                  ),
-
-                  const Gap(12),
-
-                  // Price
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: primary.withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(LucideIcons.banknote, color: primary, size: 24),
-                        const Gap(12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Rent Price',
-                              style: HomifyTypography.medium(
-                                HomifyTypography.label3.copyWith(
-                                  color: textSecondary,
-                                ),
-                              ),
-                            ),
-                            const Gap(4),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  // Philippine Peso Icon
-                                  Icon(
-                                    LucideIcons.philippinePeso,
-                                    size: 16,
-                                    color: textPrimary,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    widget.property.rentAmount
-                                        .toInt()
-                                        .toString(),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: textPrimary,
-                                        ),
-                                  ),
-                                  Text(
-                                    ' / ${widget.property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
-                                    style: HomifyTypography.body3.copyWith(
-                                      color: textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const Gap(20),
-
                   // Location
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -476,10 +458,6 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                   // Divider
                   Container(height: 1, color: surface.withValues(alpha: 0.5)),
-
-                  const Gap(24),
-
-                  ContactOwnerButton(ownerUid: widget.property.ownerUid),
 
                   const Gap(24),
 
@@ -677,5 +655,87 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
         .split(' ')
         .map((e) => e[0].toUpperCase() + e.substring(1))
         .join(' ');
+  }
+}
+
+class OwnerProfileDetails extends ConsumerWidget {
+  final String ownerUid;
+  const OwnerProfileDetails({super.key, required this.ownerUid});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final primary = const Color(0xFFE05725);
+    final textPrimary = const Color(0xFF32190D);
+    final textSecondary = const Color(0xFF6B4F3C);
+
+    return FutureBuilder(
+      future: ref.read(authRepositoryProvider).getUser(ownerUid),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData) {
+          return Text(
+            'Owner information unavailable',
+            style: HomifyTypography.body3.copyWith(color: textSecondary),
+          );
+        }
+        final owner = snapshot.data!;
+        final displayName = (owner.fullName).isNotEmpty
+            ? owner.fullName
+            : 'Owner';
+        final email = owner.email;
+        final initials = displayName.isNotEmpty
+            ? displayName.trim().split(' ').map((e) => e[0]).take(2).join()
+            : 'O';
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: primary.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: primary.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: primary.withValues(alpha: 0.2),
+                child: Text(
+                  initials,
+                  style: HomifyTypography.bold(
+                    HomifyTypography.title3.copyWith(color: primary),
+                  ),
+                ),
+              ),
+              const Gap(12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: HomifyTypography.semibold(
+                        HomifyTypography.body1.copyWith(color: textPrimary),
+                      ),
+                    ),
+                    if (email.isNotEmpty)
+                      Text(
+                        email,
+                        style: HomifyTypography.medium(
+                          HomifyTypography.body3.copyWith(color: textSecondary),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

@@ -11,12 +11,14 @@ class ExploreState {
   final Set<Marker> markers;
   final LatLng? initialPosition;
   final String? errorMessage;
+  final PropertyEntity? selectedProperty;
 
   ExploreState({
     this.isLoading = true,
     this.markers = const {},
     this.initialPosition,
     this.errorMessage,
+    this.selectedProperty,
   });
 
   ExploreState copyWith({
@@ -24,12 +26,16 @@ class ExploreState {
     Set<Marker>? markers,
     LatLng? initialPosition,
     String? errorMessage,
+    PropertyEntity? selectedProperty,
+    bool resetSelectedProperty = false,
   }) {
     return ExploreState(
       isLoading: isLoading ?? this.isLoading,
       markers: markers ?? this.markers,
       initialPosition: initialPosition ?? this.initialPosition,
       errorMessage: errorMessage ?? this.errorMessage,
+      selectedProperty:
+          resetSelectedProperty ? null : (selectedProperty ?? this.selectedProperty),
     );
   }
 }
@@ -100,10 +106,17 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
           snippet: "₱${property.rentAmount}",
         ),
         onTap: () {
-          // Handle marker tap (e.g., update a selectedProperty provider to show a card)
+          // Set the selected property to trigger UI (e.g., bottom sheet)
+          state = state.copyWith(selectedProperty: property);
         },
       );
     }).toSet();
+  }
+
+  void clearSelectedProperty() {
+    if (state.selectedProperty != null) {
+      state = state.copyWith(resetSelectedProperty: true);
+    }
   }
 }
 

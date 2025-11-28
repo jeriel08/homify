@@ -4,9 +4,11 @@ import 'package:gap/gap.dart';
 import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/messages/presentation/providers/message_provider.dart';
+import 'package:homify/features/messages/presentation/providers/theme_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/chat_bubble.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ChatScreen extends ConsumerWidget {
   final String conversationId;
@@ -30,15 +32,18 @@ class ChatScreen extends ConsumerWidget {
 
     // 2. Get current user ID to know which bubbles are "mine"
     final currentUser = ref.watch(currentUserProvider).value;
+    
+    // 3. Watch theme color
+    final theme = ref.watch(messageThemeProvider);
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: theme.backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
         shadowColor: Colors.black.withValues(
           alpha: 0.1,
-        ), // Replaced withValues for older Flutter versions or use withValues(alpha:0.1)
+        ),
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft, color: textPrimary),
           onPressed: () => Navigator.pop(context),
@@ -68,6 +73,64 @@ class ChatScreen extends ConsumerWidget {
             icon: const Icon(LucideIcons.phone, color: textPrimary),
             onPressed: () {},
           ),
+          IconButton(
+            icon: Icon(LucideIcons.palette, color: theme.color),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Message Theme'),
+                  contentPadding: const EdgeInsets.all(12),
+                  content: Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: MessageThemeColor.values
+                        .map((themeOption) => GestureDetector(
+                              onTap: () {
+                                ref.read(messageThemeProvider.notifier).setTheme(themeOption);
+                                Navigator.pop(ctx);
+                              },
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      color: themeOption.color,
+                                      shape: BoxShape.circle,
+                                      border: theme == themeOption
+                                          ? Border.all(
+                                              color: Colors.black,
+                                              width: 3,
+                                            )
+                                          : null,
+                                    ),
+                                    child: theme == themeOption
+                                        ? const Center(
+                                            child: Icon(
+                                              Icons.check,
+                                              color: Colors.white,
+                                              size: 28,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    themeOption.name,
+                                    style: const TextStyle(fontSize: 12),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: Column(
@@ -94,10 +157,72 @@ class ChatScreen extends ConsumerWidget {
                     final msg = messages[index];
                     final isMe = msg.senderId == currentUser?.uid;
 
+                    String? myReactionValue;
+                    if (currentUser != null) {
+                      myReactionValue = msg.reactions?[currentUser.uid];
+                    }
+
+                    // Watch theme color for user's bubble only
+                    final themeColor = isMe ? ref.watch(messageThemeProvider).color : null;
+
                     return ChatBubble(
                       text: msg.content,
                       isMe: isMe,
                       time: DateFormat('h:mm a').format(msg.timestamp),
+                      imageUrl: msg.imageUrl,
+                      reactions: msg.reactions,
+                      myReaction: myReactionValue,
+                      bubbleColor: themeColor,
+                      messageType: msg.messageType,
+                      propertyData: msg.propertyData,
+                      onPropertyTap: () {
+                        // TODO: Navigate to property details
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Property details coming soon')),
+                        );
+                      },
+                      onLongPress: () async {
+                        if (currentUser == null) return;
+                        final emoji = await showDialog<String>(
+                          context: context,
+                          barrierDismissible: true,
+                          builder: (ctx) {
+                            final options = ['👍','❤️','😂','😮','😢','👏'];
+                            return AlertDialog(
+                              contentPadding: const EdgeInsets.all(12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              content: Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: options
+                                    .map((e) => InkWell(
+                                          borderRadius: BorderRadius.circular(12),
+                                          onTap: () => Navigator.pop(ctx, e),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade100,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(e, style: const TextStyle(fontSize: 22)),
+                                          ),
+                                        ))
+                                    .toList(),
+                              ),
+                            );
+                          },
+                        );
+                        if (emoji != null) {
+                          await ref.read(messageRepositoryProvider).toggleReaction(
+                                conversationId: conversationId,
+                                messageId: msg.id,
+                                userId: currentUser.uid,
+                                emoji: emoji,
+                              );
+                        }
+                      },
                     );
                   },
                 );
@@ -107,6 +232,7 @@ class ChatScreen extends ConsumerWidget {
 
           // Input Area
           _ChatInput(
+            conversationId: conversationId,
             onSend: (text) {
               if (currentUser == null) return;
 
@@ -119,6 +245,21 @@ class ChatScreen extends ConsumerWidget {
                     content: text,
                   );
             },
+            onPickImage: () async {
+              if (currentUser == null) return;
+              final picker = ImagePicker();
+              final picked = await picker.pickImage(
+                source: ImageSource.gallery,
+                imageQuality: 85,
+              );
+              if (picked != null) {
+                await ref.read(messageRepositoryProvider).sendImageMessage(
+                      conversationId: conversationId,
+                      senderId: currentUser.uid,
+                      imagePath: picked.path,
+                    );
+              }
+            },
           ),
         ],
       ),
@@ -126,15 +267,21 @@ class ChatScreen extends ConsumerWidget {
   }
 }
 
-class _ChatInput extends StatefulWidget {
+class _ChatInput extends ConsumerStatefulWidget {
   final Function(String) onSend;
-  const _ChatInput({required this.onSend});
+  final VoidCallback onPickImage;
+  final String conversationId;
+  const _ChatInput({
+    required this.onSend,
+    required this.onPickImage,
+    required this.conversationId,
+  });
 
   @override
-  State<_ChatInput> createState() => _ChatInputState();
+  ConsumerState<_ChatInput> createState() => _ChatInputState();
 }
 
-class _ChatInputState extends State<_ChatInput> {
+class _ChatInputState extends ConsumerState<_ChatInput> {
   final _controller = TextEditingController();
 
   void _handleSend() {
@@ -145,9 +292,11 @@ class _ChatInputState extends State<_ChatInput> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ref.watch(messageThemeProvider);
+
     return Container(
       padding: EdgeInsets.only(
-        left: 16,
+        left: 8,
         right: 8,
         top: 8,
         bottom: 8 + MediaQuery.of(context).padding.bottom,
@@ -166,7 +315,39 @@ class _ChatInputState extends State<_ChatInput> {
         children: [
           IconButton(
             icon: const Icon(LucideIcons.plus, color: ChatScreen.textPrimary),
-            onPressed: () {},
+            onPressed: () async {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Attach'),
+                  contentPadding: const EdgeInsets.all(12),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.image),
+                        title: const Text('Image'),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          widget.onPickImage();
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.home),
+                        title: const Text('Send Property'),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          // TODO: Show property picker
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Property picker coming soon')),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           Expanded(
             child: TextField(
@@ -185,8 +366,8 @@ class _ChatInputState extends State<_ChatInput> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(
-                    color: ChatScreen.primary,
+                  borderSide: BorderSide(
+                    color: theme.color,
                     width: 1.5,
                   ),
                 ),
@@ -194,7 +375,7 @@ class _ChatInputState extends State<_ChatInput> {
             ),
           ),
           IconButton(
-            icon: const Icon(LucideIcons.send, color: ChatScreen.primary),
+            icon: Icon(LucideIcons.send, color: theme.color),
             onPressed: _handleSend,
           ),
         ],

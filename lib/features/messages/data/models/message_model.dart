@@ -8,6 +8,10 @@ class MessageModel extends MessageEntity {
     required super.content,
     required super.timestamp,
     required super.isRead,
+    super.imageUrl,
+    super.reactions,
+    super.messageType = 'text',
+    super.propertyData,
   });
 
   factory MessageModel.fromFirestore(DocumentSnapshot doc) {
@@ -20,6 +24,11 @@ class MessageModel extends MessageEntity {
       // Handle Firestore Timestamp conversion safely
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isRead: data['is_read'] ?? false,
+      imageUrl: data['image_url'] as String?,
+      reactions: (data['reactions'] as Map<String, dynamic>?)
+          ?.map((k, v) => MapEntry(k, v as String)),
+      messageType: data['message_type'] as String? ?? 'text',
+      propertyData: data['property_data'] as Map<String, dynamic>?,
     );
   }
 
@@ -29,6 +38,10 @@ class MessageModel extends MessageEntity {
       'content': content,
       'timestamp': FieldValue.serverTimestamp(), // Use server time
       'is_read': isRead,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (reactions != null) 'reactions': reactions,
+      'message_type': messageType,
+      if (propertyData != null) 'property_data': propertyData,
     };
   }
 }

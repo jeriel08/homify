@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
+import 'package:homify/features/home/presentation/providers/explorer_provider.dart';
+import 'package:homify/features/home/presentation/pages/explore_screen.dart';
 import 'package:homify/features/home/presentation/widgets/app_bottom_nav_bar.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -217,8 +219,27 @@ class _HomePageState extends ConsumerState<HomePage> {
             )
           : const Center(child: CircularProgressIndicator()),
 
-      // --- Bottom Navigation Bar ---
-      bottomNavigationBar: const AppBottomNavBar(),
+      // --- Bottom Navigation Bar (slides down when details are open on Explore) ---
+      bottomNavigationBar: Builder(
+        builder: (context) {
+          final exploreState = ref.watch(exploreProvider);
+          final detailsOpen = exploreState.selectedProperty != null;
+          final onExploreTab = isIndexSafe && screens[selectedIndex] is ExploreScreen;
+  
+          final shouldHideNav = onExploreTab && detailsOpen;
+
+          return AnimatedSlide(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            offset: shouldHideNav ? const Offset(0, 1.0) : Offset.zero,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 180),
+              opacity: shouldHideNav ? 0.0 : 1.0,
+              child: const AppBottomNavBar(),
+            ),
+          );
+        },
+      ),
     );
   }
 }
