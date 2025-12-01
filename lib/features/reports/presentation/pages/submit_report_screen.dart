@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/theme/app_colors.dart';
 import 'package:homify/core/utils/uuid_generator.dart';
-import 'package:homify/core/widgets/step_progress_bar.dart';
+import 'package:homify/core/presentation/widgets/step_progress_bar.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/reports/domain/entities/report_entity.dart';
 import 'package:homify/features/reports/presentation/pages/steps/report_details_step.dart';

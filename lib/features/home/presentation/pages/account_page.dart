@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:homify/core/widgets/loading_screen.dart';
+import 'package:homify/core/presentation/widgets/loading_screen.dart';
 import 'package:homify/features/auth/presentation/controllers/account_controller.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/core/entities/user_entity.dart';

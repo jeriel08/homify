@@ -7,7 +7,7 @@ import 'package:homify/core/theme/app_colors.dart';
 // import 'package:go_router/go_router.dart';
 // import 'package:homify/core/entities/user_entity.dart';
 // import 'package:homify/core/entities/user_entity.dart';
-import 'package:homify/core/widgets/step_progress_bar.dart';
+import 'package:homify/core/presentation/widgets/step_progress_bar.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 // import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
