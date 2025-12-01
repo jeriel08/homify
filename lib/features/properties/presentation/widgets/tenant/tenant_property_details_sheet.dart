@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
@@ -715,19 +716,35 @@ class _TenantPropertyDetailsSheetState
               child: Row(
                 children: [
                   // Favorite Button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: surface.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        // TODO: Implement favorite toggle
-                      },
-                      icon: const Icon(LucideIcons.heart),
-                      color: textPrimary,
-                      padding: const EdgeInsets.all(16),
-                    ),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final favoritesState = ref.watch(favoritesProvider);
+                      final isFavorite = favoritesState.contains(
+                        widget.property.id,
+                      );
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: isFavorite
+                              ? Colors.red.withValues(alpha: 0.1)
+                              : surface.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            ref
+                                .read(favoritesProvider.notifier)
+                                .toggle(widget.property);
+                          },
+                          icon: Icon(
+                            LucideIcons.heart,
+                            fill: isFavorite ? 1.0 : 0.0,
+                          ),
+                          color: isFavorite ? Colors.red : textPrimary,
+                          padding: const EdgeInsets.all(16),
+                        ),
+                      );
+                    },
                   ),
                   const Gap(12),
                   // Show Direction Button

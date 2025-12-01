@@ -10,6 +10,10 @@ import 'package:homify/features/properties/domain/entities/property_entity.dart'
 import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_card.dart';
 import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_details_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
+import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class TenantHomeScreen extends ConsumerStatefulWidget {
@@ -176,12 +180,43 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
 
                         final property =
                             state.displayedRecommendedProperties[index];
+
+                        final isFavorite = ref
+                            .watch(favoritesProvider)
+                            .contains(property.id);
+
                         return TenantPropertyCard(
                           property: property,
-                          isFavorite:
-                              false, // TODO: Hook up to riverpod provider
+                          isFavorite: isFavorite,
                           onFavorite: () {
-                            // TODO: Toggle favorite logic
+                            ref
+                                .read(favoritesProvider.notifier)
+                                .toggle(property);
+
+                            DelightToastBar(
+                              builder: (context) => ToastCard(
+                                color: Colors.white,
+                                leading: Icon(
+                                  isFavorite
+                                      ? LucideIcons.heartCrack
+                                      : LucideIcons.heart,
+                                  size: 28,
+                                  color: isFavorite
+                                      ? Colors.grey
+                                      : AppColors.error,
+                                ),
+                                title: Text(
+                                  isFavorite
+                                      ? 'Removed from favorites'
+                                      : 'Added to favorites',
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                              position: DelightSnackbarPosition.top,
+                              autoDismiss: true,
+                              snackbarDuration: const Duration(seconds: 2),
+                            ).show(context);
                           },
                           onTap: () => _showPropertyDetails(property),
                         );
