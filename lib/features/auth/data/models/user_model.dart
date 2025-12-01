@@ -10,6 +10,7 @@ class UserModel extends UserEntity {
     required super.uid,
     required super.accountType,
     required super.firstName,
+    super.middleName,
     required super.lastName,
     required super.birthday,
     required super.gender,
@@ -38,6 +39,7 @@ class UserModel extends UserEntity {
       uid: doc.id,
       accountType: _parseAccountType(data['account_type'] as String?),
       firstName: data['first_name'] as String? ?? '',
+      middleName: data['middle_name'] as String?,
       lastName: data['last_name'] as String? ?? '',
       birthday: data['birthday'] as String? ?? '',
       gender: data['gender'] as String? ?? '',
@@ -56,13 +58,19 @@ class UserModel extends UserEntity {
   }
 
   @override
-  String get fullName => '$firstName $lastName';
+  String get fullName {
+    if (middleName != null && middleName!.isNotEmpty) {
+      return '$firstName $middleName $lastName';
+    }
+    return '$firstName $lastName';
+  }
 
   factory UserModel.fromEntity(UserEntity entity) {
     return UserModel(
       uid: entity.uid,
       accountType: entity.accountType,
       firstName: entity.firstName,
+      middleName: entity.middleName,
       lastName: entity.lastName,
       birthday: entity.birthday,
       gender: entity.gender,
@@ -79,6 +87,7 @@ class UserModel extends UserEntity {
     return {
       'account_type': accountType.name,
       'first_name': firstName,
+      'middle_name': middleName,
       'last_name': lastName,
       'birthday': birthday,
       'gender': gender,

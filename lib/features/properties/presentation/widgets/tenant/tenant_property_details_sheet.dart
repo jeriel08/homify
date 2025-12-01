@@ -11,6 +11,7 @@ import 'package:homify/features/profile/presentation/providers/profile_provider.
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:homify/features/properties/presentation/widgets/reviews/review_list.dart';
 
 class TenantPropertyDetailsSheet extends ConsumerStatefulWidget {
   final PropertyEntity property;
@@ -568,6 +569,11 @@ class _TenantPropertyDetailsSheetState
                     const Gap(24),
                   ],
 
+                  // Divider
+                  Container(height: 1, color: surface.withValues(alpha: 0.5)),
+
+                  const Gap(24),
+
                   // Owner Info
                   Row(
                     children: [
@@ -666,7 +672,7 @@ class _TenantPropertyDetailsSheetState
                   const Gap(16),
                   ContactOwnerButton(ownerUid: property.ownerUid),
 
-                  const Gap(20),
+                  const Gap(24),
 
                   // Report Issue Button
                   Center(
@@ -695,6 +701,16 @@ class _TenantPropertyDetailsSheetState
                       ),
                     ),
                   ),
+                  const Gap(20),
+
+                  // Divider
+                  Container(height: 1, color: surface.withValues(alpha: 0.5)),
+
+                  const Gap(24),
+
+                  // Reviews
+                  ReviewList(propertyId: property.id, canWriteReview: true),
+
                   const Gap(20),
                 ],
               ),

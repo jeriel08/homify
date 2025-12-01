@@ -13,6 +13,7 @@ import 'package:delightful_toast/delight_toast.dart';
 import 'package:delightful_toast/toast/components/toast_card.dart';
 import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
+import 'package:homify/features/properties/presentation/widgets/reviews/review_list.dart';
 
 class OwnerPropertyDetailsSheet extends StatefulWidget {
   final PropertyEntity property;
@@ -573,7 +574,22 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
                           .toList(),
                     ),
                     const Gap(24),
+                    const Gap(24),
                   ],
+
+                  // Reviews
+                  ReviewList(
+                    propertyId: widget.property.id,
+                    canWriteReview:
+                        false, // Owners can't review their own property
+                  ),
+
+                  const Gap(24),
+
+                  // Divider
+                  Container(height: 1, color: surface.withValues(alpha: 0.5)),
+
+                  const Gap(24),
 
                   const Gap(8),
 

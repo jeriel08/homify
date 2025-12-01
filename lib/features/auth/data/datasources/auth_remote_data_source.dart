@@ -64,6 +64,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         orElse: () => AccountType.tenant,
       ),
       firstName: userData['first_name'] as String,
+      middleName: userData['middle_name'] as String?,
       lastName: userData['last_name'] as String,
       birthday: userData['birthday'] as String,
       gender: userData['gender'] as String,
@@ -199,6 +200,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           uid: user.uid,
           // Extract data from Google profile
           firstName: user.displayName?.split(' ').first ?? '',
+          middleName: null, // Google doesn't provide middle name easily
           lastName: user.displayName?.split(' ').last ?? '',
           email: user.email!,
           // Set sensible defaults for new Google users
