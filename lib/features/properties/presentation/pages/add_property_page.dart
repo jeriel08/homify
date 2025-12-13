@@ -148,6 +148,7 @@ class _AddPropertyPageState extends ConsumerState<AddPropertyPage> {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: Text(
             'Add Your Property', // New title
