@@ -12,6 +12,7 @@ import 'package:homify/core/constants/app_constants.dart';
 // 1. Define the State State
 class ExploreState {
   final bool isLoading;
+  final List<PropertyEntity> properties; // Store properties for screen access
   final Set<Marker> markers;
   final Set<Polyline> polylines;
   final LatLng? initialPosition;
@@ -20,6 +21,7 @@ class ExploreState {
 
   ExploreState({
     this.isLoading = true,
+    this.properties = const [],
     this.markers = const {},
     this.polylines = const {},
     this.initialPosition,
@@ -29,6 +31,7 @@ class ExploreState {
 
   ExploreState copyWith({
     bool? isLoading,
+    List<PropertyEntity>? properties,
     Set<Marker>? markers,
     Set<Polyline>? polylines,
     LatLng? initialPosition,
@@ -38,6 +41,7 @@ class ExploreState {
   }) {
     return ExploreState(
       isLoading: isLoading ?? this.isLoading,
+      properties: properties ?? this.properties,
       markers: markers ?? this.markers,
       polylines: polylines ?? this.polylines,
       initialPosition: initialPosition ?? this.initialPosition,
@@ -98,6 +102,7 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
           state = state.copyWith(
             isLoading: false,
             initialPosition: userPos,
+            properties: properties, // Store properties for screen access
             markers: markers,
           );
         }
@@ -110,10 +115,6 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
       return Marker(
         markerId: MarkerId(property.id),
         position: LatLng(property.latitude, property.longitude),
-        infoWindow: InfoWindow(
-          title: property.name,
-          snippet: "₱${property.rentAmount}",
-        ),
         onTap: () {
           // Set the selected property to trigger UI (e.g., bottom sheet)
           state = state.copyWith(selectedProperty: property);

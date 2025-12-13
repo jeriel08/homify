@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/theme/typography.dart';
-import 'package:homify/features/home/presentation/providers/explorer_provider.dart';
 import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
@@ -15,11 +14,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 class ExplorePropertyDetailsSheet extends ConsumerStatefulWidget {
   final PropertyEntity property;
   final VoidCallback? onClose;
+  final VoidCallback? onDirectionTap;
 
   const ExplorePropertyDetailsSheet({
     super.key,
     required this.property,
     this.onClose,
+    this.onDirectionTap,
   });
 
   @override
@@ -238,11 +239,7 @@ class _ExplorePropertyDetailsSheetState
                                   const Gap(12),
                                   Expanded(
                                     child: OutlinedButton.icon(
-                                      onPressed: () {
-                                        ref
-                                            .read(exploreProvider.notifier)
-                                            .showDirection(property);
-                                      },
+                                      onPressed: widget.onDirectionTap,
                                       style: OutlinedButton.styleFrom(
                                         foregroundColor: primary,
                                         side: BorderSide(

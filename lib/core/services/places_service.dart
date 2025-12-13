@@ -68,4 +68,72 @@ class PlacesService {
     }
     return null;
   }
+
+  /// Get route polyline between two points using Geoapify Routing API
+  /// Returns list of coordinates for the route
+  static Future<List<RouteCoordinate>> getRoute({
+    required double originLat,
+    required double originLon,
+    required double destLat,
+    required double destLon,
+    String mode = 'drive', // drive, walk, bicycle
+  }) async {
+    final uri = Uri.parse('https://api.geoapify.com/v1/routing').replace(
+      queryParameters: {
+        'waypoints': '$originLat,$originLon|$destLat,$destLon',
+        'mode': mode,
+        'apiKey': _apiKey,
+      },
+    );
+
+    try {
+      debugPrint('Geoapify Routing Request');
+      final response = await http.get(uri);
+      debugPrint('Geoapify Routing Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final features = data['features'] as List? ?? [];
+
+        if (features.isNotEmpty) {
+          final geometry = features[0]['geometry'];
+          final coordinates = geometry['coordinates'] as List? ?? [];
+
+          // Flatten all line segments into a single list
+          final List<RouteCoordinate> routePoints = [];
+          for (final segment in coordinates) {
+            if (segment is List) {
+              for (final point in segment) {
+                if (point is List && point.length >= 2) {
+                  routePoints.add(
+                    RouteCoordinate(
+                      latitude: (point[1] as num)
+                          .toDouble(), // GeoJSON is [lon, lat]
+                      longitude: (point[0] as num).toDouble(),
+                    ),
+                  );
+                }
+              }
+            }
+          }
+
+          debugPrint('Geoapify Route found ${routePoints.length} points');
+          return routePoints;
+        }
+      } else {
+        debugPrint('Geoapify Routing Error: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Geoapify Routing Exception: $e');
+    }
+    return [];
+  }
+}
+
+/// Route coordinate model
+class RouteCoordinate {
+  final double latitude;
+  final double longitude;
+
+  const RouteCoordinate({required this.latitude, required this.longitude});
 }
