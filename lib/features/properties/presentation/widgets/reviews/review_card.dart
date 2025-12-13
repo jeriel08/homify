@@ -37,9 +37,15 @@ class ReviewCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +72,7 @@ class ReviewCard extends ConsumerWidget {
                       backgroundColor: AppColors.secondary,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                    error: (_, _) => const CircleAvatar(
+                    error: (_, __) => const CircleAvatar(
                       radius: 20,
                       backgroundColor: AppColors.secondary,
                       backgroundImage: AssetImage(
@@ -90,7 +96,7 @@ class ReviewCard extends ConsumerWidget {
                           height: 16,
                           color: Colors.grey[300],
                         ),
-                        error: (_, _) => Text(
+                        error: (_, __) => Text(
                           'Unknown User',
                           style: HomifyTypography.semibold(
                             HomifyTypography.body2,
@@ -214,11 +220,13 @@ class ReviewCard extends ConsumerWidget {
           Row(
             children: [
               _LikeButton(
-                icon: LucideIcons.thumbsUp,
+                icon: (isActive) =>
+                    isActive ? Icons.thumb_up : Icons.thumb_up_outlined,
                 count: review.likes.length,
                 isActive:
                     currentUser != null &&
                     review.likes.contains(currentUser.uid),
+                activeColor: Colors.orange,
                 onTap: () {
                   if (currentUser != null) {
                     ref
@@ -229,11 +237,13 @@ class ReviewCard extends ConsumerWidget {
               ),
               const Gap(16),
               _LikeButton(
-                icon: LucideIcons.thumbsDown,
+                icon: (isActive) =>
+                    isActive ? Icons.thumb_down : Icons.thumb_down_outlined,
                 count: review.dislikes.length,
                 isActive:
                     currentUser != null &&
                     review.dislikes.contains(currentUser.uid),
+                activeColor: Colors.red,
                 onTap: () {
                   if (currentUser != null) {
                     ref
@@ -251,15 +261,17 @@ class ReviewCard extends ConsumerWidget {
 }
 
 class _LikeButton extends StatelessWidget {
-  final IconData icon;
+  final IconData Function(bool) icon;
   final int count;
   final bool isActive;
+  final Color activeColor;
   final VoidCallback onTap;
 
   const _LikeButton({
     required this.icon,
     required this.count,
     required this.isActive,
+    this.activeColor = AppColors.primary,
     required this.onTap,
   });
 
@@ -273,16 +285,16 @@ class _LikeButton extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              icon,
+              icon(isActive),
               size: 16,
-              color: isActive ? AppColors.primary : AppColors.textSecondary,
+              color: isActive ? activeColor : AppColors.textSecondary,
             ),
             const Gap(6),
             Text(
               count.toString(),
               style: HomifyTypography.medium(
                 HomifyTypography.label3.copyWith(
-                  color: isActive ? AppColors.primary : AppColors.textSecondary,
+                  color: isActive ? activeColor : AppColors.textSecondary,
                 ),
               ),
             ),

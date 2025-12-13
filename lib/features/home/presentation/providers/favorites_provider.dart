@@ -12,9 +12,8 @@ class FavoritesState {
 }
 
 class FavoritesNotifier extends Notifier<FavoritesState> {
-
-FirebaseFirestore get _db => FirebaseFirestore.instance;
-@override
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
+  @override
   FavoritesState build() {
     _hydrate();
     return const FavoritesState();
@@ -26,7 +25,11 @@ FirebaseFirestore get _db => FirebaseFirestore.instance;
       final uid = auth.value?.uid;
       if (uid == null) return;
 
-      final snap = await _db.collection('users').doc(uid).collection('favorites').get();
+      final snap = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('favorites')
+          .get();
       final Map<String, PropertyEntity> map = {};
 
       for (final doc in snap.docs) {
@@ -55,7 +58,7 @@ FirebaseFirestore get _db => FirebaseFirestore.instance;
         );
       }
       if (map.isNotEmpty) {
-          state = FavoritesState(items: map);
+        state = FavoritesState(items: map);
       }
     } catch (_) {
       // ignore hydration errors
@@ -89,9 +92,18 @@ FirebaseFirestore get _db => FirebaseFirestore.instance;
       final auth = ref.read(authStateProvider);
       final uid = auth.value?.uid;
       if (uid == null) return;
-      final doc = _db.collection('users').doc(uid).collection('favorites').doc(property.id);
+
+      final batch = _db.batch();
+
+      // 1. Update User's Favorites Collection
+      final userFavDoc = _db
+          .collection('users')
+          .doc(uid)
+          .collection('favorites')
+          .doc(property.id);
+
       if (add) {
-        await doc.set({
+        batch.set(userFavDoc, {
           'property_id': property.id,
           'owner_uid': property.ownerUid,
           'name': property.name,
@@ -104,16 +116,30 @@ FirebaseFirestore get _db => FirebaseFirestore.instance;
           'longitude': property.longitude,
           'image_urls': property.imageUrls,
           'is_verified': property.isVerified,
-          'favorites_count': property.favoritesCount,
+          'favorites_count': property.favoritesCount, // Snapshot at time of fav
           'created_at': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } else {
-        await doc.delete();
+        batch.delete(userFavDoc);
       }
-    } catch (_) {}
+
+      // 2. Update Property's Global Favorites Count
+      final propertyDoc = _db.collection('properties').doc(property.id);
+      batch.update(propertyDoc, {
+        'favorites_count': FieldValue.increment(add ? 1 : -1),
+      });
+
+      await batch.commit();
+    } catch (e) {
+      // Revert state if persistence fails?
+      // For now, just log or ignore as per original code
+      // debugPrint('Error updating favorites: $e');
+    }
   }
 }
 
-final favoritesProvider = NotifierProvider<FavoritesNotifier, FavoritesState>(() {
-  return FavoritesNotifier();
-});
+final favoritesProvider = NotifierProvider<FavoritesNotifier, FavoritesState>(
+  () {
+    return FavoritesNotifier();
+  },
+);
