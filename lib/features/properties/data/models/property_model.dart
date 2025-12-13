@@ -39,7 +39,7 @@ class PropertyModel extends PropertyEntity {
       ),
       rentChargeMethod: RentChargeMethod.values.firstWhere(
         (e) => e.name == data['rent_charge_method'],
-        orElse: () => RentChargeMethod.perUnit,
+        orElse: () => RentChargeMethod.perMonth,
       ),
       rentAmount: (data['rent_amount'] as num).toDouble(),
       amenities: List<String>.from(data['amenities'] ?? []),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/admin/domain/entities/property_with_user.dart';
-import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -280,7 +279,7 @@ class AdminPropertyCard extends StatelessWidget {
                                     ),
                               ),
                               Text(
-                                ' / ${property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                ' / month',
                                 style: HomifyTypography.body3.copyWith(
                                   color: textSecondary,
                                 ),

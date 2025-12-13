@@ -191,7 +191,7 @@ class TenantPropertyCard extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                ' / ${property.rentChargeMethod.name == 'perUnit' ? 'unit' : 'bed'}',
+                                ' / month',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],

@@ -125,7 +125,7 @@ class _PropertyDetailsSheetState extends ConsumerState<PropertyDetailsSheet> {
                                   ),
                                 ),
                                 Text(
-                                  ' / ${widget.property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                  ' / month',
                                   style: HomifyTypography.body3.copyWith(
                                     color: textSecondary,
                                   ),

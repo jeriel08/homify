@@ -209,9 +209,7 @@ class EditPropertyPage extends ConsumerWidget {
                   _buildInfoRow(
                     context,
                     'Charge Method',
-                    currentProperty.rentChargeMethod == RentChargeMethod.perUnit
-                        ? 'Per Unit'
-                        : 'Per Bed',
+                    'Per Month',
                     LucideIcons.calculator,
                   ),
                 ],

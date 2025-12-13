@@ -312,7 +312,7 @@ class PendingPropertyCard extends StatelessWidget {
                                     ),
                               ),
                               Text(
-                                ' / ${property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                ' / month',
                                 style: HomifyTypography.body3.copyWith(
                                   color: textSecondary,
                                 ),

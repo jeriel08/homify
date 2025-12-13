@@ -45,7 +45,7 @@ class FavoritesNotifier extends Notifier<FavoritesState> {
           ),
           rentChargeMethod: RentChargeMethod.values.firstWhere(
             (e) => e.name == data['rent_charge_method'],
-            orElse: () => RentChargeMethod.perUnit,
+            orElse: () => RentChargeMethod.perMonth,
           ),
           rentAmount: (data['rent_amount'] as num?)?.toDouble() ?? 0,
           amenities: List<String>.from(data['amenities'] ?? []),

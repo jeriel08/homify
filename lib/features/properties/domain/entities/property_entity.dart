@@ -1,6 +1,6 @@
 import 'package:homify/features/properties/data/models/property_model.dart';
 
-enum RentChargeMethod { perPerson, perBed, perRoom, perUnit }
+enum RentChargeMethod { perMonth }
 
 enum PropertyType { bedspacer, room, house, apartment, dormitory }
 

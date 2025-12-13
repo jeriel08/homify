@@ -18,7 +18,6 @@ class EditRentDetails extends ConsumerStatefulWidget {
 
 class _EditRentDetailsState extends ConsumerState<EditRentDetails> {
   late final TextEditingController _rentCtrl;
-  late RentChargeMethod _selectedMethod;
   bool _triedSave = false;
   bool _isSaving = false;
 
@@ -28,7 +27,6 @@ class _EditRentDetailsState extends ConsumerState<EditRentDetails> {
     _rentCtrl = TextEditingController(
       text: widget.property.rentAmount.toInt().toString(),
     );
-    _selectedMethod = widget.property.rentChargeMethod;
   }
 
   @override
@@ -81,7 +79,7 @@ class _EditRentDetailsState extends ConsumerState<EditRentDetails> {
         .read(ownerDashboardProvider.notifier)
         .updateProperty(widget.property.id, {
           'rentAmount': double.parse(_rentCtrl.text.trim()),
-          'rentChargeMethod': _selectedMethod.name,
+          'rentChargeMethod': RentChargeMethod.perMonth.name,
         });
 
     if (mounted) {
@@ -138,7 +136,7 @@ class _EditRentDetailsState extends ConsumerState<EditRentDetails> {
 
                   // Header
                   Text(
-                    "Update rent amount and charge method",
+                    "Update rent amount",
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF32190D),
@@ -147,7 +145,7 @@ class _EditRentDetailsState extends ConsumerState<EditRentDetails> {
                   const SizedBox(height: 4),
 
                   Text(
-                    "Set the monthly rent and how it's charged.",
+                    "Set the monthly rent for this property.",
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: Colors.grey.shade700,
                     ),
@@ -188,85 +186,6 @@ class _EditRentDetailsState extends ConsumerState<EditRentDetails> {
                       ),
                     ),
                     cursorColor: const Color(0xFF32190D),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Charge Method Section
-                  Text(
-                    'Charge method',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF32190D),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Charge Method Radio Card
-                  Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      side: const BorderSide(
-                        color: Color(0xFF32190D),
-                        width: 2,
-                      ),
-                    ),
-                    color: const Color(0xFFFFEDD4),
-                    child: RadioGroup<RentChargeMethod>(
-                      groupValue: _selectedMethod,
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _selectedMethod = value);
-                        }
-                      },
-                      child: Column(
-                        children: [
-                          ListTile(
-                            title: const Text(
-                              'Per Unit',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF32190D),
-                              ),
-                            ),
-                            subtitle: Text(
-                              'Rent for the entire room/unit',
-                              style: TextStyle(color: Colors.grey.shade600),
-                            ),
-                            trailing: Radio<RentChargeMethod>(
-                              value: RentChargeMethod.perUnit,
-                              activeColor: const Color(0xFF32190D),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 4,
-                            ),
-                          ),
-                          ListTile(
-                            title: const Text(
-                              'Per Bed',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF32190D),
-                              ),
-                            ),
-                            subtitle: Text(
-                              'Rent per bed (shared room)',
-                              style: TextStyle(color: Colors.grey.shade600),
-                            ),
-                            trailing: Radio<RentChargeMethod>(
-                              value: RentChargeMethod.perBed,
-                              activeColor: const Color(0xFF32190D),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
 
                   const SizedBox(height: 32),
