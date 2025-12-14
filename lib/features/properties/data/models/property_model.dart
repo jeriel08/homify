@@ -18,6 +18,8 @@ class PropertyModel extends PropertyEntity {
     required super.isVerified,
     super.updatedAt,
     required int favoritesCount,
+    super.status,
+    super.rejectionReason,
   });
 
   // Firestore stores GeoPoint, but our Entity just cares about lat/lng
@@ -27,6 +29,22 @@ class PropertyModel extends PropertyEntity {
     final data = doc.data() as Map<String, dynamic>;
 
     final geo = data['location'] as GeoPoint?;
+    final isVerified = data['is_verified'] ?? false;
+
+    // Parse status from Firestore, with backward compatibility
+    PropertyStatus status;
+    final statusString = data['status'] as String?;
+    if (statusString != null) {
+      status = PropertyStatus.values.firstWhere(
+        (e) => e.name == statusString,
+        orElse: () =>
+            isVerified ? PropertyStatus.approved : PropertyStatus.pending,
+      );
+    } else {
+      // Backward compatibility: derive status from is_verified
+      status = isVerified ? PropertyStatus.approved : PropertyStatus.pending;
+    }
+
     return PropertyModel(
       id: doc.id,
       ownerUid: data['owner_uid'] as String,
@@ -50,8 +68,10 @@ class PropertyModel extends PropertyEntity {
       updatedAt: data['updated_at'] != null
           ? (data['updated_at'] as Timestamp).toDate()
           : null,
-      isVerified: data['is_verified'] ?? false,
+      isVerified: isVerified,
       favoritesCount: data['favorites_count'] ?? 0,
+      status: status,
+      rejectionReason: data['rejection_reason'] as String?,
     );
   }
 
@@ -69,6 +89,8 @@ class PropertyModel extends PropertyEntity {
       'created_at': FieldValue.serverTimestamp(),
       'is_verified': isVerified,
       'favorites_count': favoritesCount,
+      'status': status.name,
+      if (rejectionReason != null) 'rejection_reason': rejectionReason,
       if (updatedAt != null) 'updated_at': Timestamp.fromDate(updatedAt!),
     };
   }

@@ -181,8 +181,12 @@ class _ApprovalsScreenState extends ConsumerState<ApprovalsScreen> {
           );
           // if (context.mounted) Navigator.of(context).pop();
         },
-        onReject: () async {
-          final result = await verify(property.id, false);
+        onReject: (reason) async {
+          final result = await verify(
+            property.id,
+            false,
+            rejectionReason: reason,
+          );
           result.fold(
             (_) => showAwesomeSnackbar(
               context: context,

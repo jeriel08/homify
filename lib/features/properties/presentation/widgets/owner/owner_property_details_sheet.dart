@@ -309,6 +309,140 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
 
                   const Gap(24),
 
+                  // Rejection Info Alert (only shown when rejected)
+                  if (widget.property.status == PropertyStatus.rejected) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                LucideIcons.circleAlert,
+                                color: Colors.red.shade700,
+                                size: 22,
+                              ),
+                              const Gap(10),
+                              Text(
+                                'Property Rejected',
+                                style: HomifyTypography.semibold(
+                                  HomifyTypography.body1.copyWith(
+                                    color: Colors.red.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (widget.property.rejectionReason != null) ...[
+                            const Gap(12),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Reason:',
+                                    style: HomifyTypography.medium(
+                                      HomifyTypography.label3.copyWith(
+                                        color: textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  const Gap(4),
+                                  Text(
+                                    widget.property.rejectionReason!,
+                                    style: HomifyTypography.medium(
+                                      HomifyTypography.body2.copyWith(
+                                        color: textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const Gap(16),
+                          // Comply & Resubmit Button
+                          Consumer(
+                            builder: (context, ref, child) {
+                              return SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await ref
+                                        .read(ownerDashboardProvider.notifier)
+                                        .complyProperty(widget.property.id);
+
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      DelightToastBar(
+                                        position: DelightSnackbarPosition.top,
+                                        snackbarDuration: const Duration(
+                                          seconds: 3,
+                                        ),
+                                        autoDismiss: true,
+                                        builder: (context) => const ToastCard(
+                                          color: Colors.green,
+                                          leading: Icon(
+                                            Icons.check_circle,
+                                            size: 28,
+                                            color: Colors.white,
+                                          ),
+                                          title: Text(
+                                            'Property submitted for re-approval',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 14,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ).show(context);
+                                    }
+                                  },
+                                  icon: const Icon(
+                                    LucideIcons.refreshCcw,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Comply & Resubmit'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primary,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    textStyle: HomifyTypography.semibold(
+                                      HomifyTypography.label2,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Gap(24),
+                  ],
+
                   // Property type badge
                   Align(
                     alignment: Alignment.centerLeft,

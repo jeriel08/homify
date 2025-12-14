@@ -186,11 +186,15 @@ class _ConfirmationReasonSheetState extends State<ConfirmationReasonSheet> {
                 size: 20,
               ),
               const Gap(12),
-              Text(
-                reason,
-                style: HomifyTypography.body2.copyWith(
-                  color: isSelected ? AppColors.primary : Colors.black87,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              Expanded(
+                child: Text(
+                  reason,
+                  style: HomifyTypography.body2.copyWith(
+                    color: isSelected ? AppColors.primary : Colors.black87,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
                 ),
               ),
             ],

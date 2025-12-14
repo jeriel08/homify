@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
@@ -167,6 +168,40 @@ class OwnerDashboardNotifier extends StateNotifier<OwnerDashboardState> {
         );
       },
     );
+  }
+
+  /// Comply with rejection - reset property status to pending for re-approval
+  Future<void> complyProperty(String propertyId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('properties')
+          .doc(propertyId)
+          .update({
+            'status': 'pending',
+            'rejection_reason': FieldValue.delete(),
+            'is_verified': false,
+          });
+
+      if (!mounted) return;
+
+      // Update local state
+      final updatedList = state.properties.map((p) {
+        if (p.id == propertyId) {
+          return p.copyWith(
+            status: PropertyStatus.pending,
+            rejectionReason: null,
+            isVerified: false,
+          );
+        }
+        return p;
+      }).toList();
+
+      state = state.copyWith(properties: updatedList);
+    } catch (e) {
+      if (mounted) {
+        state = state.copyWith(error: 'Failed to submit for re-approval: $e');
+      }
+    }
   }
 }
 

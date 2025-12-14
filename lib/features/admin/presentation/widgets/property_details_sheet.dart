@@ -4,6 +4,7 @@ import 'package:homify/features/properties/domain/entities/property_entity.dart'
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
+import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class PropertyDetailsSheet extends StatefulWidget {
   final PropertyEntity property;
   final VoidCallback onApprove;
-  final VoidCallback onReject;
+  final void Function(String reason) onReject;
   final bool showActions;
 
   const PropertyDetailsSheet({
@@ -25,7 +26,7 @@ class PropertyDetailsSheet extends StatefulWidget {
   });
 
   static void _defaultApprove() {}
-  static void _defaultReject() {}
+  static void _defaultReject(String reason) {}
 
   @override
   State<PropertyDetailsSheet> createState() => _PropertyDetailsSheetState();
@@ -607,8 +608,36 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () {
-                              widget.onReject();
-                              Navigator.pop(context);
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (sheetContext) => ConfirmationReasonSheet(
+                                  title: 'Reject Property',
+                                  subtitle:
+                                      'Please select a reason for rejection:',
+                                  reasons: const [
+                                    'Incomplete or unclear property information',
+                                    'Poor quality images',
+                                    'Suspicious or misleading listing',
+                                    'Property appears to be a duplicate',
+                                    'Inappropriate content',
+                                    'Other',
+                                  ],
+                                  confirmLabel: 'Reject Property',
+                                  confirmIcon: LucideIcons.x,
+                                  confirmColor: Colors.red,
+                                  onConfirm: (reason) {
+                                    Navigator.pop(
+                                      sheetContext,
+                                    ); // Close reason sheet
+                                    Navigator.pop(
+                                      context,
+                                    ); // Close details sheet
+                                    widget.onReject(reason);
+                                  },
+                                ),
+                              );
                             },
                             icon: const Icon(LucideIcons.x, size: 20),
                             label: const Text('Reject'),

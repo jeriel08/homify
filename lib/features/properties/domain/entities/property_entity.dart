@@ -4,6 +4,8 @@ enum RentChargeMethod { perMonth }
 
 enum PropertyType { bedspacer, room, house, apartment, dormitory }
 
+enum PropertyStatus { pending, approved, rejected }
+
 class PropertyEntity {
   final String id;
   final String ownerUid;
@@ -20,6 +22,8 @@ class PropertyEntity {
   final DateTime? updatedAt;
   final bool isVerified;
   final int favoritesCount;
+  final PropertyStatus status;
+  final String? rejectionReason;
 
   const PropertyEntity({
     required this.id,
@@ -37,6 +41,8 @@ class PropertyEntity {
     required this.isVerified,
     this.updatedAt,
     this.favoritesCount = 0,
+    this.status = PropertyStatus.pending,
+    this.rejectionReason,
   });
 
   PropertyModel copyWith({
@@ -55,6 +61,8 @@ class PropertyEntity {
     DateTime? updatedAt,
     bool? isVerified,
     int? favoritesCount,
+    PropertyStatus? status,
+    String? rejectionReason,
   }) {
     return PropertyModel(
       id: id ?? this.id,
@@ -72,6 +80,8 @@ class PropertyEntity {
       updatedAt: updatedAt ?? this.updatedAt,
       isVerified: isVerified ?? this.isVerified,
       favoritesCount: favoritesCount ?? this.favoritesCount,
+      status: status ?? this.status,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
     );
   }
 }
