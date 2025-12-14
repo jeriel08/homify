@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/presentation/widgets/loading_screen.dart';
+import 'package:homify/core/widgets/logout_dialog.dart';
 import 'package:homify/features/auth/presentation/controllers/account_controller.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/core/entities/user_entity.dart';
@@ -341,25 +342,7 @@ class AccountPage extends ConsumerWidget {
                       ? null
                       : () async {
                           final router = GoRouter.of(context);
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: const Text('Logout'),
-                              content: const Text(
-                                'Are you sure you want to logout?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => context.pop(false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => context.pop(true),
-                                  child: const Text('Logout'),
-                                ),
-                              ],
-                            ),
-                          );
+                          final confirm = await LogoutDialog.show(context);
                           if (confirm != true) return;
 
                           await ref
@@ -373,7 +356,7 @@ class AccountPage extends ConsumerWidget {
                           height: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
-                            color: Color(0xFF32190D),
+                            color: Colors.white,
                           ),
                         )
                       : const Row(

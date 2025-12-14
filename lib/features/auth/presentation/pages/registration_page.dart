@@ -4,13 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/theme/app_colors.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:homify/core/entities/user_entity.dart';
-// import 'package:homify/core/entities/user_entity.dart';
+import 'package:homify/core/widgets/discard_registration_dialog.dart';
 import 'package:homify/core/presentation/widgets/step_progress_bar.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
-// import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class RegistrationPage extends ConsumerStatefulWidget {
   const RegistrationPage({super.key});
@@ -26,49 +22,7 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
     BuildContext context,
     RegistrationController controller,
   ) async {
-    final bool? shouldDiscard = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            textTheme: GoogleFonts.poppinsTextTheme(
-              Theme.of(dialogContext).textTheme,
-            ),
-          ),
-          child: AlertDialog(
-            title: const Text(
-              'Discard Registration?',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-            ),
-            content: const Text(
-              'If you go back, all your progress will be lost.',
-              style: TextStyle(fontSize: 16),
-            ),
-            actions: <Widget>[
-              // "Cancel" button
-              TextButton(
-                onPressed: () {
-                  // Pop the dialog, return 'false' (don't discard)
-                  Navigator.of(dialogContext).pop(false);
-                },
-                child: const Text('Cancel'),
-              ),
-              // "Discard" button
-              TextButton(
-                onPressed: () {
-                  // Pop the dialog, return 'true' (do discard)
-                  Navigator.of(dialogContext).pop(true);
-                },
-                child: const Text(
-                  'Discard',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    final bool? shouldDiscard = await DiscardRegistrationDialog.show(context);
 
     // If user tapped "Discard" (shouldDiscard is true)
     if (shouldDiscard == true && context.mounted) {
