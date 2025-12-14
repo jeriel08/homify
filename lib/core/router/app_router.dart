@@ -12,6 +12,7 @@ import 'package:homify/features/auth/presentation/pages/success_pages/tenant_suc
 import 'package:homify/features/auth/presentation/pages/success_pages/user_banned_screen.dart';
 import 'package:homify/features/auth/presentation/pages/tenant_onboarding_page.dart';
 import 'package:homify/features/auth/presentation/pages/forgot_password_page.dart';
+import 'package:homify/features/auth/presentation/pages/change_password_page.dart';
 import 'package:homify/features/home/presentation/pages/account_page.dart';
 import 'package:homify/features/home/presentation/pages/home_page.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
@@ -210,6 +211,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/change-password',
+        builder: (context, state) => const ChangePasswordPage(),
       ),
       // ADMIN ROUTES
       GoRoute(

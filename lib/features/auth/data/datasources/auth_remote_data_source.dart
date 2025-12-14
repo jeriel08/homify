@@ -21,6 +21,8 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> getUser(String uid);
   Future<void> logout();
   Future<void> sendPasswordResetEmail(String email);
+  Future<void> reauthenticate(String email, String currentPassword);
+  Future<void> updatePassword(String newPassword);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -155,6 +157,31 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> logout() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+  }
+
+  @override
+  Future<void> reauthenticate(String email, String currentPassword) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No user is currently signed in.');
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: currentPassword,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+  }
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No user is currently signed in.');
+    }
+
+    await user.updatePassword(newPassword);
   }
 
   @override
