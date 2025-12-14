@@ -22,6 +22,7 @@ class UserModel extends UserEntity {
     super.isBanned,
     super.bannedAt,
     super.bannedBy,
+    super.photoUrl,
     this.school,
     super.preferences,
     this.occupation,
@@ -54,6 +55,7 @@ class UserModel extends UserEntity {
       isBanned: data['is_banned'] as bool? ?? false,
       bannedAt: (data['banned_at'] as Timestamp?)?.toDate(),
       bannedBy: data['banned_by'] as String?,
+      photoUrl: data['photo_url'] as String?,
     );
   }
 
@@ -79,6 +81,7 @@ class UserModel extends UserEntity {
       createdAt: entity.createdAt,
       onboardingComplete: entity.onboardingComplete,
       emailVerified: entity.emailVerified,
+      photoUrl: entity.photoUrl,
     );
   }
 
@@ -102,6 +105,7 @@ class UserModel extends UserEntity {
       'is_banned': isBanned,
       'banned_at': bannedAt != null ? Timestamp.fromDate(bannedAt!) : null,
       'banned_by': bannedBy,
+      'photo_url': photoUrl,
     };
   }
 

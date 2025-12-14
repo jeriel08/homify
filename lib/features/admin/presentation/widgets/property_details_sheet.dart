@@ -704,12 +704,18 @@ class OwnerProfileDetails extends ConsumerWidget {
               CircleAvatar(
                 radius: 24,
                 backgroundColor: primary.withValues(alpha: 0.2),
-                child: Text(
-                  initials,
-                  style: HomifyTypography.bold(
-                    HomifyTypography.title3.copyWith(color: primary),
-                  ),
-                ),
+                backgroundImage:
+                    owner.photoUrl != null && owner.photoUrl!.isNotEmpty
+                    ? CachedNetworkImageProvider(owner.photoUrl!)
+                    : null,
+                child: owner.photoUrl == null || owner.photoUrl!.isEmpty
+                    ? Text(
+                        initials,
+                        style: HomifyTypography.bold(
+                          HomifyTypography.title3.copyWith(color: primary),
+                        ),
+                      )
+                    : null,
               ),
               const Gap(12),
               Expanded(

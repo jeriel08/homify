@@ -200,11 +200,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         value: profile.email,
                         icon: LucideIcons.mail,
                       ),
-                      InfoRow(
-                        label: 'Occupation',
-                        value: profile.displayOccupation,
-                        icon: LucideIcons.briefcase,
-                      ),
+                      if (profile.occupation != null)
+                        InfoRow(
+                          label: 'Occupation',
+                          value: profile.displayOccupation,
+                          icon: LucideIcons.briefcase,
+                        ),
                       if (profile.mobile != null)
                         InfoRow(
                           label: 'Mobile Number',
