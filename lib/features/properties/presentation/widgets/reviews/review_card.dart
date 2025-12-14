@@ -72,7 +72,7 @@ class ReviewCard extends ConsumerWidget {
                       backgroundColor: AppColors.secondary,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                    error: (_, __) => const CircleAvatar(
+                    error: (_, _) => const CircleAvatar(
                       radius: 20,
                       backgroundColor: AppColors.secondary,
                       backgroundImage: AssetImage(
@@ -96,7 +96,7 @@ class ReviewCard extends ConsumerWidget {
                           height: 16,
                           color: Colors.grey[300],
                         ),
-                        error: (_, __) => Text(
+                        error: (_, _) => Text(
                           'Unknown User',
                           style: HomifyTypography.semibold(
                             HomifyTypography.body2,

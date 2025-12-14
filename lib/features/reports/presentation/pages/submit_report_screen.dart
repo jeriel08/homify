@@ -235,6 +235,7 @@ class _SubmitReportScreenState extends ConsumerState<SubmitReportScreen> {
           onPressed: () => context.pop(),
         ),
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
       backgroundColor: AppColors.background,

@@ -3,11 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:homify/core/services/location_service.dart';
+import 'package:homify/core/services/places_service.dart';
 import 'package:homify/features/properties/domain/usecases/get_verified_properties.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/properties_providers.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:homify/core/constants/app_constants.dart';
 
 // 1. Define the State State
 class ExploreState {
@@ -136,29 +135,18 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
     final currentPos = await LocationService.getCurrentPosition();
     if (currentPos == null) return;
 
-    final userLatLng = PointLatLng(currentPos.latitude, currentPos.longitude);
-    final propertyLatLng = PointLatLng(property.latitude, property.longitude);
-
-    PolylinePoints polylinePoints = PolylinePoints(
-      apiKey: AppConstants.googleMapsApiKey,
-    );
-
-    // 1. Try Routes API (v2)
     try {
-      RoutesApiRequest request = RoutesApiRequest(
-        origin: userLatLng,
-        destination: propertyLatLng,
-        travelMode: TravelMode.driving,
-        routingPreference: RoutingPreference.trafficAware,
+      // Use Geoapify routing API
+      final routePoints = await PlacesService.getRoute(
+        originLat: currentPos.latitude,
+        originLon: currentPos.longitude,
+        destLat: property.latitude,
+        destLon: property.longitude,
+        mode: 'drive',
       );
 
-      RoutesApiResponse result = await polylinePoints
-          .getRouteBetweenCoordinatesV2(request: request);
-
-      if (result.routes.isNotEmpty) {
-        final route = result.routes.first;
-        final points = route.polylinePoints ?? [];
-        final List<LatLng> polylineCoordinates = points
+      if (routePoints.isNotEmpty) {
+        final polylineCoordinates = routePoints
             .map((point) => LatLng(point.latitude, point.longitude))
             .toList();
 
@@ -166,35 +154,10 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
         return;
       }
     } catch (e) {
-      debugPrint('Routes API Error: $e');
-      // Ignore error and try legacy API
+      debugPrint('Geoapify Routing Error: $e');
     }
 
-    // 2. Fallback to Legacy Directions API
-    try {
-      // ignore: deprecated_member_use
-      PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        request: PolylineRequest(
-          origin: userLatLng,
-          destination: propertyLatLng,
-          mode: TravelMode.driving,
-        ),
-      );
-
-      if (result.points.isNotEmpty) {
-        final List<LatLng> polylineCoordinates = result.points
-            .map((point) => LatLng(point.latitude, point.longitude))
-            .toList();
-
-        _setPolyline(polylineCoordinates);
-        return;
-      }
-    } catch (e) {
-      debugPrint('Legacy API Error: $e');
-      // Ignore error and use straight line fallback
-    }
-
-    // 3. Fallback: Show error if both APIs fail
+    // Show error if routing fails
     if (mounted) {
       state = state.copyWith(
         errorMessage:

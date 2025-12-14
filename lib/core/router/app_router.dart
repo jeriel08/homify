@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/entities/user_entity.dart'; // For AccountType enum
 import 'package:homify/core/presentation/widgets/loading_screen.dart';
+import 'package:homify/core/presentation/pages/not_found_page.dart';
 import 'package:homify/features/auth/presentation/pages/landing_page.dart';
 import 'package:homify/features/auth/presentation/pages/login_page.dart';
 import 'package:homify/features/auth/presentation/pages/registration_page.dart';
@@ -15,6 +16,7 @@ import 'package:homify/features/auth/presentation/pages/forgot_password_page.dar
 import 'package:homify/features/auth/presentation/pages/change_password_page.dart';
 import 'package:homify/features/home/presentation/pages/account_page.dart';
 import 'package:homify/features/home/presentation/pages/home_page.dart';
+import 'package:homify/features/home/presentation/pages/about_screen.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
 import 'package:homify/features/properties/presentation/pages/property_success_page.dart';
@@ -35,6 +37,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     refreshListenable: RouterRefreshNotifier(ref),
+    errorBuilder: (context, state) => const NotFoundPage(),
     redirect: (context, state) {
       try {
         final path = state.matchedLocation;
@@ -215,6 +218,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/change-password',
         builder: (context, state) => const ChangePasswordPage(),
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AboutScreen(showAppBar: true),
       ),
       // ADMIN ROUTES
       GoRoute(

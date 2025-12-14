@@ -165,25 +165,26 @@ class _ExplorePropertyDetailsSheetState
                                           : TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  IconButton(
-                                    onPressed: () {
-                                      context.push(
-                                        '/report',
-                                        extra: {
-                                          'targetId': property.id,
-                                          'targetType': 'property',
-                                        },
-                                      );
-                                    },
-                                    icon: Icon(
-                                      LucideIcons.flag,
-                                      size: 20,
-                                      color: textSecondary.withValues(
-                                        alpha: 0.6,
+                                  if (!isGuest)
+                                    IconButton(
+                                      onPressed: () {
+                                        context.push(
+                                          '/report',
+                                          extra: {
+                                            'targetId': property.id,
+                                            'targetType': 'property',
+                                          },
+                                        );
+                                      },
+                                      icon: Icon(
+                                        LucideIcons.flag,
+                                        size: 20,
+                                        color: textSecondary.withValues(
+                                          alpha: 0.6,
+                                        ),
                                       ),
+                                      tooltip: 'Report Issue',
                                     ),
-                                    tooltip: 'Report Issue',
-                                  ),
                                   if (widget.onClose != null)
                                     IconButton(
                                       icon: const Icon(

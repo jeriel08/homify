@@ -223,70 +223,6 @@ class AccountPage extends ConsumerWidget {
                 const SizedBox(height: 20),
               ],
 
-              // ───── SETTINGS SECTION ─────
-              const _SectionHeader(title: 'Settings'),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _SettingsTile(
-                      icon: LucideIcons.bell,
-                      title: 'Notification Settings',
-                      onTap: () {
-                        /* TODO: Navigate to notification settings */
-                      },
-                    ),
-                    const Divider(height: 1),
-                    _SettingsTile(
-                      icon: LucideIcons.circleQuestionMark,
-                      title: 'Help & Support',
-                      onTap: () {
-                        /* TODO: Navigate to help page */
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ───── SECURITY SETTINGS SECTION ─────
-              const _SectionHeader(title: 'Security'),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _SettingsTile(
-                      icon: LucideIcons.lock,
-                      title: 'Change Password',
-                      onTap: () => context.push('/change-password'),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
               // ───── ADMIN PANEL (ADMIN ONLY) ─────
               if (user.accountType == AccountType.admin) ...[
                 const _SectionHeader(title: 'Admin Panel'),
@@ -322,7 +258,68 @@ class AccountPage extends ConsumerWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: 20),
               ],
+
+              // ───── SECURITY SETTINGS SECTION ─────
+              const _SectionHeader(title: 'Security'),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _SettingsTile(
+                      icon: LucideIcons.lock,
+                      title: 'Change Password',
+                      onTap: () => context.push('/change-password'),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ───── SETTINGS SECTION ─────
+              const _SectionHeader(title: 'Settings'),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _SettingsTile(
+                      icon: LucideIcons.bell,
+                      title: 'Notification Settings',
+                      onTap: () {
+                        /* TODO: Navigate to notification settings */
+                      },
+                    ),
+                    const Divider(height: 1),
+                    _SettingsTile(
+                      icon: LucideIcons.info,
+                      title: 'About',
+                      onTap: () => context.push('/about'),
+                    ),
+                  ],
+                ),
+              ),
 
               const SizedBox(height: 20),
 

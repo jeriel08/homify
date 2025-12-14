@@ -149,6 +149,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             SliverAppBar(
               backgroundColor: background,
               elevation: 0,
+              surfaceTintColor: Colors.transparent,
               pinned: false,
               floating: true,
               leading: IconButton(
