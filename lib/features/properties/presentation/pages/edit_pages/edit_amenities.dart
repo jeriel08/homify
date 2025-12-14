@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 
 /// All possible amenities – grouped by category
 final Map<String, List<String>> _amenityGroups = {
@@ -83,23 +81,7 @@ class _EditAmenitiesState extends ConsumerState<EditAmenities> {
 
     if (_selected.isEmpty) {
       if (mounted) {
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => const ToastCard(
-            color: Colors.orange,
-            leading: Icon(Icons.warning, size: 28, color: Colors.white),
-            title: Text(
-              'Please select at least one amenity',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.warning(context, 'Please select at least one amenity');
       }
       return;
     }
@@ -115,23 +97,7 @@ class _EditAmenitiesState extends ConsumerState<EditAmenities> {
     if (mounted) {
       setState(() => _isSaving = false);
       Navigator.pop(context);
-      DelightToastBar(
-        position: DelightSnackbarPosition.top,
-        snackbarDuration: const Duration(seconds: 3),
-        autoDismiss: true,
-        builder: (context) => const ToastCard(
-          color: Colors.green,
-          leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
-          title: Text(
-            'Amenities updated',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ).show(context);
+      ToastHelper.success(context, 'Amenities updated');
     }
   }
 

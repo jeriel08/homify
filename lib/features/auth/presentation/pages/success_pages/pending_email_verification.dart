@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:lottie/lottie.dart';
 
@@ -35,9 +36,7 @@ class _PendingEmailVerificationPageState
       if (user != null) {
         await user.sendEmailVerification();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Verification email sent!')),
-          );
+          ToastHelper.success(context, 'Verification email sent!');
         }
         // Start Cooldown
         setState(() {
@@ -49,9 +48,7 @@ class _PendingEmailVerificationPageState
     } catch (e) {
       debugPrint('Error resending email: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ToastHelper.error(context, 'Error: $e');
       }
       setState(() => _isResending = false);
     }
@@ -102,10 +99,9 @@ class _PendingEmailVerificationPageState
       } else {
         debugPrint('WAITING: Email still not verified.');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Email not verified yet. Please check your inbox.'),
-            ),
+          ToastHelper.warning(
+            context,
+            'Email not verified yet. Please check your inbox.',
           );
         }
       }

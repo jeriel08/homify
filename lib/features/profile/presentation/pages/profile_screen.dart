@@ -1,7 +1,4 @@
 import 'dart:io';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -9,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
 import 'package:homify/core/theme/app_colors.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/profile/data/services/profile_photo_service.dart';
 import 'package:homify/features/profile/domain/entities/user_profile_entity.dart';
@@ -62,47 +60,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ref.invalidate(userProfileStreamProvider(widget.userId));
 
       if (mounted) {
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => const ToastCard(
-            color: Colors.green,
-            leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
-            title: Text(
-              'Profile photo updated!',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.success(context, 'Profile photo updated!');
       }
     } catch (e) {
       if (mounted) {
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => ToastCard(
-            color: Colors.red,
-            leading: const Icon(
-              Icons.error_outline,
-              size: 28,
-              color: Colors.white,
-            ),
-            title: Text(
-              'Failed to upload photo: ${e.toString().replaceAll('Exception: ', '')}',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.error(
+          context,
+          'Upload Failed',
+          subtitle: e.toString().replaceAll('Exception: ', ''),
+        );
       }
     } finally {
       if (mounted) {
@@ -420,18 +386,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         result.fold(
           (failure) {
             if (context.mounted) {
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                builder: (context) => ToastCard(
-                  color: Colors.red,
-                  leading: const Icon(Icons.error_outline, color: Colors.white),
-                  title: Text(
-                    'Failed to unban user: ${failure.message}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.error(
+                context,
+                'Unban Failed',
+                subtitle: failure.message,
+              );
             }
           },
           (_) {
@@ -439,18 +398,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ref.invalidate(userProfileProvider(userId));
 
             if (context.mounted) {
-              DelightToastBar(
-                snackbarDuration: const Duration(seconds: 3),
-                position: DelightSnackbarPosition.top,
-                builder: (context) => const ToastCard(
-                  color: Colors.green,
-                  leading: Icon(Icons.check_circle, color: Colors.white),
-                  title: Text(
-                    'User unbanned successfully',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.success(context, 'User unbanned successfully');
             }
           },
         );
@@ -465,18 +413,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         result.fold(
           (failure) {
             if (context.mounted) {
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                builder: (context) => ToastCard(
-                  color: Colors.red,
-                  leading: const Icon(Icons.error_outline, color: Colors.white),
-                  title: Text(
-                    'Failed to ban user: ${failure.message}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.error(
+                context,
+                'Ban Failed',
+                subtitle: failure.message,
+              );
             }
           },
           (_) {
@@ -484,35 +425,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ref.invalidate(userProfileProvider(userId));
 
             if (context.mounted) {
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                builder: (context) => const ToastCard(
-                  color: Colors.green,
-                  leading: Icon(Icons.check_circle, color: Colors.white),
-                  title: Text(
-                    'User banned successfully',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.success(context, 'User banned successfully');
             }
           },
         );
       }
     } catch (e) {
       if (context.mounted) {
-        DelightToastBar(
-          snackbarDuration: const Duration(seconds: 3),
-          builder: (context) => ToastCard(
-            color: Colors.red,
-            leading: const Icon(Icons.error_outline, color: Colors.white),
-            title: Text(
-              'An error occurred: $e',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.error(context, 'Error', subtitle: e.toString());
       }
     }
   }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:homify/core/presentation/widgets/step_progress_bar.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/auth/presentation/providers/registration_flow_provider.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
@@ -85,12 +86,7 @@ class _AddPropertyPageState extends ConsumerState<AddPropertyPage> {
     // 2. Listen for navigation and errors
     ref.listen(addPropertyControllerProvider, (previous, next) {
       if (next.submitError != null && previous?.submitError == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.submitError!),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
+        ToastHelper.error(context, next.submitError!);
         controller.clearSubmitError();
       }
 

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 
 class EditRentDetails extends ConsumerStatefulWidget {
   final PropertyEntity property;
@@ -51,23 +49,7 @@ class _EditRentDetailsState extends ConsumerState<EditRentDetails> {
 
     if (rentError != null) {
       if (mounted) {
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => const ToastCard(
-            color: Colors.orange,
-            leading: Icon(Icons.warning, size: 28, color: Colors.white),
-            title: Text(
-              'Please enter a valid rent amount',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.warning(context, 'Please enter a valid rent amount');
       }
       return;
     }
@@ -85,23 +67,7 @@ class _EditRentDetailsState extends ConsumerState<EditRentDetails> {
     if (mounted) {
       setState(() => _isSaving = false);
       Navigator.pop(context);
-      DelightToastBar(
-        position: DelightSnackbarPosition.top,
-        snackbarDuration: const Duration(seconds: 3),
-        autoDismiss: true,
-        builder: (context) => const ToastCard(
-          color: Colors.green,
-          leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
-          title: Text(
-            'Rent details updated',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ).show(context);
+      ToastHelper.success(context, 'Rent details updated');
     }
   }
 

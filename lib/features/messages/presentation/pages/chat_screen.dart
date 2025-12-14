@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/core/entities/user_entity.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/messages/presentation/providers/message_provider.dart';
 import 'package:homify/features/messages/presentation/providers/theme_provider.dart';
@@ -32,7 +33,7 @@ class ChatScreen extends ConsumerWidget {
 
     // 2. Get current user ID to know which bubbles are "mine"
     final currentUser = ref.watch(currentUserProvider).value;
-    
+
     // 3. Watch theme color
     final theme = ref.watch(messageThemeProvider);
 
@@ -41,9 +42,7 @@ class ChatScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        shadowColor: Colors.black.withValues(
-          alpha: 0.1,
-        ),
+        shadowColor: Colors.black.withValues(alpha: 0.1),
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft, color: textPrimary),
           onPressed: () => Navigator.pop(context),
@@ -85,46 +84,50 @@ class ChatScreen extends ConsumerWidget {
                     spacing: 12,
                     runSpacing: 12,
                     children: MessageThemeColor.values
-                        .map((themeOption) => GestureDetector(
-                              onTap: () {
-                                ref.read(messageThemeProvider.notifier).setTheme(themeOption);
-                                Navigator.pop(ctx);
-                              },
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 60,
-                                    height: 60,
-                                    decoration: BoxDecoration(
-                                      color: themeOption.color,
-                                      shape: BoxShape.circle,
-                                      border: theme == themeOption
-                                          ? Border.all(
-                                              color: Colors.black,
-                                              width: 3,
-                                            )
-                                          : null,
-                                    ),
-                                    child: theme == themeOption
-                                        ? const Center(
-                                            child: Icon(
-                                              Icons.check,
-                                              color: Colors.white,
-                                              size: 28,
-                                            ),
+                        .map(
+                          (themeOption) => GestureDetector(
+                            onTap: () {
+                              ref
+                                  .read(messageThemeProvider.notifier)
+                                  .setTheme(themeOption);
+                              Navigator.pop(ctx);
+                            },
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: themeOption.color,
+                                    shape: BoxShape.circle,
+                                    border: theme == themeOption
+                                        ? Border.all(
+                                            color: Colors.black,
+                                            width: 3,
                                           )
                                         : null,
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    themeOption.name,
-                                    style: const TextStyle(fontSize: 12),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ))
+                                  child: theme == themeOption
+                                      ? const Center(
+                                          child: Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 28,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  themeOption.name,
+                                  style: const TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                 ),
@@ -163,7 +166,9 @@ class ChatScreen extends ConsumerWidget {
                     }
 
                     // Watch theme color for user's bubble only
-                    final themeColor = isMe ? ref.watch(messageThemeProvider).color : null;
+                    final themeColor = isMe
+                        ? ref.watch(messageThemeProvider).color
+                        : null;
 
                     return ChatBubble(
                       text: msg.content,
@@ -177,8 +182,9 @@ class ChatScreen extends ConsumerWidget {
                       propertyData: msg.propertyData,
                       onPropertyTap: () {
                         // TODO: Navigate to property details
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Property details coming soon')),
+                        ToastHelper.info(
+                          context,
+                          'Property details coming soon',
                         );
                       },
                       onLongPress: () async {
@@ -187,7 +193,14 @@ class ChatScreen extends ConsumerWidget {
                           context: context,
                           barrierDismissible: true,
                           builder: (ctx) {
-                            final options = ['👍','❤️','😂','😮','😢','👏'];
+                            final options = [
+                              '👍',
+                              '❤️',
+                              '😂',
+                              '😮',
+                              '😢',
+                              '👏',
+                            ];
                             return AlertDialog(
                               contentPadding: const EdgeInsets.all(12),
                               shape: RoundedRectangleBorder(
@@ -197,25 +210,36 @@ class ChatScreen extends ConsumerWidget {
                                 spacing: 10,
                                 runSpacing: 10,
                                 children: options
-                                    .map((e) => InkWell(
-                                          borderRadius: BorderRadius.circular(12),
-                                          onTap: () => Navigator.pop(ctx, e),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey.shade100,
-                                              borderRadius: BorderRadius.circular(12),
+                                    .map(
+                                      (e) => InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () => Navigator.pop(ctx, e),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade100,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
                                             ),
-                                            child: Text(e, style: const TextStyle(fontSize: 22)),
                                           ),
-                                        ))
+                                          child: Text(
+                                            e,
+                                            style: const TextStyle(
+                                              fontSize: 22,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
                                     .toList(),
                               ),
                             );
                           },
                         );
                         if (emoji != null) {
-                          await ref.read(messageRepositoryProvider).toggleReaction(
+                          await ref
+                              .read(messageRepositoryProvider)
+                              .toggleReaction(
                                 conversationId: conversationId,
                                 messageId: msg.id,
                                 userId: currentUser.uid,
@@ -253,7 +277,9 @@ class ChatScreen extends ConsumerWidget {
                 imageQuality: 85,
               );
               if (picked != null) {
-                await ref.read(messageRepositoryProvider).sendImageMessage(
+                await ref
+                    .read(messageRepositoryProvider)
+                    .sendImageMessage(
                       conversationId: conversationId,
                       senderId: currentUser.uid,
                       imagePath: picked.path,
@@ -338,8 +364,9 @@ class _ChatInputState extends ConsumerState<_ChatInput> {
                         onTap: () {
                           Navigator.pop(ctx);
                           // TODO: Show property picker
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Property picker coming soon')),
+                          ToastHelper.info(
+                            context,
+                            'Property picker coming soon',
                           );
                         },
                       ),
@@ -366,10 +393,7 @@ class _ChatInputState extends ConsumerState<_ChatInput> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(
-                    color: theme.color,
-                    width: 1.5,
-                  ),
+                  borderSide: BorderSide(color: theme.color, width: 1.5),
                 ),
               ),
             ),

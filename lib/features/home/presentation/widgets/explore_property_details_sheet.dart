@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/theme/typography.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
@@ -217,14 +218,9 @@ class _ExplorePropertyDetailsSheetState
                                               final msg = isFav
                                                   ? 'Removed from favorites'
                                                   : 'Added to favorites';
-                                              ScaffoldMessenger.of(
+                                              ToastHelper.success(
                                                 context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    '$msg: ${property.name}',
-                                                  ),
-                                                ),
+                                                '$msg: ${property.name}',
                                               );
                                             },
                                             style: OutlinedButton.styleFrom(

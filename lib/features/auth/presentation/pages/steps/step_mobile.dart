@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 import 'package:homify/core/theme/app_colors.dart';
 
@@ -188,12 +189,9 @@ class _MobileStepState extends ConsumerState<_MobileStep> {
                           setState(() => _triedNext = true);
                           final ok = await controller.next();
                           if (!ok && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please enter a valid mobile number.',
-                                ),
-                              ),
+                            ToastHelper.warning(
+                              context,
+                              'Please enter a valid mobile number.',
                             );
                           }
                         },

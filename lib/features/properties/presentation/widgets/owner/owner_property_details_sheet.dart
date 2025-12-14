@@ -3,15 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:homify/features/properties/presentation/pages/edit_property_page.dart';
 import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
 import 'package:homify/features/properties/presentation/widgets/reviews/review_list.dart';
 
@@ -389,29 +387,10 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
 
                                     if (context.mounted) {
                                       Navigator.pop(context);
-                                      DelightToastBar(
-                                        position: DelightSnackbarPosition.top,
-                                        snackbarDuration: const Duration(
-                                          seconds: 3,
-                                        ),
-                                        autoDismiss: true,
-                                        builder: (context) => const ToastCard(
-                                          color: Colors.green,
-                                          leading: Icon(
-                                            Icons.check_circle,
-                                            size: 28,
-                                            color: Colors.white,
-                                          ),
-                                          title: Text(
-                                            'Property submitted for re-approval',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 14,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ).show(context);
+                                      ToastHelper.success(
+                                        context,
+                                        'Property submitted for re-approval',
+                                      );
                                     }
                                   },
                                   icon: const Icon(
@@ -853,52 +832,15 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
 
             if (context.mounted) {
               Navigator.pop(context); // Close details sheet
-
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                autoDismiss: true,
-                builder: (context) => const ToastCard(
-                  color: Colors.green,
-                  leading: Icon(
-                    Icons.check_circle,
-                    size: 28,
-                    color: Colors.white,
-                  ),
-                  title: Text(
-                    'Property deleted successfully',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.success(context, 'Property deleted successfully');
             }
           } catch (e) {
             if (context.mounted) {
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                autoDismiss: true,
-                builder: (context) => ToastCard(
-                  color: Colors.red,
-                  leading: const Icon(
-                    Icons.error_outline,
-                    size: 28,
-                    color: Colors.white,
-                  ),
-                  title: Text(
-                    'Failed to delete property: $e',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.error(
+                context,
+                'Delete Failed',
+                subtitle: e.toString(),
+              );
             }
           }
         },

@@ -3,19 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/core/theme/app_colors.dart';
+import 'package:homify/core/utils/toast_helper.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 import 'package:homify/features/home/presentation/pages/search_property_page.dart';
+import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:homify/features/home/presentation/providers/tenant_home_provider.dart';
 import 'package:homify/features/home/presentation/widgets/property_carousel.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_card.dart';
 import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_details_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
-import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 
 class TenantHomeScreen extends ConsumerStatefulWidget {
   const TenantHomeScreen({super.key});
@@ -198,30 +196,12 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                                 .read(favoritesProvider.notifier)
                                 .toggle(property);
 
-                            DelightToastBar(
-                              builder: (context) => ToastCard(
-                                color: Colors.white,
-                                leading: Icon(
-                                  isFavorite
-                                      ? LucideIcons.heartCrack
-                                      : LucideIcons.heart,
-                                  size: 28,
-                                  color: isFavorite
-                                      ? Colors.grey
-                                      : AppColors.error,
-                                ),
-                                title: Text(
-                                  isFavorite
-                                      ? 'Removed from favorites'
-                                      : 'Added to favorites',
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(fontWeight: FontWeight.w700),
-                                ),
-                              ),
-                              position: DelightSnackbarPosition.top,
-                              autoDismiss: true,
-                              snackbarDuration: const Duration(seconds: 2),
-                            ).show(context);
+                            ToastHelper.info(
+                              context,
+                              isFavorite
+                                  ? 'Removed from favorites'
+                                  : 'Added to favorites',
+                            );
                           },
                           onTap: () => _showPropertyDetails(property),
                         );

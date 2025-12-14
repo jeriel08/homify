@@ -1,6 +1,7 @@
 // lib/auth/registration/steps/step_birthday.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -202,10 +203,9 @@ class _BirthdayStepState extends ConsumerState<_BirthdayStep> {
                       onPressed: () async {
                         final ok = await controller.next();
                         if (!ok && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('You must be 18 or older'),
-                            ),
+                          ToastHelper.warning(
+                            context,
+                            'You must be 18 or older',
                           );
                         }
                       },

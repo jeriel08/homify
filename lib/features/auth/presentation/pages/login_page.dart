@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/controllers/login_controller.dart';
 import 'package:homify/features/auth/presentation/controllers/google_sign_in_controller.dart';
 import 'package:homify/core/theme/app_colors.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -69,6 +70,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         labelText: label,
         suffixIcon: suffixIcon,
         helperText: helperText,
+        // Normal border
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1),
+        ),
+        // Focused border
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        // Error border (red when validation fails)
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
+        ),
+        // Focused error border (red when focused with error)
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        // Content padding for better appearance
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -80,22 +106,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final isEitherLoading = loginState.isLoading || googleSignInState.isLoading;
 
-    // We removed the ref.listen for Snackbars here.
-    // Errors will be displayed inline below.
+    // Listen for login errors and show toast
+    ref.listen<LoginState>(loginControllerProvider, (previous, next) {
+      if (next.errorMessage != null) {
+        ToastHelper.error(context, next.errorMessage!);
+        ref.read(loginControllerProvider.notifier).clearError();
+      }
+    });
 
     ref.listen<GoogleSignInState>(googleSignInControllerProvider, (
       previous,
       next,
     ) {
       if (next.errorMessage != null) {
-        // Show the error message (e.g., "account-exists-with-different-credential")
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: Colors.red,
-          ),
-        );
-        // Clear the error after showing
+        ToastHelper.error(context, next.errorMessage!);
         ref.read(googleSignInControllerProvider.notifier).clearError();
       }
     });
@@ -183,40 +207,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
 
                   const SizedBox(height: 32),
-
-                  // Inline Error Message
-                  if (loginState.errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: Colors.red.shade700,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                loginState.errorMessage!,
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
 
                   // Log in Button
                   ElevatedButton.icon(

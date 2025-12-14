@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/controllers/forgot_password_controller.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:lottie/lottie.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:homify/core/theme/app_colors.dart';
@@ -40,20 +41,13 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       next,
     ) {
       if (next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.error(context, next.errorMessage!);
         ref.read(forgotPasswordControllerProvider.notifier).clearError();
       }
       if (next.isSuccess) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset email sent! Check your inbox.'),
-            backgroundColor: Colors.green,
-          ),
+        ToastHelper.success(
+          context,
+          'Password reset email sent! Check your inbox.',
         );
         // Optionally navigate back to login
         context.pop();

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/controllers/change_password_controller.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ChangePasswordPage extends ConsumerStatefulWidget {
@@ -36,12 +37,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
       final user = userAsync.value;
 
       if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User not found. Please log in again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.error(context, 'User not found. Please log in again.');
         return;
       }
 
@@ -65,21 +61,11 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
       next,
     ) {
       if (next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.error(context, next.errorMessage!);
         ref.read(changePasswordControllerProvider.notifier).clearError();
       }
       if (next.isSuccess) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password changed successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastHelper.success(context, 'Password changed successfully!');
         context.pop();
       }
     });

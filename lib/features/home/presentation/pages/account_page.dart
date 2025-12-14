@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/presentation/widgets/loading_screen.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/core/widgets/logout_dialog.dart';
 import 'package:homify/features/auth/presentation/controllers/account_controller.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
@@ -23,12 +24,7 @@ class AccountPage extends ConsumerWidget {
     // Safe logout listener — only reacts when actually logging out
     ref.listen(logoutControllerProvider, (previous, next) {
       if (next.hasError && !next.isLoading) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error.toString()),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.error(context, next.error.toString());
       }
     });
 

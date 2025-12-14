@@ -1,6 +1,7 @@
 // lib/auth/registration/steps/step_email.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 import 'package:homify/core/theme/app_colors.dart';
 
@@ -170,12 +171,9 @@ class _EmailStepState extends ConsumerState<_EmailStep> {
 
                           final ok = await controller.next();
                           if (!ok && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please enter a valid email address',
-                                ),
-                              ),
+                            ToastHelper.warning(
+                              context,
+                              'Please enter a valid email address',
                             );
                           }
                         },

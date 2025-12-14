@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 
 class EditPropertyInformation extends ConsumerStatefulWidget {
   final PropertyEntity property;
@@ -56,9 +54,7 @@ class _EditPropertyInformationState
     final descError = _descError();
 
     if (nameError != null || descError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in both fields correctly')),
-      );
+      ToastHelper.warning(context, 'Please fill in both fields correctly');
       return;
     }
 
@@ -73,23 +69,7 @@ class _EditPropertyInformationState
     if (mounted) {
       setState(() => _isSaving = false);
       Navigator.pop(context);
-      DelightToastBar(
-        position: DelightSnackbarPosition.top,
-        snackbarDuration: const Duration(seconds: 3),
-        autoDismiss: true,
-        builder: (context) => const ToastCard(
-          color: Colors.green,
-          leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
-          title: Text(
-            'Property information updated',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ).show(context);
+      ToastHelper.success(context, 'Property information updated');
     }
   }
 

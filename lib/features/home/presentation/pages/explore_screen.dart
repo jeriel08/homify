@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:homify/core/services/location_service.dart';
 import 'package:homify/core/services/places_service.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/home/presentation/providers/explorer_provider.dart';
 import 'package:homify/features/home/presentation/providers/bottom_nav_provider.dart';
 import 'package:homify/features/home/presentation/widgets/explore_property_details_sheet.dart';
@@ -77,9 +78,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
     if (currentPos == null) {
       if (mounted) {
         setState(() => _isLoadingRoute = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not get your current location')),
-        );
+        ToastHelper.error(context, 'Could not get your current location');
       }
       return;
     }
@@ -95,9 +94,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
     if (routePoints.isEmpty) {
       if (mounted) {
         setState(() => _isLoadingRoute = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Could not find route')));
+        ToastHelper.error(context, 'Could not find route');
       }
       return;
     }
@@ -325,13 +322,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
     ref.listen(exploreProvider, (previous, next) {
       if (previous?.errorMessage != next.errorMessage &&
           next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ToastHelper.error(context, next.errorMessage!);
       }
     });
 

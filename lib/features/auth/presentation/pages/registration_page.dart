@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/theme/app_colors.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/core/widgets/discard_registration_dialog.dart';
 import 'package:homify/core/presentation/widgets/step_progress_bar.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
@@ -49,12 +50,7 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
       next,
     ) {
       if (next.submitError != null && previous?.submitError == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.submitError!),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.error(context, next.submitError!);
         controller.clearSubmitError();
       }
 

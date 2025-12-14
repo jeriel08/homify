@@ -1,6 +1,7 @@
 // lib/auth/registration/steps/step_password.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:homify/core/theme/app_colors.dart';
@@ -280,9 +281,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                                       _getPasswordError() ??
                                       _getConfirmError() ??
                                       "Please fix password issues";
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(SnackBar(content: Text(msg)));
+                                  ToastHelper.warning(context, msg);
                                 }
                               },
                         style: ElevatedButton.styleFrom(
