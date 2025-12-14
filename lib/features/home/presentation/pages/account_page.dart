@@ -139,6 +139,8 @@ class AccountPage extends ConsumerWidget {
                                   style: textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey.shade700,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ],
                             ),

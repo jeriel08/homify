@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:delightful_toast/delight_toast.dart';
 import 'package:delightful_toast/toast/components/toast_card.dart';
 import 'package:delightful_toast/toast/utils/enums.dart';
@@ -9,32 +10,113 @@ import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
 import 'package:homify/core/theme/app_colors.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
+import 'package:homify/features/profile/data/services/profile_photo_service.dart';
 import 'package:homify/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:homify/features/profile/domain/usecases/ban_user.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
 import 'package:homify/features/profile/presentation/widgets/profile_header.dart';
 import 'package:homify/features/profile/presentation/widgets/profile_info_section.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   final String userId;
 
   const ProfileScreen({super.key, required this.userId});
 
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // Brand colors
   static const Color primary = Color(0xFF32190D);
-  static const Color surface = Color(0xFFF9E5C5);
   static const Color background = Color(0xFFFFFAF5);
 
+  final _photoService = ProfilePhotoService();
+  final _imagePicker = ImagePicker();
+  bool _isUploadingPhoto = false;
+
+  Future<void> _pickAndUploadPhoto() async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() => _isUploadingPhoto = true);
+
+      await _photoService.uploadProfilePhoto(
+        widget.userId,
+        File(pickedFile.path),
+      );
+
+      // Refresh the profile stream
+      ref.invalidate(userProfileStreamProvider(widget.userId));
+
+      if (mounted) {
+        DelightToastBar(
+          position: DelightSnackbarPosition.top,
+          snackbarDuration: const Duration(seconds: 3),
+          autoDismiss: true,
+          builder: (context) => const ToastCard(
+            color: Colors.green,
+            leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
+            title: Text(
+              'Profile photo updated!',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ).show(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        DelightToastBar(
+          position: DelightSnackbarPosition.top,
+          snackbarDuration: const Duration(seconds: 3),
+          autoDismiss: true,
+          builder: (context) => ToastCard(
+            color: Colors.red,
+            leading: const Icon(
+              Icons.error_outline,
+              size: 28,
+              color: Colors.white,
+            ),
+            title: Text(
+              'Failed to upload photo: ${e.toString().replaceAll('Exception: ', '')}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ).show(context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingPhoto = false);
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(userProfileStreamProvider(userId));
+  Widget build(BuildContext context) {
+    final profileAsync = ref.watch(userProfileStreamProvider(widget.userId));
     final currentUserAsync = ref.watch(currentUserProvider);
     final currentUser = currentUserAsync.asData?.value;
 
-    final isOwnProfile = currentUser?.uid == userId;
+    final isOwnProfile = currentUser?.uid == widget.userId;
     final isAdmin = currentUser?.accountType == AccountType.admin;
 
     return Scaffold(
@@ -79,7 +161,10 @@ class ProfileScreen extends ConsumerWidget {
                     onPressed: () {
                       context.push(
                         '/report',
-                        extra: {'targetId': userId, 'targetType': 'user'},
+                        extra: {
+                          'targetId': widget.userId,
+                          'targetType': 'user',
+                        },
                       );
                     },
                   ),
@@ -95,7 +180,10 @@ class ProfileScreen extends ConsumerWidget {
                   ProfileHeader(
                     profile: profile,
                     showEditButton: isOwnProfile,
-                    onEditTap: () => context.push('/profile/edit/name/$userId'),
+                    onEditTap: () =>
+                        context.push('/profile/edit/name/${widget.userId}'),
+                    onPhotoTap: _pickAndUploadPhoto,
+                    isUploadingPhoto: _isUploadingPhoto,
                   ),
                   const Gap(32),
 
@@ -104,7 +192,7 @@ class ProfileScreen extends ConsumerWidget {
                     title: 'Personal Information',
                     showEditButton: isOwnProfile,
                     onEditTap: () => context.push(
-                      '/profile/edit/personal-information/$userId',
+                      '/profile/edit/personal-information/${widget.userId}',
                     ),
                     rows: [
                       InfoRow(
@@ -164,8 +252,9 @@ class ProfileScreen extends ConsumerWidget {
                     ProfileInfoSection(
                       title: 'Preferences',
                       showEditButton: isOwnProfile,
-                      onEditTap: () =>
-                          context.push('/profile/edit/preferences/$userId'),
+                      onEditTap: () => context.push(
+                        '/profile/edit/preferences/${widget.userId}',
+                      ),
                       rows: [
                         if (profile.preferences!['dealbreakers'] != null &&
                             (profile.preferences!['dealbreakers']
@@ -218,7 +307,7 @@ class ProfileScreen extends ConsumerWidget {
                                       _handleBanUnban(
                                         context,
                                         ref,
-                                        userId,
+                                        widget.userId,
                                         profile.isBanned,
                                         currentUser!.uid,
                                         null,
@@ -257,7 +346,7 @@ class ProfileScreen extends ConsumerWidget {
                                   _handleBanUnban(
                                     context,
                                     ref,
-                                    userId,
+                                    widget.userId,
                                     profile.isBanned,
                                     currentUser!.uid,
                                     reason,
