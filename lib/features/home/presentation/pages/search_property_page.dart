@@ -8,6 +8,7 @@ import 'package:homify/features/properties/presentation/widgets/tenant/tenant_pr
 import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_details_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 
 class SearchPropertyPage extends ConsumerStatefulWidget {
   const SearchPropertyPage({super.key});
@@ -55,6 +56,8 @@ class _SearchPropertyPageState extends ConsumerState<SearchPropertyPage> {
   Widget build(BuildContext context) {
     final searchState = ref.watch(searchProvider);
     final searchNotifier = ref.read(searchProvider.notifier);
+    final userRole = ref.watch(userRoleProvider);
+    final isGuest = userRole == AppUserRole.guest;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -149,13 +152,17 @@ class _SearchPropertyPageState extends ConsumerState<SearchPropertyPage> {
           const Gap(24),
 
           // Content
-          Expanded(child: _buildContent(searchState, searchNotifier)),
+          Expanded(child: _buildContent(searchState, searchNotifier, isGuest)),
         ],
       ),
     );
   }
 
-  Widget _buildContent(SearchState state, SearchNotifier notifier) {
+  Widget _buildContent(
+    SearchState state,
+    SearchNotifier notifier,
+    bool isGuest,
+  ) {
     if (state.isLoading) {
       return Skeletonizer(
         enabled: true,
@@ -259,6 +266,7 @@ class _SearchPropertyPageState extends ConsumerState<SearchPropertyPage> {
               return TenantPropertyCard(
                 property: property,
                 isFavorite: false,
+                showFavorite: !isGuest,
                 onFavorite: () {},
                 onTap: () {
                   showModalBottomSheet(

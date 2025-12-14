@@ -10,20 +10,8 @@ service cloud.firestore {
   
     match /users/{userId} {
       allow create: if request.auth.uid == userId;
-      allow read : if request.auth != null;
-      
-      // Users can update their own profile (firstName, lastName only)
-      allow update: if request.auth.uid == userId &&
-                    request.resource.data.diff(resource.data).affectedKeys()
-                      .hasOnly(['first_name', 'last_name', 'updated_at']);
-      
-      // Only admins can ban/unban users
-      allow update: if isUserAdmin() &&
-                    request.resource.data.diff(resource.data).affectedKeys()
-                      .hasOnly(['is_banned', 'banned_at', 'banned_by', 'updated_at']);
-      
-      // Admins can update any other fields
-      allow update: if isUserAdmin();
+      allow read : if true;
+      allow update: if request.auth.uid == userId || isUserAdmin();
     }
     
     match /users {
@@ -44,7 +32,7 @@ service cloud.firestore {
       allow delete: if request.auth != null &&
                        request.auth.uid == get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_uid;
     }
-
+    
     match /deleted_properties/{propertyId} {
       allow create: if request.auth != null &&
                        request.auth.uid == request.resource.data.owner_uid;
@@ -66,22 +54,15 @@ service cloud.firestore {
       }
       allow list: if request.auth != null && isParticipant();
       
-      // 2. GET (Single Doc): 
-      // - IF doc exists: check resource.data (isParticipant)
-      // - IF doc missing: check the ID string (isPartOfId) - This fixes the crash!
       allow get: if request.auth != null && 
                  ( (resource != null && isParticipant()) || (resource == null && isPartOfId()) );
       
-      // 3. CREATE: Allow if you are one of the participants
       allow create: if request.auth != null && 
                        request.auth.uid in request.resource.data.participants;
-
-      // 4. UPDATE: Allow if you are a participant
       allow update: if request.auth != null && isParticipant();
 
       // --- SUBCOLLECTION: MESSAGES ---
       match /messages/{messageId} {
-        // Standard check: Must be a participant of the parent conversation
         allow read, list, create: if request.auth != null && 
                                      request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
       }
@@ -89,16 +70,12 @@ service cloud.firestore {
 
     // --- REPORTS ---
     match /reports/{reportId} {
-      // Allow authenticated users to create reports
       allow create: if request.auth != null;
-      
-      // Allow admins to read and update (status)
-      // Also allow the reporter to read their own report
       allow read: if isUserAdmin() || (request.auth != null && resource.data.reporterId == request.auth.uid);
       
       allow update: if isUserAdmin();
     }
-
+    
     // --- REVIEWS ---
     match /reviews/{reviewId} {
       allow read: if true;

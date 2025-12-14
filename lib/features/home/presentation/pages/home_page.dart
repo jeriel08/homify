@@ -6,6 +6,7 @@ import 'package:homify/features/home/presentation/providers/navigation_provider.
 
 import 'package:homify/features/home/presentation/providers/bottom_nav_provider.dart';
 import 'package:homify/features/home/presentation/widgets/app_bottom_nav_bar.dart';
+import 'package:homify/core/widgets/login_required_dialog.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -92,28 +93,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                         ), // for ripple effect
                         onTap: () {
                           if (user == null || user.email.isEmpty) {
-                            // Guest flow
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Login Required'),
-                                content: const Text(
-                                  'Please log in to access your account.',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(ctx);
-                                      context.go('/login');
-                                    },
-                                    child: const Text('Log In'),
-                                  ),
-                                ],
-                              ),
+                            // Guest flow - show login dialog
+                            LoginRequiredDialog.show(
+                              context,
+                              closeSheet: false,
                             );
                           } else {
                             context.push('/account');

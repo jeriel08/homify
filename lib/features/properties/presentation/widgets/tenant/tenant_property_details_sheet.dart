@@ -12,6 +12,8 @@ import 'package:homify/features/properties/domain/entities/property_entity.dart'
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:homify/features/properties/presentation/widgets/reviews/review_list.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
+import 'package:homify/core/widgets/login_required_dialog.dart';
 
 class TenantPropertyDetailsSheet extends ConsumerStatefulWidget {
   final PropertyEntity property;
@@ -48,6 +50,8 @@ class _TenantPropertyDetailsSheetState
 
     final property = widget.property;
     final ownerAsync = ref.watch(userProfileProvider(property.ownerUid));
+    final userRole = ref.watch(userRoleProvider);
+    final isGuest = userRole == AppUserRole.guest;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -592,7 +596,11 @@ class _TenantPropertyDetailsSheetState
                   const Gap(12),
                   InkWell(
                     onTap: () {
-                      context.push('/profile/${property.ownerUid}');
+                      if (isGuest) {
+                        _showLoginRequiredDialog(context);
+                      } else {
+                        context.push('/profile/${property.ownerUid}');
+                      }
                     },
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
@@ -670,7 +678,7 @@ class _TenantPropertyDetailsSheetState
                     ),
                   ),
                   const Gap(16),
-                  ContactOwnerButton(ownerUid: property.ownerUid),
+                  if (!isGuest) ContactOwnerButton(ownerUid: property.ownerUid),
 
                   const Gap(24),
 
@@ -709,7 +717,7 @@ class _TenantPropertyDetailsSheetState
                   const Gap(24),
 
                   // Reviews
-                  ReviewList(propertyId: property.id, canWriteReview: true),
+                  ReviewList(propertyId: property.id, canWriteReview: !isGuest),
 
                   const Gap(20),
                 ],
@@ -731,38 +739,39 @@ class _TenantPropertyDetailsSheetState
               ),
               child: Row(
                 children: [
-                  // Favorite Button
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final favoritesState = ref.watch(favoritesProvider);
-                      final isFavorite = favoritesState.contains(
-                        widget.property.id,
-                      );
+                  // Favorite Button (hidden for guests)
+                  if (!isGuest)
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final favoritesState = ref.watch(favoritesProvider);
+                        final isFavorite = favoritesState.contains(
+                          widget.property.id,
+                        );
 
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: isFavorite
-                              ? Colors.red.withValues(alpha: 0.1)
-                              : surface.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            ref
-                                .read(favoritesProvider.notifier)
-                                .toggle(widget.property);
-                          },
-                          icon: Icon(
-                            LucideIcons.heart,
-                            fill: isFavorite ? 1.0 : 0.0,
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: isFavorite
+                                ? Colors.red.withValues(alpha: 0.1)
+                                : surface.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          color: isFavorite ? Colors.red : textPrimary,
-                          padding: const EdgeInsets.all(16),
-                        ),
-                      );
-                    },
-                  ),
-                  const Gap(12),
+                          child: IconButton(
+                            onPressed: () {
+                              ref
+                                  .read(favoritesProvider.notifier)
+                                  .toggle(widget.property);
+                            },
+                            icon: Icon(
+                              LucideIcons.heart,
+                              fill: isFavorite ? 1.0 : 0.0,
+                            ),
+                            color: isFavorite ? Colors.red : textPrimary,
+                            padding: const EdgeInsets.all(16),
+                          ),
+                        );
+                      },
+                    ),
+                  if (!isGuest) const Gap(12),
                   // Show Direction Button
                   Expanded(
                     child: ElevatedButton.icon(
@@ -802,5 +811,9 @@ class _TenantPropertyDetailsSheetState
         .split(' ')
         .map((e) => e[0].toUpperCase() + e.substring(1))
         .join(' ');
+  }
+
+  void _showLoginRequiredDialog(BuildContext context) {
+    LoginRequiredDialog.show(context, closeSheet: true);
   }
 }

@@ -10,6 +10,8 @@ import 'package:homify/features/profile/presentation/providers/profile_provider.
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
+import 'package:homify/core/widgets/login_required_dialog.dart';
 
 class ExplorePropertyDetailsSheet extends ConsumerStatefulWidget {
   final PropertyEntity property;
@@ -79,6 +81,8 @@ class _ExplorePropertyDetailsSheetState
 
     final property = widget.property;
     final ownerAsync = ref.watch(userProfileProvider(property.ownerUid));
+    final userRole = ref.watch(userRoleProvider);
+    final isGuest = userRole == AppUserRole.guest;
 
     return NotificationListener<DraggableScrollableNotification>(
       onNotification: (notification) {
@@ -194,69 +198,72 @@ class _ExplorePropertyDetailsSheetState
                               // Row 2: Favorites + Show Direction
                               Row(
                                 children: [
-                                  Expanded(
-                                    child: Consumer(
-                                      builder: (context, ref, _) {
-                                        final isFav = ref
-                                            .watch(favoritesProvider)
-                                            .contains(property.id);
-                                        return OutlinedButton.icon(
-                                          onPressed: () {
-                                            ref
-                                                .read(
-                                                  favoritesProvider.notifier,
-                                                )
-                                                .toggle(property);
-                                            final msg = isFav
-                                                ? 'Removed from favorites'
-                                                : 'Added to favorites';
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  '$msg: ${property.name}',
+                                  // Favorite button (hidden for guests)
+                                  if (!isGuest)
+                                    Expanded(
+                                      child: Consumer(
+                                        builder: (context, ref, _) {
+                                          final isFav = ref
+                                              .watch(favoritesProvider)
+                                              .contains(property.id);
+                                          return OutlinedButton.icon(
+                                            onPressed: () {
+                                              ref
+                                                  .read(
+                                                    favoritesProvider.notifier,
+                                                  )
+                                                  .toggle(property);
+                                              final msg = isFav
+                                                  ? 'Removed from favorites'
+                                                  : 'Added to favorites';
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    '$msg: ${property.name}',
+                                                  ),
                                                 ),
-                                              ),
-                                            );
-                                          },
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: isFav
-                                                ? Colors.red
-                                                : textPrimary,
-                                            side: BorderSide(
-                                              color: isFav
+                                              );
+                                            },
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: isFav
                                                   ? Colors.red
-                                                  : surface.withValues(
-                                                      alpha: 0.8,
-                                                    ),
+                                                  : textPrimary,
+                                              side: BorderSide(
+                                                color: isFav
+                                                    ? Colors.red
+                                                    : surface.withValues(
+                                                        alpha: 0.8,
+                                                      ),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                  ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
                                             ),
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 12,
+                                            icon: Icon(
+                                              isFav
+                                                  ? LucideIcons.heart
+                                                  : LucideIcons.heart,
+                                              color: isFav ? Colors.red : null,
+                                              size: 18,
                                             ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
+                                            label: Text(
+                                              isFav ? 'Favorited' : 'Favorite',
+                                              style: HomifyTypography.semibold(
+                                                HomifyTypography.label2,
+                                              ),
                                             ),
-                                          ),
-                                          icon: Icon(
-                                            isFav
-                                                ? LucideIcons.heart
-                                                : LucideIcons.heart,
-                                            color: isFav ? Colors.red : null,
-                                            size: 18,
-                                          ),
-                                          label: Text(
-                                            isFav ? 'Favorited' : 'Favorite',
-                                            style: HomifyTypography.semibold(
-                                              HomifyTypography.label2,
-                                            ),
-                                          ),
-                                        );
-                                      },
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                  const Gap(12),
+                                  if (!isGuest) const Gap(12),
                                   Expanded(
                                     child: OutlinedButton.icon(
                                       onPressed: _collapseAndShowDirection,
@@ -803,7 +810,11 @@ class _ExplorePropertyDetailsSheetState
                     const Gap(12),
                     InkWell(
                       onTap: () {
-                        context.push('/profile/${property.ownerUid}');
+                        if (isGuest) {
+                          _showLoginRequiredDialog(context);
+                        } else {
+                          context.push('/profile/${property.ownerUid}');
+                        }
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
@@ -882,7 +893,8 @@ class _ExplorePropertyDetailsSheetState
                       ),
                     ),
                     const Gap(16),
-                    ContactOwnerButton(ownerUid: property.ownerUid),
+                    if (!isGuest)
+                      ContactOwnerButton(ownerUid: property.ownerUid),
 
                     const Gap(20),
                   ]),
@@ -901,6 +913,10 @@ class _ExplorePropertyDetailsSheetState
         .split(' ')
         .map((e) => e[0].toUpperCase() + e.substring(1))
         .join(' ');
+  }
+
+  void _showLoginRequiredDialog(BuildContext context) {
+    LoginRequiredDialog.show(context, closeSheet: false);
   }
 }
 

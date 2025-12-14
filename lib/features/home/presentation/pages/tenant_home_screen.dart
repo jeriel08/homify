@@ -15,6 +15,7 @@ import 'package:delightful_toast/toast/components/toast_card.dart';
 import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 
 class TenantHomeScreen extends ConsumerStatefulWidget {
   const TenantHomeScreen({super.key});
@@ -48,6 +49,8 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(tenantHomeProvider);
+    final userRole = ref.watch(userRoleProvider);
+    final isGuest = userRole == AppUserRole.guest;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -171,6 +174,7 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                                     .displayedRecommendedProperties
                                     .last, // Use last property as template
                                 isFavorite: false,
+                                showFavorite: !isGuest,
                                 onFavorite: () {},
                                 onTap: () {},
                               ),
@@ -188,6 +192,7 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                         return TenantPropertyCard(
                           property: property,
                           isFavorite: isFavorite,
+                          showFavorite: !isGuest,
                           onFavorite: () {
                             ref
                                 .read(favoritesProvider.notifier)
