@@ -40,6 +40,10 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
 
   // Route/Direction state
   Set<Polyline> _routePolylines = {};
+  bool _isLoadingRoute = false; // Loading state for direction
+
+  // Selected marker state for highlighting
+  String? _selectedMarkerId;
 
   // Brand colors
   static const Color primary = Color(0xFFE05725);
@@ -65,15 +69,14 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
 
     final property = _selectedForBottomSheet!;
 
-    // Collapse the bottom sheet
-    setState(() {
-      _showBottomSheet = false;
-    });
+    // Show loading indicator
+    setState(() => _isLoadingRoute = true);
 
     // Get user's current location
     final currentPos = await LocationService.getCurrentPosition();
     if (currentPos == null) {
       if (mounted) {
+        setState(() => _isLoadingRoute = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not get your current location')),
         );
@@ -91,6 +94,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
 
     if (routePoints.isEmpty) {
       if (mounted) {
+        setState(() => _isLoadingRoute = false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Could not find route')));
@@ -109,6 +113,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
     if (mounted) {
       setState(() {
         _routePolylines = {polyline};
+        _isLoadingRoute = false; // Clear loading state
       });
 
       // Zoom to show the route
@@ -153,7 +158,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
 
       // 1. Search in properties
       final exploreState = ref.read(exploreProvider);
-      final propertyMatches = _searchProperties(query, exploreState.markers);
+      final propertyMatches = _searchProperties(query, exploreState.properties);
       results.addAll(propertyMatches);
 
       // 2. Search via Geoapify
@@ -181,21 +186,23 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
     });
   }
 
-  List<_SearchResult> _searchProperties(String query, Set<Marker> markers) {
+  List<_SearchResult> _searchProperties(
+    String query,
+    List<PropertyEntity> properties,
+  ) {
     final lowerQuery = query.toLowerCase();
     final results = <_SearchResult>[];
 
-    for (final marker in markers) {
-      final title = marker.infoWindow.title ?? '';
-      if (title.toLowerCase().contains(lowerQuery)) {
+    for (final property in properties) {
+      if (property.name.toLowerCase().contains(lowerQuery)) {
         results.add(
           _SearchResult(
             type: _SearchResultType.property,
-            title: title,
-            subtitle: marker.infoWindow.snippet ?? '',
-            latitude: marker.position.latitude,
-            longitude: marker.position.longitude,
-            markerId: marker.markerId.value,
+            title: property.name,
+            subtitle: '₱${property.rentAmount.toStringAsFixed(0)} / month',
+            latitude: property.latitude,
+            longitude: property.longitude,
+            markerId: property.id,
           ),
         );
       }
@@ -210,6 +217,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
     setState(() {
       _searchResults = [];
       _searchController.text = result.title;
+      _selectedMarkerId = result.markerId; // Track selected marker
     });
 
     if (result.latitude != null && result.longitude != null) {
@@ -221,25 +229,59 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
       );
     }
 
+    // If it's a property, show the info window
     if (result.type == _SearchResultType.property && result.markerId != null) {
       final exploreState = ref.read(exploreProvider);
-      final marker = exploreState.markers.firstWhere(
-        (m) => m.markerId.value == result.markerId,
-        orElse: () => Marker(markerId: MarkerId('')),
-      );
-      if (marker.markerId.value.isNotEmpty) {
-        marker.onTap?.call();
+
+      // Find the property by ID
+      PropertyEntity? property;
+      try {
+        property = exploreState.properties.firstWhere(
+          (p) => p.id == result.markerId,
+        );
+      } catch (e) {
+        // Property not found
+        return;
       }
+
+      // Show info window for this property
+      _infoWindowController.addInfoWindow!(
+        PropertyInfoCard(
+          property: property,
+          onTap: () {
+            _infoWindowController.hideInfoWindow!();
+            setState(() {
+              _showBottomSheet = true;
+              _selectedForBottomSheet = property;
+            });
+            ref.read(bottomNavVisibilityProvider.notifier).state = false;
+          },
+          onClose: () {
+            _infoWindowController.hideInfoWindow!();
+            setState(() => _selectedMarkerId = null);
+          },
+        ),
+        LatLng(property.latitude, property.longitude),
+      );
     }
   }
 
   // Create markers with custom info window
   Set<Marker> _createMarkersWithInfoWindow(List<PropertyEntity> properties) {
     return properties.map((property) {
+      final isSelected = _selectedMarkerId == property.id;
+
       return Marker(
         markerId: MarkerId(property.id),
         position: LatLng(property.latitude, property.longitude),
+        // Dynamic marker color - selected shows blue, unselected shows red
+        icon: isSelected
+            ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
+            : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         onTap: () {
+          // Set selected marker for highlighting
+          setState(() => _selectedMarkerId = property.id);
+
           // Show custom info window above marker
           _infoWindowController.addInfoWindow!(
             PropertyInfoCard(
@@ -255,6 +297,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
               },
               onClose: () {
                 _infoWindowController.hideInfoWindow!();
+                setState(() => _selectedMarkerId = null);
               },
             ),
             LatLng(property.latitude, property.longitude),
@@ -297,6 +340,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
     final markersWithInfoWindow = _createMarkersWithInfoWindow(properties);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false, // Prevent keyboard from pushing up UI
       body: Stack(
         children: [
           // Google Map
@@ -313,7 +357,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
             mapToolbarEnabled: false,
-            padding: const EdgeInsets.only(bottom: 100, top: 70),
+            padding: const EdgeInsets.only(bottom: 70, top: 80),
             onMapCreated: (controller) {
               _mapController = controller;
               _infoWindowController.googleMapController = controller;
@@ -327,6 +371,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
                 _searchResults = [];
                 _showBottomSheet = false;
                 _selectedForBottomSheet = null;
+                _routePolylines = {}; // Clear route when tapping away
+                _selectedMarkerId = null; // Reset marker selection
               });
               FocusScope.of(context).unfocus();
               ref.read(bottomNavVisibilityProvider.notifier).state = true;
@@ -340,6 +386,18 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
             width: 280,
             offset: 50,
           ),
+
+          // Route Loading Progress Bar
+          if (_isLoadingRoute)
+            Positioned(
+              top: MediaQuery.of(context).padding.top,
+              left: 0,
+              right: 0,
+              child: LinearProgressIndicator(
+                backgroundColor: surface.withValues(alpha: 0.3),
+                valueColor: AlwaysStoppedAnimation<Color>(primary),
+              ),
+            ),
 
           // Search Bar - at top
           Positioned(
@@ -363,24 +421,25 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
               ),
             ),
 
-          // My Location Button
-          Positioned(
-            bottom: _showBottomSheet ? 320 : 110,
-            right: 20,
-            child: FloatingActionButton(
-              heroTag: 'my_location_explore',
-              backgroundColor: Colors.white,
-              child: const Icon(Icons.my_location, color: Colors.black),
-              onPressed: () {
-                if (_mapController != null &&
-                    exploreState.initialPosition != null) {
-                  _mapController!.animateCamera(
-                    CameraUpdate.newLatLng(exploreState.initialPosition!),
-                  );
-                }
-              },
+          // My Location Button - hidden when modal sheet is active
+          if (!_showBottomSheet)
+            Positioned(
+              bottom: 80,
+              right: 20,
+              child: FloatingActionButton(
+                heroTag: 'my_location_explore',
+                backgroundColor: Colors.white,
+                child: const Icon(Icons.my_location, color: Colors.black),
+                onPressed: () {
+                  if (_mapController != null &&
+                      exploreState.initialPosition != null) {
+                    _mapController!.animateCamera(
+                      CameraUpdate.newLatLng(exploreState.initialPosition!),
+                    );
+                  }
+                },
+              ),
             ),
-          ),
 
           // Property Details Sheet - only shows when user taps info card
           if (_showBottomSheet && _selectedForBottomSheet != null)
@@ -460,7 +519,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
-            vertical: 12,
+            vertical: 16,
           ),
         ),
         style: TextStyle(color: textPrimary, fontSize: 14),

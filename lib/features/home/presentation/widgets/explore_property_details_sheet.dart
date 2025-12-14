@@ -31,6 +31,8 @@ class ExplorePropertyDetailsSheet extends ConsumerStatefulWidget {
 class _ExplorePropertyDetailsSheetState
     extends ConsumerState<ExplorePropertyDetailsSheet> {
   final PageController _pageController = PageController();
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
   int _currentPage = 0;
   bool _isExpanded = false;
 
@@ -43,7 +45,24 @@ class _ExplorePropertyDetailsSheetState
   @override
   void dispose() {
     _pageController.dispose();
+    _sheetController.dispose();
     super.dispose();
+  }
+
+  void _collapseAndShowDirection() {
+    // Collapse the sheet to minimum size
+    final screenHeight = MediaQuery.of(context).size.height;
+    const double headerHeight = 160.0;
+    final double minChildSize = (headerHeight / screenHeight).clamp(0.1, 0.5);
+
+    _sheetController.animateTo(
+      minChildSize,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+
+    // Call the direction handler
+    widget.onDirectionTap?.call();
   }
 
   @override
@@ -72,6 +91,7 @@ class _ExplorePropertyDetailsSheetState
         return false;
       },
       child: DraggableScrollableSheet(
+        controller: _sheetController,
         initialChildSize: 0.92,
         minChildSize: minChildSize,
         maxChildSize: (maxHeight / screenHeight).clamp(0.5, 0.98),
@@ -239,7 +259,7 @@ class _ExplorePropertyDetailsSheetState
                                   const Gap(12),
                                   Expanded(
                                     child: OutlinedButton.icon(
-                                      onPressed: widget.onDirectionTap,
+                                      onPressed: _collapseAndShowDirection,
                                       style: OutlinedButton.styleFrom(
                                         foregroundColor: primary,
                                         side: BorderSide(
