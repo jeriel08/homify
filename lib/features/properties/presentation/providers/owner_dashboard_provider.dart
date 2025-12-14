@@ -79,7 +79,7 @@ class OwnerDashboardNotifier extends StateNotifier<OwnerDashboardState> {
         // Calculate Stats
         final totalLikes = properties.fold(
           0,
-          (sum, item) => sum + item.favoritesCount,
+          (total, item) => total + item.favoritesCount,
         );
 
         state = state.copyWith(
@@ -131,7 +131,7 @@ class OwnerDashboardNotifier extends StateNotifier<OwnerDashboardState> {
         // Recalculate total favorites
         final totalLikes = updatedList.fold(
           0,
-          (sum, item) => sum + item.favoritesCount,
+          (total, item) => total + item.favoritesCount,
         );
 
         state = state.copyWith(
@@ -159,7 +159,7 @@ class OwnerDashboardNotifier extends StateNotifier<OwnerDashboardState> {
         // Recalculate total favorites
         final totalLikes = updatedList.fold(
           0,
-          (sum, item) => sum + item.favoritesCount,
+          (total, item) => total + item.favoritesCount,
         );
 
         state = state.copyWith(

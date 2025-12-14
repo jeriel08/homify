@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:homify/core/services/location_service.dart';
 import 'package:homify/core/services/places_service.dart';
 import 'package:homify/core/models/place_models.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -429,11 +430,11 @@ class _LocationStepState extends ConsumerState<_LocationStep> {
                     if (_selectedPosition == null) return;
 
                     final ok = await controller.next();
-                    if (!ok && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please select a location'),
-                        ),
+                    if (!ok && mounted) {
+                      ToastHelper.warning(
+                        context,
+                        'Location Required',
+                        subtitle: 'Please select a location on the map',
                       );
                     }
                   },

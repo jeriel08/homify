@@ -58,7 +58,6 @@ dependencies:
   skeletonizer: ^2.1.0+1
   dartz: ^0.10.1
   gap: ^3.0.1
-  awesome_snackbar_content: ^0.1.8
   animations: ^2.1.1
   geocoding: ^4.0.0
   equatable: ^2.0.7
