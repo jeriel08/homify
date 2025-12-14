@@ -7,6 +7,7 @@ import 'package:homify/features/auth/presentation/controllers/account_controller
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
+import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
 import 'package:lottie/lottie.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -305,15 +306,17 @@ class AccountPage extends ConsumerWidget {
                       _SettingsTile(
                         icon: Icons.approval,
                         title: 'Review Pending Properties',
-                        onTap: () => context.push('/pending-properties'),
+                        onTap: () {
+                          // Set Approvals tab (index 1) and go back to home
+                          ref.read(bottomNavIndexProvider.notifier).state = 1;
+                          context.go('/');
+                        },
                       ),
                       const Divider(height: 1),
                       _SettingsTile(
                         icon: Icons.group_outlined,
                         title: 'Manage Users',
-                        onTap: () {
-                          /* TODO: Navigate to user management */
-                        },
+                        onTap: () => context.push('/admin/all-users'),
                       ),
                     ],
                   ),

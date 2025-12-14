@@ -38,6 +38,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _photoService = ProfilePhotoService();
   final _imagePicker = ImagePicker();
   bool _isUploadingPhoto = false;
+  bool _isEditMode = false;
 
   Future<void> _pickAndUploadPhoto() async {
     try {
@@ -155,6 +156,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onPressed: () => Navigator.of(context).pop(),
               ),
               actions: [
+                // Edit toggle for own profile
+                if (isOwnProfile)
+                  IconButton(
+                    icon: Icon(
+                      _isEditMode ? LucideIcons.check : LucideIcons.pencil,
+                      color: primary,
+                    ),
+                    tooltip: _isEditMode ? 'Done editing' : 'Edit profile',
+                    onPressed: () {
+                      setState(() => _isEditMode = !_isEditMode);
+                    },
+                  ),
+                // Report button for other profiles
                 if (!isOwnProfile)
                   IconButton(
                     icon: const Icon(LucideIcons.flag, color: primary),
@@ -179,7 +193,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   // Header
                   ProfileHeader(
                     profile: profile,
-                    showEditButton: isOwnProfile,
+                    showEditButton: isOwnProfile && _isEditMode,
                     onEditTap: () =>
                         context.push('/profile/edit/name/${widget.userId}'),
                     onPhotoTap: _pickAndUploadPhoto,
@@ -190,7 +204,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   // Personal Information
                   ProfileInfoSection(
                     title: 'Personal Information',
-                    showEditButton: isOwnProfile,
+                    showEditButton: isOwnProfile && _isEditMode,
                     onEditTap: () => context.push(
                       '/profile/edit/personal-information/${widget.userId}',
                     ),
@@ -252,7 +266,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const Gap(24),
                     ProfileInfoSection(
                       title: 'Preferences',
-                      showEditButton: isOwnProfile,
+                      showEditButton: isOwnProfile && _isEditMode,
                       onEditTap: () => context.push(
                         '/profile/edit/preferences/${widget.userId}',
                       ),

@@ -125,6 +125,8 @@ class _InfoRowWidget extends StatelessWidget {
                   color: textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ],
           ),
