@@ -85,6 +85,9 @@ class _AddPropertyPageState extends ConsumerState<AddPropertyPage> {
 
     // 2. Listen for navigation and errors
     ref.listen(addPropertyControllerProvider, (previous, next) {
+      // IMPORTANT: Always check mounted before using context in listeners
+      if (!mounted) return;
+
       if (next.submitError != null && previous?.submitError == null) {
         ToastHelper.error(context, next.submitError!);
         controller.clearSubmitError();

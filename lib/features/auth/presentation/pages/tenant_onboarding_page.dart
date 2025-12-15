@@ -35,7 +35,8 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
       if (success) {
         // Force navigation to success page
         context.go('/tenant-success');
-      } else if (state.error != null) {
+        return; // Prevent any further code execution after navigation
+      } else if (mounted && state.error != null) {
         ToastHelper.error(context, 'Error: ${state.error}');
       }
     }

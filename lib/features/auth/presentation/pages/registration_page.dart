@@ -49,6 +49,9 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
       previous,
       next,
     ) {
+      // IMPORTANT: Always check mounted before using context in listeners
+      if (!mounted) return;
+
       if (next.submitError != null && previous?.submitError == null) {
         ToastHelper.error(context, next.submitError!);
         controller.clearSubmitError();
