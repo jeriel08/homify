@@ -112,4 +112,22 @@ class MessageRepositoryImpl implements MessageRepository {
       return const Left(ServerFailure('Failed to toggle reaction'));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> setConversationTheme({
+    required String conversationId,
+    required String userId,
+    required String themeName,
+  }) async {
+    try {
+      await remoteDataSource.setConversationTheme(
+        conversationId: conversationId,
+        userId: userId,
+        themeName: themeName,
+      );
+      return const Right(null);
+    } catch (e) {
+      return const Left(ServerFailure('Failed to set theme'));
+    }
+  }
 }

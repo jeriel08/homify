@@ -7,6 +7,8 @@ import 'package:homify/features/auth/presentation/providers/auth_providers.dart'
 import 'package:homify/features/messages/presentation/providers/message_provider.dart';
 import 'package:homify/features/messages/presentation/providers/theme_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/chat_bubble.dart';
+import 'package:homify/features/messages/presentation/widgets/theme_picker_dialog.dart';
+import 'package:homify/features/profile/presentation/pages/profile_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,8 +36,15 @@ class ChatScreen extends ConsumerWidget {
     // 2. Get current user ID to know which bubbles are "mine"
     final currentUser = ref.watch(currentUserProvider).value;
 
-    // 3. Watch theme color
-    final theme = ref.watch(messageThemeProvider);
+    // 3. Watch per-conversation theme from Firestore
+    final conversationAsync = ref.watch(conversationProvider(conversationId));
+    final conversationData = conversationAsync.value;
+    final themePrefs = conversationData?.themePreferences ?? {};
+    final currentThemeName = themePrefs[currentUser?.uid];
+    final theme = MessageThemeColor.values.firstWhere(
+      (t) => t.name == currentThemeName,
+      orElse: () => MessageThemeColor.defaultColor,
+    );
 
     return Scaffold(
       backgroundColor: theme.backgroundColor,
@@ -47,25 +56,35 @@ class ChatScreen extends ConsumerWidget {
           icon: const Icon(LucideIcons.arrowLeft, color: textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          children: [
-            const CircleAvatar(
-              radius: 18,
-              backgroundColor: surface,
-              child: Icon(LucideIcons.user, color: primary, size: 20),
-            ),
-            const Gap(12),
-            Expanded(
-              child: Text(
-                otherUser.fullName, // Dynamic Name
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: textPrimary,
-                ),
-                overflow: TextOverflow.ellipsis,
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProfileScreen(userId: otherUser.uid),
               ),
-            ),
-          ],
+            );
+          },
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 18,
+                backgroundColor: surface,
+                child: Icon(LucideIcons.user, color: primary, size: 20),
+              ),
+              const Gap(12),
+              Expanded(
+                child: Text(
+                  otherUser.fullName, // Dynamic Name
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -75,62 +94,13 @@ class ChatScreen extends ConsumerWidget {
           IconButton(
             icon: Icon(LucideIcons.palette, color: theme.color),
             onPressed: () {
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Message Theme'),
-                  contentPadding: const EdgeInsets.all(12),
-                  content: Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: MessageThemeColor.values
-                        .map(
-                          (themeOption) => GestureDetector(
-                            onTap: () {
-                              ref
-                                  .read(messageThemeProvider.notifier)
-                                  .setTheme(themeOption);
-                              Navigator.pop(ctx);
-                            },
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    color: themeOption.color,
-                                    shape: BoxShape.circle,
-                                    border: theme == themeOption
-                                        ? Border.all(
-                                            color: Colors.black,
-                                            width: 3,
-                                          )
-                                        : null,
-                                  ),
-                                  child: theme == themeOption
-                                      ? const Center(
-                                          child: Icon(
-                                            Icons.check,
-                                            color: Colors.white,
-                                            size: 28,
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  themeOption.name,
-                                  style: const TextStyle(fontSize: 12),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
+              if (currentUser == null) return;
+              ThemePickerDialog.show(
+                context,
+                ref: ref,
+                conversationId: conversationId,
+                userId: currentUser.uid,
+                currentTheme: theme,
               );
             },
           ),
@@ -165,10 +135,8 @@ class ChatScreen extends ConsumerWidget {
                       myReactionValue = msg.reactions?[currentUser.uid];
                     }
 
-                    // Watch theme color for user's bubble only
-                    final themeColor = isMe
-                        ? ref.watch(messageThemeProvider).color
-                        : null;
+                    // Use theme color for user's bubble only
+                    final themeColor = isMe ? theme.color : null;
 
                     return ChatBubble(
                       text: msg.content,
@@ -318,7 +286,17 @@ class _ChatInputState extends ConsumerState<_ChatInput> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ref.watch(messageThemeProvider);
+    // Watch per-conversation theme
+    final currentUser = ref.watch(currentUserProvider).value;
+    final conversationAsync = ref.watch(
+      conversationProvider(widget.conversationId),
+    );
+    final themePrefs = conversationAsync.value?.themePreferences ?? {};
+    final themeName = themePrefs[currentUser?.uid];
+    final theme = MessageThemeColor.values.firstWhere(
+      (t) => t.name == themeName,
+      orElse: () => MessageThemeColor.defaultColor,
+    );
 
     return Container(
       padding: EdgeInsets.only(
@@ -341,36 +319,84 @@ class _ChatInputState extends ConsumerState<_ChatInput> {
         children: [
           IconButton(
             icon: const Icon(LucideIcons.plus, color: ChatScreen.textPrimary),
-            onPressed: () async {
-              showDialog(
+            onPressed: () {
+              showModalBottomSheet(
                 context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Attach'),
-                  contentPadding: const EdgeInsets.all(12),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.image),
-                        title: const Text('Image'),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          widget.onPickImage();
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.home),
-                        title: const Text('Send Property'),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          // TODO: Show property picker
-                          ToastHelper.info(
-                            context,
-                            'Property picker coming soon',
-                          );
-                        },
-                      ),
-                    ],
+                backgroundColor: Colors.transparent,
+                builder: (ctx) => Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Drag handle
+                        Container(
+                          margin: const EdgeInsets.only(top: 12, bottom: 8),
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        // Title
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                LucideIcons.paperclip,
+                                color: ChatScreen.primary,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Attach',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: ChatScreen.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        // Options
+                        _AttachmentOption(
+                          icon: LucideIcons.image,
+                          iconColor: Colors.blue,
+                          label: 'Photo',
+                          subtitle: 'Send an image from gallery',
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            widget.onPickImage();
+                          },
+                        ),
+                        _AttachmentOption(
+                          icon: LucideIcons.house,
+                          iconColor: ChatScreen.primary,
+                          label: 'Property',
+                          subtitle: 'Share a property listing',
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            ToastHelper.info(
+                              context,
+                              'Property picker coming soon',
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -403,6 +429,56 @@ class _ChatInputState extends ConsumerState<_ChatInput> {
             onPressed: _handleSend,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A styled attachment option for the modal sheet
+class _AttachmentOption extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _AttachmentOption({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: iconColor, size: 22),
+      ),
+      title: Text(
+        label,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+          color: Color(0xFF32190D),
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+      ),
+      trailing: Icon(
+        LucideIcons.chevronRight,
+        color: Colors.grey.shade400,
+        size: 20,
       ),
     );
   }

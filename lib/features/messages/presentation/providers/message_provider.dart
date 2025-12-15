@@ -81,3 +81,26 @@ final conversationsProvider = StreamProvider<List<ConversationDetails>>((ref) {
     return results.whereType<ConversationDetails>().toList();
   });
 });
+
+/// 3. Single Conversation Stream (for theme and other details)
+/// Usage: ref.watch(conversationProvider('conversation_id'))
+final conversationProvider = StreamProvider.family((
+  ref,
+  String conversationId,
+) {
+  final firestore = FirebaseFirestore.instance;
+  return firestore
+      .collection('conversations')
+      .doc(conversationId)
+      .snapshots()
+      .map((doc) {
+        if (!doc.exists) return null;
+        final data = doc.data() as Map<String, dynamic>;
+        return (
+          id: doc.id,
+          themePreferences: Map<String, String>.from(
+            data['theme_preferences'] ?? {},
+          ),
+        );
+      });
+});

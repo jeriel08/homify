@@ -44,4 +44,11 @@ abstract class MessageRepository {
     required String userId,
     required String emoji,
   });
+
+  /// Set the theme preference for a user in a conversation
+  Future<Either<Failure, void>> setConversationTheme({
+    required String conversationId,
+    required String userId,
+    required String themeName,
+  });
 }

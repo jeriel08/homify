@@ -25,6 +25,12 @@ abstract class MessageRemoteDataSource {
     required String userId,
     required String emoji,
   });
+
+  Future<void> setConversationTheme({
+    required String conversationId,
+    required String userId,
+    required String themeName,
+  });
 }
 
 class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
@@ -32,7 +38,11 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   final CloudinaryPublic _cloudinary;
 
   MessageRemoteDataSourceImpl(this._firestore)
-      : _cloudinary = CloudinaryPublic('dcjhugzvs', 'homify_unsigned', cache: false);
+    : _cloudinary = CloudinaryPublic(
+        'dcjhugzvs',
+        'homify_unsigned',
+        cache: false,
+      );
 
   @override
   Stream<List<ConversationModel>> getConversationsStream(String userId) {
@@ -203,6 +213,17 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
       }
 
       txn.update(msgRef, {'reactions': reactions});
+    });
+  }
+
+  @override
+  Future<void> setConversationTheme({
+    required String conversationId,
+    required String userId,
+    required String themeName,
+  }) async {
+    await _firestore.collection('conversations').doc(conversationId).update({
+      'theme_preferences.$userId': themeName,
     });
   }
 }
