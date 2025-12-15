@@ -30,7 +30,10 @@ class NavigationModel {
 // 1. The Provider for the currently selected tab index
 // -----------------------------------------------------------------
 final bottomNavIndexProvider = StateProvider<int?>((ref) {
-  return 0; // Default to the first tab
+  // Watch the user role - this ensures the index resets when role changes
+  // (e.g., on logout from a role with 4 tabs to guest with 3 tabs)
+  ref.watch(userRoleProvider);
+  return 0; // Default to the first tab (and reset on role change)
 });
 
 // -----------------------------------------------------------------

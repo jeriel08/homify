@@ -85,28 +85,33 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
                           ],
                         ),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
+                          horizontal: 16,
+                          vertical: 14,
                         ),
                         child: Row(
                           children: [
                             const Icon(
                               LucideIcons.search,
                               color: AppColors.accent,
+                              size: 20,
                             ),
                             const Gap(12),
-                            Text(
-                              'Search for a property...',
-                              style: TextStyle(
-                                color: Colors.grey[400],
-                                fontSize: 16,
+                            Expanded(
+                              child: Text(
+                                'Search for a property...',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  fontSize: 15,
+                                ),
                               ),
                             ),
                           ],
