@@ -318,11 +318,66 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
       return Center(child: Text('Error: ${exploreState.errorMessage}'));
     }
 
-    // Listen for error messages
+    // Listen for error messages and navigation events
     ref.listen(exploreProvider, (previous, next) {
+      // Error handling
       if (previous?.errorMessage != next.errorMessage &&
           next.errorMessage != null) {
         ToastHelper.error(context, next.errorMessage!);
+      }
+
+      // Navigation handling - Target Property
+      if (previous?.targetProperty != next.targetProperty &&
+          next.targetProperty != null) {
+        final target = next.targetProperty!;
+
+        // 1. Move camera to property
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(
+            LatLng(target.latitude, target.longitude),
+            15,
+          ),
+        );
+
+        // 2. Select marker and show info window
+        setState(() => _selectedMarkerId = target.id);
+
+        if (_infoWindowController.addInfoWindow != null) {
+          _infoWindowController.addInfoWindow!(
+            PropertyInfoCard(
+              property: target,
+              onTap: () {
+                _infoWindowController.hideInfoWindow!();
+                setState(() {
+                  _showBottomSheet = true;
+                  _selectedForBottomSheet = target;
+                });
+                ref.read(bottomNavVisibilityProvider.notifier).state = false;
+              },
+              onClose: () {
+                _infoWindowController.hideInfoWindow!();
+                setState(() => _selectedMarkerId = null);
+              },
+            ),
+            LatLng(target.latitude, target.longitude),
+          );
+        }
+      }
+
+      // Navigation handling - Route Polylines
+      if (next.targetProperty != null &&
+          next.polylines.isNotEmpty &&
+          next.polylines != previous?.polylines) {
+        // Zoom to fit the route
+        if (next.polylines.isNotEmpty) {
+          final points = next.polylines.first.points;
+          _mapController?.animateCamera(
+            CameraUpdate.newLatLngBounds(
+              _boundsFromLatLngList(points),
+              50, // padding
+            ),
+          );
+        }
       }
     });
 
@@ -352,6 +407,33 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
             onMapCreated: (controller) {
               _mapController = controller;
               _infoWindowController.googleMapController = controller;
+
+              // Handle pending navigation on map create
+              final state = ref.read(exploreProvider);
+              if (state.targetProperty != null) {
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  if (mounted) {
+                    if (state.polylines.isNotEmpty) {
+                      controller.animateCamera(
+                        CameraUpdate.newLatLngBounds(
+                          _boundsFromLatLngList(state.polylines.first.points),
+                          50,
+                        ),
+                      );
+                    } else {
+                      controller.animateCamera(
+                        CameraUpdate.newLatLngZoom(
+                          LatLng(
+                            state.targetProperty!.latitude,
+                            state.targetProperty!.longitude,
+                          ),
+                          15,
+                        ),
+                      );
+                    }
+                  }
+                });
+              }
             },
             onCameraMove: (position) {
               _infoWindowController.onCameraMove!();

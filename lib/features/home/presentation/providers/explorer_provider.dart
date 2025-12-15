@@ -17,6 +17,8 @@ class ExploreState {
   final LatLng? initialPosition;
   final String? errorMessage;
   final PropertyEntity? selectedProperty;
+  final PropertyEntity?
+  targetProperty; // Property to navigate to from other screens
 
   ExploreState({
     this.isLoading = true,
@@ -26,6 +28,7 @@ class ExploreState {
     this.initialPosition,
     this.errorMessage,
     this.selectedProperty,
+    this.targetProperty,
   });
 
   ExploreState copyWith({
@@ -37,6 +40,8 @@ class ExploreState {
     String? errorMessage,
     PropertyEntity? selectedProperty,
     bool resetSelectedProperty = false,
+    PropertyEntity? targetProperty,
+    bool resetTargetProperty = false,
   }) {
     return ExploreState(
       isLoading: isLoading ?? this.isLoading,
@@ -48,6 +53,9 @@ class ExploreState {
       selectedProperty: resetSelectedProperty
           ? null
           : (selectedProperty ?? this.selectedProperty),
+      targetProperty: resetTargetProperty
+          ? null
+          : (targetProperty ?? this.targetProperty),
     );
   }
 }
@@ -123,12 +131,19 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
   }
 
   void clearSelectedProperty() {
-    if (state.selectedProperty != null) {
-      state = state.copyWith(
-        resetSelectedProperty: true,
-        polylines: {}, // Clear polylines when closing sheet
-      );
-    }
+    state = state.copyWith(
+      resetSelectedProperty: true,
+      resetTargetProperty: true,
+      polylines: {}, // Clear polylines when closing details
+    );
+  }
+
+  // Called when user wants to navigate to a property from another screen
+  Future<void> triggerNavigation(PropertyEntity property) async {
+    // 1. Set the target property
+    state = state.copyWith(targetProperty: property);
+    // 2. Calculate route
+    await showDirection(property);
   }
 
   Future<void> showDirection(PropertyEntity property) async {

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
+import 'package:homify/features/home/presentation/providers/explorer_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
@@ -778,6 +779,11 @@ class _TenantPropertyDetailsSheetState
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
+                          // Trigger navigation in explorer
+                          ref
+                              .read(exploreProvider.notifier)
+                              .triggerNavigation(widget.property);
+
                           Navigator.pop(context); // Close sheet
                           // Switch to Explore tab (Index 1)
                           ref.read(bottomNavIndexProvider.notifier).state = 1;
