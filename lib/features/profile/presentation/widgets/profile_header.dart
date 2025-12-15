@@ -68,16 +68,22 @@ class ProfileHeader extends StatelessWidget {
                             color: primary.withValues(alpha: 0.5),
                           ),
                         ),
-                        errorWidget: (context, url, error) => Icon(
-                          Icons.person,
-                          size: 50,
-                          color: primary.withValues(alpha: 0.7),
+                        errorWidget: (context, url, error) => Image.asset(
+                          profile.gender == 'female'
+                              ? 'assets/images/placeholder_female.png'
+                              : 'assets/images/placeholder_male.png',
+                          fit: BoxFit.cover,
+                          width: 100,
+                          height: 100,
                         ),
                       )
-                    : Icon(
-                        Icons.person,
-                        size: 50,
-                        color: primary.withValues(alpha: 0.7),
+                    : Image.asset(
+                        profile.gender == 'female'
+                            ? 'assets/images/placeholder_female.png'
+                            : 'assets/images/placeholder_male.png',
+                        fit: BoxFit.cover,
+                        width: 100,
+                        height: 100,
                       ),
               ),
             ),

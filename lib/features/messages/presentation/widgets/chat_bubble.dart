@@ -62,6 +62,42 @@ class ChatBubble extends StatelessWidget {
         return 0;
       });
 
+    // Property messages are rendered independently (outside bubble styling)
+    if (messageType == 'property' && propertyData != null) {
+      return Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
+          ),
+          child: Column(
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _PropertyMessageWidget(
+                propertyData: propertyData!,
+                onTap: onPropertyTap,
+              ),
+              const Gap(4),
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Text(
+                  time,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: textSecondary.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Standard bubble for text/image messages
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
@@ -99,28 +135,20 @@ class ChatBubble extends StatelessWidget {
                 : CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Property Message Card
-              if (messageType == 'property' && propertyData != null)
-                _PropertyMessageWidget(
-                  propertyData: propertyData!,
-                  onTap: onPropertyTap,
-                )
-              else ...[
-                if (imageUrl != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(imageUrl!, fit: BoxFit.cover),
+              if (imageUrl != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(imageUrl!, fit: BoxFit.cover),
+                ),
+              if (imageUrl != null && text.isNotEmpty) const Gap(8),
+              if (text.isNotEmpty)
+                Text(
+                  text,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w500,
                   ),
-                if (imageUrl != null && text.isNotEmpty) const Gap(8),
-                if (text.isNotEmpty)
-                  Text(
-                    text,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: textColor,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-              ],
+                ),
               const Gap(6),
               Text(
                 time,
@@ -205,82 +233,112 @@ class _PropertyMessageWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = propertyData['name'] ?? 'Property';
     final rentAmount = propertyData['rent_amount'] ?? 0;
-    final imageUrls = propertyData['image_urls'] ?? [];
-    final imageUrl = imageUrls.isNotEmpty ? imageUrls.first : null;
+    // Support both 'image_urls' (from Firestore) and 'image_url' (from sending)
+    final imageUrls =
+        propertyData['image_urls'] ?? propertyData['image_url'] ?? [];
+    final imageUrl = (imageUrls is List && imageUrls.isNotEmpty)
+        ? imageUrls.first
+        : null;
 
     const Color brand = Color(0xFFE05725);
+    const Color surface = Color(0xFFF9E5C5);
     const Color textPrimary = Color(0xFF32190D);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 160,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.white,
-        ),
+    // Responsive width: 75% of screen, min 280, max 340
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = (screenWidth * 0.75).clamp(280.0, 340.0);
+
+    return Container(
+      width: cardWidth,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             // Image
             if (imageUrl != null)
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-                child: Image.network(
-                  imageUrl,
-                  height: 100,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 100,
-                    color: const Color(0xFFF9E5C5),
-                    child: const Center(
-                      child: Icon(Icons.home, color: brand, size: 28),
-                    ),
+              Image.network(
+                imageUrl,
+                height: 140,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 140,
+                  color: surface,
+                  child: const Center(
+                    child: Icon(Icons.home, color: brand, size: 40),
                   ),
                 ),
               )
             else
               Container(
-                height: 100,
+                height: 140,
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF9E5C5),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
+                color: surface,
                 child: const Center(
-                  child: Icon(Icons.home, color: brand, size: 28),
+                  child: Icon(Icons.home, color: brand, size: 40),
                 ),
               ),
+            // Content
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: textPrimary,
+                      height: 1.3,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     '₱ ${(rentAmount as num).toStringAsFixed(0)}',
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: FontWeight.w900,
                       color: brand,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Show Details Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: onTap,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: brand,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Show Details',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],

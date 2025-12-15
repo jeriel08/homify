@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/core/utils/toast_helper.dart';
@@ -8,7 +9,10 @@ import 'package:homify/features/messages/presentation/providers/message_provider
 import 'package:homify/features/messages/presentation/providers/theme_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/chat_bubble.dart';
 import 'package:homify/features/messages/presentation/widgets/theme_picker_dialog.dart';
+import 'package:homify/features/messages/presentation/widgets/property_picker_sheet.dart';
 import 'package:homify/features/profile/presentation/pages/profile_screen.dart';
+import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_details_sheet.dart';
+import 'package:homify/features/properties/properties_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
@@ -67,10 +71,51 @@ class ChatScreen extends ConsumerWidget {
           },
           child: Row(
             children: [
-              const CircleAvatar(
-                radius: 18,
-                backgroundColor: surface,
-                child: Icon(LucideIcons.user, color: primary, size: 20),
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: primary.withValues(alpha: 0.3),
+                    width: 2,
+                  ),
+                ),
+                child: ClipOval(
+                  child:
+                      otherUser.photoUrl != null &&
+                          otherUser.photoUrl!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: otherUser.photoUrl!,
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: 36,
+                            height: 36,
+                            color: surface,
+                            child: const Icon(
+                              LucideIcons.user,
+                              color: primary,
+                              size: 20,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Image.asset(
+                            otherUser.gender == 'female'
+                                ? 'assets/images/placeholder_female.png'
+                                : 'assets/images/placeholder_male.png',
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Image.asset(
+                          otherUser.gender == 'female'
+                              ? 'assets/images/placeholder_female.png'
+                              : 'assets/images/placeholder_male.png',
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                        ),
+                ),
               ),
               const Gap(12),
               Expanded(
@@ -148,11 +193,35 @@ class ChatScreen extends ConsumerWidget {
                       bubbleColor: themeColor,
                       messageType: msg.messageType,
                       propertyData: msg.propertyData,
-                      onPropertyTap: () {
-                        // TODO: Navigate to property details
-                        ToastHelper.info(
-                          context,
-                          'Property details coming soon',
+                      onPropertyTap: () async {
+                        final propertyId = msg.propertyData?['id'] as String?;
+                        if (propertyId == null) {
+                          ToastHelper.warning(
+                            context,
+                            'Property data not available',
+                          );
+                          return;
+                        }
+
+                        // Fetch the full property
+                        final result = await ref
+                            .read(propertyRepositoryProvider)
+                            .getPropertyById(propertyId);
+                        result.fold(
+                          (failure) => ToastHelper.error(
+                            context,
+                            'Could not load property',
+                          ),
+                          (property) {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) => TenantPropertyDetailsSheet(
+                                property: property,
+                              ),
+                            );
+                          },
                         );
                       },
                       onLongPress: () async {
@@ -388,9 +457,28 @@ class _ChatInputState extends ConsumerState<_ChatInput> {
                           subtitle: 'Share a property listing',
                           onTap: () {
                             Navigator.pop(ctx);
-                            ToastHelper.info(
+                            final currentUser = ref
+                                .read(currentUserProvider)
+                                .value;
+                            if (currentUser == null) return;
+
+                            PropertyPickerSheet.show(
                               context,
-                              'Property picker coming soon',
+                              onPropertySelected: (property) async {
+                                // Send property message
+                                await ref
+                                    .read(messageRemoteDataSourceProvider)
+                                    .sendPropertyMessage(
+                                      conversationId: widget.conversationId,
+                                      senderId: currentUser.uid,
+                                      propertyData: {
+                                        'id': property.id,
+                                        'name': property.name,
+                                        'rent_amount': property.rentAmount,
+                                        'image_url': property.imageUrls,
+                                      },
+                                    );
+                              },
                             );
                           },
                         ),
