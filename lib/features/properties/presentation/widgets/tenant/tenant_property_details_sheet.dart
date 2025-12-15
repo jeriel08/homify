@@ -52,6 +52,7 @@ class _TenantPropertyDetailsSheetState
     final ownerAsync = ref.watch(userProfileProvider(property.ownerUid));
     final userRole = ref.watch(userRoleProvider);
     final isGuest = userRole == AppUserRole.guest;
+    final isAdmin = userRole == AppUserRole.admin;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -725,80 +726,81 @@ class _TenantPropertyDetailsSheetState
             ),
 
             // Bottom Action Bar
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // Favorite Button (hidden for guests)
-                  if (!isGuest)
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final favoritesState = ref.watch(favoritesProvider);
-                        final isFavorite = favoritesState.contains(
-                          widget.property.id,
-                        );
+            if (!isAdmin)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Favorite Button (hidden for guests) - Admin check handled by parent container
+                    if (!isGuest)
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final favoritesState = ref.watch(favoritesProvider);
+                          final isFavorite = favoritesState.contains(
+                            widget.property.id,
+                          );
 
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: isFavorite
-                                ? Colors.red.withValues(alpha: 0.1)
-                                : surface.withValues(alpha: 0.3),
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: isFavorite
+                                  ? Colors.red.withValues(alpha: 0.1)
+                                  : surface.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                ref
+                                    .read(favoritesProvider.notifier)
+                                    .toggle(widget.property);
+                              },
+                              icon: Icon(
+                                LucideIcons.heart,
+                                fill: isFavorite ? 1.0 : 0.0,
+                              ),
+                              color: isFavorite ? Colors.red : textPrimary,
+                              padding: const EdgeInsets.all(16),
+                            ),
+                          );
+                        },
+                      ),
+                    if (!isGuest) const Gap(12),
+                    // Show Direction Button
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context); // Close sheet
+                          // Switch to Explore tab (Index 1)
+                          ref.read(bottomNavIndexProvider.notifier).state = 1;
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: IconButton(
-                            onPressed: () {
-                              ref
-                                  .read(favoritesProvider.notifier)
-                                  .toggle(widget.property);
-                            },
-                            icon: Icon(
-                              LucideIcons.heart,
-                              fill: isFavorite ? 1.0 : 0.0,
-                            ),
-                            color: isFavorite ? Colors.red : textPrimary,
-                            padding: const EdgeInsets.all(16),
+                          elevation: 0,
+                          textStyle: HomifyTypography.semibold(
+                            HomifyTypography.label1,
                           ),
-                        );
-                      },
-                    ),
-                  if (!isGuest) const Gap(12),
-                  // Show Direction Button
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context); // Close sheet
-                        // Switch to Explore tab (Index 1)
-                        ref.read(bottomNavIndexProvider.notifier).state = 1;
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
                         ),
-                        elevation: 0,
-                        textStyle: HomifyTypography.semibold(
-                          HomifyTypography.label1,
-                        ),
+                        icon: const Icon(LucideIcons.map),
+                        label: const Text('Show Direction'),
                       ),
-                      icon: const Icon(LucideIcons.map),
-                      label: const Text('Show Direction'),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),

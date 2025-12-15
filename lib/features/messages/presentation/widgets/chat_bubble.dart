@@ -216,10 +216,7 @@ class ChatBubble extends StatelessWidget {
 
   // Helper method to determine if a color is light or dark
   bool _isLightColor(Color color) {
-    // Calculate luminance
-    final luminance =
-        (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
-    return luminance > 0.5;
+    return color.computeLuminance() > 0.75;
   }
 }
 
