@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
 
+import 'package:homify/features/auth/presentation/controllers/account_controller.dart';
 import 'package:homify/features/home/presentation/providers/bottom_nav_provider.dart';
 import 'package:homify/features/home/presentation/widgets/app_bottom_nav_bar.dart';
 import 'package:homify/core/widgets/login_required_dialog.dart';
@@ -17,6 +18,8 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   int _previousIndex = 0;
+  // PERSISTENT GUARD: Tracks if logout has started. Once true, stays true until disposal.
+  bool _isLoggingOut = false;
 
   @override
   void initState() {
@@ -44,181 +47,218 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
     });
 
-    return Scaffold(
-      extendBody: true,
-      // --- AppBar unchanged ---
-      appBar: AppBar(
-        title: Text(
-          'Homify',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF32190D),
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFFF9E5C5),
-        foregroundColor: const Color(0xFF32190D),
-        elevation: 6,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.black.withValues(alpha: 0.2),
-        actions: [
-          // Replace the entire IconButton with this Widget
-          Consumer(
-            builder: (context, ref, child) {
-              final userAsync = ref.watch(authStateProvider);
+    // --- CRASH FIX: Persistent Guard Listener ---
+    // If logout starts, latch _isLoggingOut to true immediately.
+    ref.listen(logoutControllerProvider, (previous, next) {
+      if (next.isLoading && !_isLoggingOut) {
+        setState(() {
+          _isLoggingOut = true;
+        });
+      }
+    });
 
-              return userAsync.when(
-                data: (user) {
-                  // Determine avatar image (same logic as AccountPage)
-                  ImageProvider? backgroundImage;
-                  if (user?.photoUrl != null && user!.photoUrl!.isNotEmpty) {
-                    backgroundImage = NetworkImage(user.photoUrl!);
-                  } else if (user?.gender == 'male') {
-                    backgroundImage = const AssetImage(
-                      'assets/images/placeholder_male.png',
-                    );
-                  } else if (user?.gender == 'female') {
-                    backgroundImage = const AssetImage(
-                      'assets/images/placeholder_female.png',
-                    );
-                  }
+    final logoutState = ref.watch(logoutControllerProvider);
+    final authState = ref.watch(authStateProvider);
+    final isUserNull = authState.value == null;
 
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Material(
-                      color: const Color(0xFFF9E5C5),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(
-                          28,
-                        ), // for ripple effect
-                        onTap: () {
-                          if (user == null || user.email.isEmpty) {
-                            // Guest flow - show login dialog
-                            LoginRequiredDialog.show(
-                              context,
-                              closeSheet: false,
-                            );
-                          } else {
-                            context.push('/account');
-                          }
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(0xFF32190D),
-                              width: 2.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
+    debugPrint(
+      'HomePage: Build. logoutLoading=${logoutState.isLoading}, isUserNull=$isUserNull, _isLoggingOut=$_isLoggingOut',
+    );
+
+    // --- CRASH FIX: KILL SWITCH ---
+    // If we are actively logging out (either via local guard or provider),
+    // we MUST NOT build the AnimatedSwitcher or BottomNavBar.
+    // They try to animate transitions (Ticker creation) when the user state becomes null,
+    // which happens right before the Router unmounts us, causing the Ticker disposal crash.
+    if (_isLoggingOut || logoutState.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return Stack(
+      children: [
+        Scaffold(
+          extendBody: true,
+          // --- AppBar unchanged ---
+          appBar: AppBar(
+            title: Text(
+              'Homify',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF32190D),
+              ),
+            ),
+            centerTitle: true,
+            backgroundColor: const Color(0xFFF9E5C5),
+            foregroundColor: const Color(0xFF32190D),
+            elevation: 6,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.black.withValues(alpha: 0.2),
+            actions: [
+              // Replace the entire IconButton with this Widget
+              Consumer(
+                builder: (context, ref, child) {
+                  final userAsync = ref.watch(authStateProvider);
+
+                  return userAsync.when(
+                    data: (user) {
+                      // Determine avatar image (same logic as AccountPage)
+                      ImageProvider? backgroundImage;
+                      if (user?.photoUrl != null &&
+                          user!.photoUrl!.isNotEmpty) {
+                        backgroundImage = NetworkImage(user.photoUrl!);
+                      } else if (user?.gender == 'male') {
+                        backgroundImage = const AssetImage(
+                          'assets/images/placeholder_male.png',
+                        );
+                      } else if (user?.gender == 'female') {
+                        backgroundImage = const AssetImage(
+                          'assets/images/placeholder_female.png',
+                        );
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Material(
+                          color: const Color(0xFFF9E5C5),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(
+                              28,
+                            ), // for ripple effect
+                            onTap: () {
+                              if (user == null || user.email.isEmpty) {
+                                // Guest flow - show login dialog
+                                LoginRequiredDialog.show(
+                                  context,
+                                  closeSheet: false,
+                                );
+                              } else {
+                                context.push('/account');
+                              }
+                            },
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFF32190D),
+                                  width: 2.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.15),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                                image: backgroundImage != null
+                                    ? DecorationImage(
+                                        image: backgroundImage,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
                               ),
-                            ],
-                            image: backgroundImage != null
-                                ? DecorationImage(
-                                    image: backgroundImage,
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
+                              child: backgroundImage == null
+                                  ? const Icon(
+                                      Icons.person,
+                                      color: Color(0xFF32190D),
+                                      size: 24,
+                                    )
+                                  : null,
+                            ),
                           ),
-                          child: backgroundImage == null
-                              ? const Icon(
-                                  Icons.person,
-                                  color: Color(0xFF32190D),
-                                  size: 24,
-                                )
-                              : null,
                         ),
+                      );
+                    },
+                    loading: () => const Padding(
+                      padding: EdgeInsets.only(right: 8.0),
+                      child: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Color(0xFFF9E5C5),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                    error: (_, _) => const Padding(
+                      padding: EdgeInsets.only(right: 8.0),
+                      child: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Color(0xFFE05725),
+                        child: Icon(Icons.error, color: Colors.white),
                       ),
                     ),
                   );
                 },
-                loading: () => const Padding(
-                  padding: EdgeInsets.only(right: 8.0),
-                  child: CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Color(0xFFF9E5C5),
-                    child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+
+          // --- UPDATED BODY with AnimatedSwitcher for direct transitions ---
+          body: isIndexSafe
+              ? AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 350),
+                  switchInCurve: Curves.easeInOutCubic,
+                  switchOutCurve: Curves.easeInOutCubic,
+                  transitionBuilder: (child, animation) {
+                    // Determine slide direction based on index comparison
+                    final bool slideFromRight = selectedIndex > _previousIndex;
+
+                    // Slide animation
+                    final offsetAnimation =
+                        Tween<Offset>(
+                          begin: slideFromRight
+                              ? const Offset(1.0, 0.0) // Coming from right
+                              : const Offset(-1.0, 0.0), // Coming from left
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeInOutCubic,
+                          ),
+                        );
+
+                    return SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    );
+                  },
+                  layoutBuilder: (currentChild, previousChildren) {
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        ...previousChildren,
+                        if (currentChild != null) currentChild,
+                      ],
+                    );
+                  },
+                  child: Container(
+                    key: ValueKey<int>(selectedIndex),
+                    child: screens[selectedIndex],
                   ),
-                ),
-                error: (_, _) => const Padding(
-                  padding: EdgeInsets.only(right: 8.0),
-                  child: CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Color(0xFFE05725),
-                    child: Icon(Icons.error, color: Colors.white),
+                )
+              : const Center(child: CircularProgressIndicator()),
+
+          // --- Bottom Navigation Bar (slides down when details are open on Explore) ---
+          bottomNavigationBar: Consumer(
+            builder: (context, ref, child) {
+              final isVisible = ref.watch(bottomNavVisibilityProvider);
+
+              return AnimatedSlide(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                offset: isVisible ? Offset.zero : const Offset(0, 1.0),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 180),
+                  opacity: isVisible ? 1.0 : 0.0,
+                  child: AppBottomNavBar(
+                    key: ValueKey('BottomNav-${navModel.tabs.length}'),
                   ),
                 ),
               );
             },
           ),
-          const SizedBox(width: 8),
-        ],
-      ),
-
-      // --- UPDATED BODY with AnimatedSwitcher for direct transitions ---
-      body: isIndexSafe
-          ? AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
-              switchInCurve: Curves.easeInOutCubic,
-              switchOutCurve: Curves.easeInOutCubic,
-              transitionBuilder: (child, animation) {
-                // Determine slide direction based on index comparison
-                final bool slideFromRight = selectedIndex > _previousIndex;
-
-                // Slide animation
-                final offsetAnimation =
-                    Tween<Offset>(
-                      begin: slideFromRight
-                          ? const Offset(1.0, 0.0) // Coming from right
-                          : const Offset(-1.0, 0.0), // Coming from left
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeInOutCubic,
-                      ),
-                    );
-
-                return SlideTransition(position: offsetAnimation, child: child);
-              },
-              layoutBuilder: (currentChild, previousChildren) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    ...previousChildren,
-                    if (currentChild != null) currentChild,
-                  ],
-                );
-              },
-              child: Container(
-                key: ValueKey<int>(selectedIndex),
-                child: screens[selectedIndex],
-              ),
-            )
-          : const Center(child: CircularProgressIndicator()),
-
-      // --- Bottom Navigation Bar (slides down when details are open on Explore) ---
-      bottomNavigationBar: Consumer(
-        builder: (context, ref, child) {
-          final isVisible = ref.watch(bottomNavVisibilityProvider);
-
-          return AnimatedSlide(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOut,
-            offset: isVisible ? Offset.zero : const Offset(0, 1.0),
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 180),
-              opacity: isVisible ? 1.0 : 0.0,
-              child: const AppBottomNavBar(),
-            ),
-          );
-        },
-      ),
+        ),
+      ],
     );
   }
 }

@@ -196,11 +196,10 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 }
 
 // 3. Define the Provider
-final exploreProvider = StateNotifierProvider<ExploreNotifier, ExploreState>((
-  ref,
-) {
-  final repository = ref.watch(propertyRepositoryProvider);
-  return ExploreNotifier(
-    getVerifiedProperties: GetVerifiedProperties(repository),
-  );
-});
+final exploreProvider =
+    StateNotifierProvider.autoDispose<ExploreNotifier, ExploreState>((ref) {
+      final repository = ref.watch(propertyRepositoryProvider);
+      return ExploreNotifier(
+        getVerifiedProperties: GetVerifiedProperties(repository),
+      );
+    });

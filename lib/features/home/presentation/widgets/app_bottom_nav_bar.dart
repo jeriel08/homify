@@ -49,18 +49,7 @@ class _AppBottomNavBarState extends ConsumerState<AppBottomNavBar> {
       }
     });
 
-    // 3. Listen for tab changes (e.g. role switch)
-    ref.listen(navigationLogicProvider, (previous, next) {
-      if (previous?.tabs.length != next.tabs.length) {
-        // If tab count changes, we MUST recreate the controller to avoid RangeError
-        // Reset index to 0 to be safe
-        setState(() {
-          _navigationController.dispose();
-          _navigationController = CircularBottomNavigationController(0);
-          ref.read(bottomNavIndexProvider.notifier).state = 0;
-        });
-      }
-    });
+    // removed complex recreation logic as we'll use Key in parent
 
     return SafeArea(
       top: false,

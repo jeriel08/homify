@@ -45,19 +45,20 @@ final routerProvider = Provider<GoRouter>((ref) {
 
         // 1. Load Auth State
         final authState = ref.read(authStateProvider);
+        debugPrint(
+          'Router: AuthState isLoading=${authState.isLoading}, hasValue=${authState.hasValue}, value=${authState.value}',
+        );
+
         if (authState.isLoading && !authState.hasValue) {
+          debugPrint('Router: AuthState is initial loading -> /loading');
           return '/loading';
         }
 
-        final firebaseUser = authState.when(
-          data: (user) => user,
-          loading: () => null,
-          error: (err, stack) => null,
-        );
+        final firebaseUser = authState.value;
 
         // 2. Guest Rules
         if (firebaseUser == null) {
-          debugPrint("Router: User logged out");
+          debugPrint("Router: User logged out (firebaseUser is null)");
           final publicRoutes = [
             '/',
             '/login',
@@ -67,18 +68,28 @@ final routerProvider = Provider<GoRouter>((ref) {
           ];
           final isAllowed = publicRoutes.any((route) => path.startsWith(route));
 
-          if (isAllowed) return null;
+          if (isAllowed) {
+            debugPrint('Router: Public route allowed -> null');
+            return null;
+          }
 
+          debugPrint('Router: Redirecting to landing -> /');
           return '/';
         }
 
         // 3. Load Firestore Data
         final userModelAsync = ref.read(currentUserProvider);
-        if (userModelAsync.isLoading) {
-          debugPrint('Router: Firestore Loading...');
+        debugPrint(
+          'Router: CurrentUser isLoading=${userModelAsync.isLoading}, hasValue=${userModelAsync.hasValue}',
+        );
+
+        if (userModelAsync.isLoading && !userModelAsync.hasValue) {
+          debugPrint('Router: Firestore Initial Loading -> /loading');
           return '/loading';
         }
+
         final userModel = userModelAsync.value;
+        debugPrint('Router: UserModel loaded: ${userModel?.accountType}');
 
         final isAuthVerified = firebaseUser.emailVerified;
         final isFirestoreVerified = userModel?.emailVerified ?? false;
@@ -153,7 +164,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/loading',
           '/forgot-password',
         ].contains(path);
-        if (isAuthPage) return '/home';
+
+        if (isAuthPage) {
+          debugPrint('Router: Authenticated user on auth page -> /home');
+          return '/home';
+        }
 
         return null;
       } catch (e) {

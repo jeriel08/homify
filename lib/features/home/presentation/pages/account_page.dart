@@ -334,14 +334,21 @@ class AccountPage extends ConsumerWidget {
                   onPressed: isLoading
                       ? null
                       : () async {
-                          final router = GoRouter.of(context);
+                          // final router = GoRouter.of(context); // Unused
                           final confirm = await LogoutDialog.show(context);
                           if (confirm != true) return;
 
+                          // 1. Perform logout (updates Auth State)
                           await ref
                               .read(logoutControllerProvider.notifier)
                               .logout();
-                          router.go('/');
+
+                          // 2. The AppRouter listens toAuth State and will redirect automatically.
+                          // However, we check mounted just in case we need to do anything manual.
+                          if (context.mounted) {
+                            // Force navigation to landing page if router hasn't already
+                            context.go('/');
+                          }
                         },
                   child: isLoading
                       ? const SizedBox(
