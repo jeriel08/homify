@@ -5,6 +5,8 @@ import 'package:gap/gap.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/messages/presentation/pages/chat_screen.dart';
 import 'package:homify/features/messages/presentation/providers/message_provider.dart';
+import 'package:homify/core/utils/toast_helper.dart';
+import 'package:homify/features/messages/presentation/delegates/user_search_delegate.dart';
 import 'package:intl/intl.dart'; // You might need to add intl to pubspec.yaml
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -46,7 +48,62 @@ class MessagesScreen extends ConsumerWidget {
               actions: [
                 IconButton(
                   icon: const Icon(LucideIcons.search, color: textPrimary),
-                  onPressed: () {},
+                  onPressed: () async {
+                    final selectedUser = await showSearch(
+                      context: context,
+                      delegate: UserSearchDelegate(ref),
+                    );
+
+                    if (selectedUser != null && context.mounted) {
+                      try {
+                        final currentUser = ref.read(currentUserProvider).value;
+                        if (currentUser == null) {
+                          ToastHelper.warning(
+                            context,
+                            'You must be logged in.',
+                          );
+                          return;
+                        }
+
+                        final messageRepo = ref.read(messageRepositoryProvider);
+                        // Show loading indicator? Or just await.
+                        // Ideally show a global loading overlay or local state,
+                        // but since we are in the main screen, maybe just await.
+
+                        final result = await messageRepo.startConversation(
+                          currentUserId: currentUser.uid,
+                          otherUserId: selectedUser.uid,
+                        );
+
+                        result.fold(
+                          (failure) {
+                            if (context.mounted) {
+                              ToastHelper.error(context, failure.message);
+                            }
+                          },
+                          (conversationId) {
+                            if (!context.mounted) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChatScreen(
+                                  conversationId: conversationId,
+                                  otherUser: selectedUser,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      } catch (e) {
+                        if (context.mounted) {
+                          ToastHelper.error(
+                            context,
+                            'Failed to start chat: $e',
+                          );
+                        }
+                      }
+                    }
+                  },
                 ),
                 const Gap(8),
               ],

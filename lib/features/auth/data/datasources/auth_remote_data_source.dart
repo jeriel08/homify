@@ -23,6 +23,7 @@ abstract class AuthRemoteDataSource {
   Future<void> sendPasswordResetEmail(String email);
   Future<void> reauthenticate(String email, String currentPassword);
   Future<void> updatePassword(String newPassword);
+  Future<List<UserModel>> searchUsers(String query);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -272,6 +273,33 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } catch (e) {
       // Handle other errors (like cancelling the sign-in)
       throw Exception(e.toString());
+    }
+  }
+
+  @override
+  Future<List<UserModel>> searchUsers(String query) async {
+    if (query.isEmpty) return [];
+
+    // Note: This is a basic prefix search on firstName.
+    // For more complex search (full name, case insensitive),
+    // you'd typically use a dedicated search service (Algolia, Typesense)
+    // or a "search_keywords" array field in Firestore.
+    // Here we'll do a simple startAt/endAt on 'first_name'.
+
+    try {
+      // Normalize query if you store lowercase in DB, otherwise assume Mixed Case match
+      // Ideally, store a lowercase_name field.
+      // Assuming 'first_name' exists.
+
+      final snapshot = await _firestore
+          .collection('users')
+          .where('first_name', isGreaterThanOrEqualTo: query)
+          .where('first_name', isLessThan: '$query\uf8ff')
+          .get();
+
+      return snapshot.docs.map((doc) => UserModel.fromSnapshot(doc)).toList();
+    } catch (e) {
+      throw Exception('Error searching users: $e');
     }
   }
 }

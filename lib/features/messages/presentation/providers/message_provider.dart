@@ -53,8 +53,13 @@ final conversationsProvider = StreamProvider<List<ConversationDetails>>((ref) {
   return messageRepo.getConversationsStream(user.uid).asyncMap((
     conversations,
   ) async {
+    // Filter out empty conversations (no messages yet)
+    final activeConversations = conversations.where(
+      (c) => c.lastMessage.trim().isNotEmpty,
+    );
+
     // B. Transform each conversation into 'ConversationDetails'
-    final futures = conversations.map((conversation) async {
+    final futures = activeConversations.map((conversation) async {
       // Find the participant ID that is NOT me
       final otherUserId = conversation.participants.firstWhere(
         (id) => id != user.uid,
