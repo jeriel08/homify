@@ -8,6 +8,7 @@ import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/auth/presentation/providers/registration_flow_provider.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
+import 'package:homify/core/widgets/discard_property_dialog.dart';
 // import 'package:homify/features/auth/presentation/widgets/progress_bar.dart';
 
 class AddPropertyPage extends ConsumerStatefulWidget {
@@ -114,31 +115,13 @@ class _AddPropertyPageState extends ConsumerState<AddPropertyPage> {
             // If onboarding, show the strict exit dialog
             _showExitConfirmDialog(context);
           } else {
-            // If just adding a property, confirm discard
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Discard Property?'),
-                content: const Text(
-                  'Are you sure you want to discard this new property?',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context); // Close dialog
-                      context.pop(); // Go back
-                    },
-                    child: const Text(
-                      'Discard',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ),
-                ],
-              ),
+            // If just adding a property, confirm discard with styled dialog
+            DiscardPropertyDialog.show(
+              context,
+              onDiscard: () {
+                Navigator.pop(context); // Close dialog
+                context.pop(); // Go back
+              },
             );
           }
         } else {

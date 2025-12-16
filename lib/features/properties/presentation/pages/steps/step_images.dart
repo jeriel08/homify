@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
+import 'package:homify/core/widgets/remove_photo_dialog.dart';
 import 'package:image_picker/image_picker.dart';
 
 PropertyStep stepImages() {
@@ -241,25 +242,12 @@ class _ImagesStepState extends ConsumerState<_ImagesStep> {
   }
 
   void _showRemoveDialog(int index) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove Photo?'),
-        content: const Text('This photo will be removed from the selection.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _removeImage(index);
-            },
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    RemovePhotoDialog.show(
+      context,
+      onRemove: () {
+        Navigator.pop(context);
+        _removeImage(index);
+      },
     );
   }
 }
