@@ -21,6 +21,9 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> getUser(String uid);
   Future<void> logout();
   Future<void> sendPasswordResetEmail(String email);
+  Future<void> reauthenticate(String email, String currentPassword);
+  Future<void> updatePassword(String newPassword);
+  Future<List<UserModel>> searchUsers(String query);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -64,6 +67,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         orElse: () => AccountType.tenant,
       ),
       firstName: userData['first_name'] as String,
+      middleName: userData['middle_name'] as String?,
       lastName: userData['last_name'] as String,
       birthday: userData['birthday'] as String,
       gender: userData['gender'] as String,
@@ -157,6 +161,31 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
+  Future<void> reauthenticate(String email, String currentPassword) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No user is currently signed in.');
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: currentPassword,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+  }
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No user is currently signed in.');
+    }
+
+    await user.updatePassword(newPassword);
+  }
+
+  @override
   Future<UserModel> signInWithGoogle() async {
     try {
       await _googleSignIn.initialize(
@@ -199,6 +228,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           uid: user.uid,
           // Extract data from Google profile
           firstName: user.displayName?.split(' ').first ?? '',
+          middleName: null, // Google doesn't provide middle name easily
           lastName: user.displayName?.split(' ').last ?? '',
           email: user.email!,
           // Set sensible defaults for new Google users
@@ -243,6 +273,33 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } catch (e) {
       // Handle other errors (like cancelling the sign-in)
       throw Exception(e.toString());
+    }
+  }
+
+  @override
+  Future<List<UserModel>> searchUsers(String query) async {
+    if (query.isEmpty) return [];
+
+    // Note: This is a basic prefix search on firstName.
+    // For more complex search (full name, case insensitive),
+    // you'd typically use a dedicated search service (Algolia, Typesense)
+    // or a "search_keywords" array field in Firestore.
+    // Here we'll do a simple startAt/endAt on 'first_name'.
+
+    try {
+      // Normalize query if you store lowercase in DB, otherwise assume Mixed Case match
+      // Ideally, store a lowercase_name field.
+      // Assuming 'first_name' exists.
+
+      final snapshot = await _firestore
+          .collection('users')
+          .where('first_name', isGreaterThanOrEqualTo: query)
+          .where('first_name', isLessThan: '$query\uf8ff')
+          .get();
+
+      return snapshot.docs.map((doc) => UserModel.fromSnapshot(doc)).toList();
+    } catch (e) {
+      throw Exception('Error searching users: $e');
     }
   }
 }

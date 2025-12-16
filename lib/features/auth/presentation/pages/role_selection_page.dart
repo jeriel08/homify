@@ -5,10 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/entities/user_entity.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 
 class RoleSelectionPage extends ConsumerStatefulWidget {
   const RoleSelectionPage({super.key});
@@ -41,26 +39,11 @@ class _RoleSelectionPageState extends ConsumerState<RoleSelectionPage> {
       }
     } catch (e) {
       if (mounted) {
-        DelightToastBar(
-          autoDismiss: true,
-          snackbarDuration: const Duration(seconds: 3),
-          position: DelightSnackbarPosition.top,
-          builder: (context) => ToastCard(
-            leading: const Icon(
-              LucideIcons.triangleAlert,
-              size: 28,
-              color: Colors.red,
-            ),
-            title: Text(
-              'Error updating role: $e',
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF32190D),
-              ),
-            ),
-            color: Colors.white,
-          ),
-        ).show(context);
+        ToastHelper.error(
+          context,
+          'Error',
+          subtitle: 'Failed to update role: $e',
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

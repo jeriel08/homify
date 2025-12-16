@@ -49,6 +49,8 @@ class _AppBottomNavBarState extends ConsumerState<AppBottomNavBar> {
       }
     });
 
+    // removed complex recreation logic as we'll use Key in parent
+
     return SafeArea(
       top: false,
       bottom: false,

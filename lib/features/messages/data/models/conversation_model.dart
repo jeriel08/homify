@@ -8,6 +8,7 @@ class ConversationModel extends ConversationEntity {
     required super.lastMessage,
     required super.lastMessageTime,
     required super.unreadCounts,
+    super.themePreferences = const {},
   });
 
   factory ConversationModel.fromFirestore(DocumentSnapshot doc) {
@@ -19,8 +20,10 @@ class ConversationModel extends ConversationEntity {
       lastMessage: data['last_message'] ?? '',
       lastMessageTime:
           (data['last_message_time'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      // content: {'uid1': 2, 'uid2': 0}
       unreadCounts: Map<String, int>.from(data['unread_counts'] ?? {}),
+      themePreferences: Map<String, String>.from(
+        data['theme_preferences'] ?? {},
+      ),
     );
   }
 
@@ -30,6 +33,7 @@ class ConversationModel extends ConversationEntity {
       'last_message': lastMessage,
       'last_message_time': FieldValue.serverTimestamp(),
       'unread_counts': unreadCounts,
+      'theme_preferences': themePreferences,
     };
   }
 }

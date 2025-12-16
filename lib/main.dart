@@ -4,6 +4,8 @@ import 'package:homify/core/theme/theme_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:homify/firebase_options.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import 'package:homify/core/theme/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,11 +23,19 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(
-      title: 'Homify',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      routerConfig: router,
+    return SkeletonizerConfig(
+      data: SkeletonizerConfigData(
+        effect: ShimmerEffect(
+          baseColor: AppColors.primary.withValues(alpha: 0.05),
+          highlightColor: AppColors.primary.withValues(alpha: 0.15),
+        ),
+      ),
+      child: MaterialApp.router(
+        title: 'Homify',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        routerConfig: router,
+      ),
     );
   }
 }

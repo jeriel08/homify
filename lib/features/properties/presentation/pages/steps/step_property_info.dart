@@ -1,6 +1,7 @@
 // lib/auth/registration/steps/step_property_info.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 
@@ -195,21 +196,17 @@ class _PropertyInfoStepState extends ConsumerState<_PropertyInfoStep> {
                                 setState(() => _triedNext = true);
 
                                 if (nameError != null || descError != null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Please fill in both fields correctly',
-                                      ),
-                                    ),
+                                  ToastHelper.warning(
+                                    context,
+                                    'Please fill in both fields correctly',
                                   );
                                   return;
                                 }
                                 final ok = await controller.next();
                                 if (!ok && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Validation failed'),
-                                    ),
+                                  ToastHelper.warning(
+                                    context,
+                                    'Validation failed',
                                   );
                                 }
                               },

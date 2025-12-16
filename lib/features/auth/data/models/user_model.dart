@@ -4,13 +4,13 @@ import 'package:homify/core/entities/user_entity.dart';
 
 class UserModel extends UserEntity {
   final String? school;
-  final Map<String, dynamic>? preferences;
   final String? occupation;
 
   const UserModel({
     required super.uid,
     required super.accountType,
     required super.firstName,
+    super.middleName,
     required super.lastName,
     required super.birthday,
     required super.gender,
@@ -22,8 +22,9 @@ class UserModel extends UserEntity {
     super.isBanned,
     super.bannedAt,
     super.bannedBy,
+    super.photoUrl,
     this.school,
-    this.preferences,
+    super.preferences,
     this.occupation,
   });
 
@@ -39,6 +40,7 @@ class UserModel extends UserEntity {
       uid: doc.id,
       accountType: _parseAccountType(data['account_type'] as String?),
       firstName: data['first_name'] as String? ?? '',
+      middleName: data['middle_name'] as String?,
       lastName: data['last_name'] as String? ?? '',
       birthday: data['birthday'] as String? ?? '',
       gender: data['gender'] as String? ?? '',
@@ -53,17 +55,24 @@ class UserModel extends UserEntity {
       isBanned: data['is_banned'] as bool? ?? false,
       bannedAt: (data['banned_at'] as Timestamp?)?.toDate(),
       bannedBy: data['banned_by'] as String?,
+      photoUrl: data['photo_url'] as String?,
     );
   }
 
   @override
-  String get fullName => '$firstName $lastName';
+  String get fullName {
+    if (middleName != null && middleName!.isNotEmpty) {
+      return '$firstName $middleName $lastName';
+    }
+    return '$firstName $lastName';
+  }
 
   factory UserModel.fromEntity(UserEntity entity) {
     return UserModel(
       uid: entity.uid,
       accountType: entity.accountType,
       firstName: entity.firstName,
+      middleName: entity.middleName,
       lastName: entity.lastName,
       birthday: entity.birthday,
       gender: entity.gender,
@@ -72,6 +81,7 @@ class UserModel extends UserEntity {
       createdAt: entity.createdAt,
       onboardingComplete: entity.onboardingComplete,
       emailVerified: entity.emailVerified,
+      photoUrl: entity.photoUrl,
     );
   }
 
@@ -80,6 +90,7 @@ class UserModel extends UserEntity {
     return {
       'account_type': accountType.name,
       'first_name': firstName,
+      'middle_name': middleName,
       'last_name': lastName,
       'birthday': birthday,
       'gender': gender,
@@ -94,6 +105,7 @@ class UserModel extends UserEntity {
       'is_banned': isBanned,
       'banned_at': bannedAt != null ? Timestamp.fromDate(bannedAt!) : null,
       'banned_by': bannedBy,
+      'photo_url': photoUrl,
     };
   }
 

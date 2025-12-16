@@ -1,8 +1,105 @@
-// lib/features/home/presentation/pages/favorites_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
+import 'package:homify/core/theme/app_colors.dart';
+import 'package:homify/core/utils/toast_helper.dart';
+import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
+import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_details_sheet.dart';
+import 'package:homify/features/properties/presentation/widgets/tenant/tenant_property_card.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
+
   @override
-  Widget build(BuildContext context) => const Center(child: Text('Favorites'));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favoritesState = ref.watch(favoritesProvider);
+    final favorites = favoritesState.values;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Favorites',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Gap(16),
+              Expanded(
+                child: favorites.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              LucideIcons.heart,
+                              size: 48,
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                            ),
+                            const Gap(16),
+                            Text(
+                              'No Favorites Yet',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            const Gap(8),
+                            Text(
+                              'Start adding properties to your favorites',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: favorites.length,
+                        itemBuilder: (itemContext, index) {
+                          final property = favorites[index];
+                          return TenantPropertyCard(
+                            property: property,
+                            isFavorite: true,
+                            onFavorite: () {
+                              ref
+                                  .read(favoritesProvider.notifier)
+                                  .toggle(property);
+
+                              ToastHelper.info(
+                                context,
+                                'Removed from favorites',
+                              );
+                            },
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (context) =>
+                                    TenantPropertyDetailsSheet(
+                                      property: property,
+                                    ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

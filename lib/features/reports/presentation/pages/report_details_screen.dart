@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/theme/app_colors.dart';
 import 'package:homify/core/theme/typography.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/admin/presentation/widgets/property_details_sheet.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
@@ -17,9 +18,6 @@ import 'package:homify/features/reports/presentation/widgets/report_status_badge
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 
 class ReportDetailsScreen extends ConsumerStatefulWidget {
   final ReportEntity report;
@@ -157,25 +155,7 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
 
     if (currentUser == null) {
       if (mounted) {
-        DelightToastBar(
-          autoDismiss: true,
-          position: DelightSnackbarPosition.top,
-          builder: (context) => ToastCard(
-            leading: Icon(
-              LucideIcons.triangleAlert,
-              size: 28,
-              color: AppColors.error,
-            ),
-            title: Text(
-              'User not authenticated',
-              style: HomifyTypography.body2.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
-              ),
-            ),
-            color: AppColors.error.withValues(alpha: 0.1),
-          ),
-        ).show(context);
+        ToastHelper.warning(context, 'User not authenticated');
       }
       return;
     }
@@ -200,26 +180,11 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
     result.fold(
       (failure) {
         if (mounted) {
-          DelightToastBar(
-            autoDismiss: true,
-            snackbarDuration: const Duration(seconds: 3),
-            position: DelightSnackbarPosition.top,
-            builder: (context) => ToastCard(
-              leading: Icon(
-                LucideIcons.triangleAlert,
-                size: 28,
-                color: AppColors.error,
-              ),
-              title: Text(
-                'Failed to update status: ${failure.message}',
-                style: HomifyTypography.body2.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-              color: Colors.white,
-            ),
-          ).show(context);
+          ToastHelper.error(
+            context,
+            'Update Failed',
+            subtitle: failure.message,
+          );
         }
       },
       (_) {
@@ -227,26 +192,7 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
           setState(() {
             _currentStatus = newStatus;
           });
-          DelightToastBar(
-            autoDismiss: true,
-            snackbarDuration: const Duration(seconds: 3),
-            position: DelightSnackbarPosition.top,
-            builder: (context) => ToastCard(
-              leading: Icon(
-                LucideIcons.circleCheck,
-                size: 28,
-                color: AppColors.success,
-              ),
-              title: Text(
-                'Status updated successfully',
-                style: HomifyTypography.body2.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-              color: Colors.white,
-            ),
-          ).show(context);
+          ToastHelper.success(context, 'Status updated successfully');
           ref.invalidate(reportsProvider);
         }
       },
@@ -499,11 +445,15 @@ class _ReportDetailsScreenState extends ConsumerState<ReportDetailsScreen> {
                       ),
                     ),
                     const Gap(12),
-                    Text(
-                      _reporterName ?? widget.report.reporterId,
-                      style: HomifyTypography.body2.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Text(
+                        _reporterName ?? widget.report.reporterId,
+                        style: HomifyTypography.body2.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

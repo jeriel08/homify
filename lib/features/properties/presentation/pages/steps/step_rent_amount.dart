@@ -1,6 +1,7 @@
 // lib/auth/registration/steps/step_rent_amount.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -132,12 +133,9 @@ class _RentAmountStepState extends ConsumerState<_RentAmountStep> {
 
                               final ok = await controller.next();
                               if (!ok && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Please enter a valid amount',
-                                    ),
-                                  ),
+                                ToastHelper.warning(
+                                  context,
+                                  'Please enter a valid amount',
                                 );
                               }
                             },

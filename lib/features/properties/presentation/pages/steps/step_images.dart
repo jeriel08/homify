@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
 import 'package:image_picker/image_picker.dart';
@@ -164,12 +165,9 @@ class _ImagesStepState extends ConsumerState<_ImagesStep> {
 
                           final ok = await controller.next();
                           if (!ok && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please upload at least one photo',
-                                ),
-                              ),
+                            ToastHelper.warning(
+                              context,
+                              'Please upload at least one photo',
                             );
                           }
                         },

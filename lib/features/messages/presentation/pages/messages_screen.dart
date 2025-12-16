@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/messages/presentation/pages/chat_screen.dart';
 import 'package:homify/features/messages/presentation/providers/message_provider.dart';
+import 'package:homify/core/utils/toast_helper.dart';
+import 'package:homify/features/messages/presentation/delegates/user_search_delegate.dart';
 import 'package:intl/intl.dart'; // You might need to add intl to pubspec.yaml
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -45,7 +48,62 @@ class MessagesScreen extends ConsumerWidget {
               actions: [
                 IconButton(
                   icon: const Icon(LucideIcons.search, color: textPrimary),
-                  onPressed: () {},
+                  onPressed: () async {
+                    final selectedUser = await showSearch(
+                      context: context,
+                      delegate: UserSearchDelegate(ref),
+                    );
+
+                    if (selectedUser != null && context.mounted) {
+                      try {
+                        final currentUser = ref.read(currentUserProvider).value;
+                        if (currentUser == null) {
+                          ToastHelper.warning(
+                            context,
+                            'You must be logged in.',
+                          );
+                          return;
+                        }
+
+                        final messageRepo = ref.read(messageRepositoryProvider);
+                        // Show loading indicator? Or just await.
+                        // Ideally show a global loading overlay or local state,
+                        // but since we are in the main screen, maybe just await.
+
+                        final result = await messageRepo.startConversation(
+                          currentUserId: currentUser.uid,
+                          otherUserId: selectedUser.uid,
+                        );
+
+                        result.fold(
+                          (failure) {
+                            if (context.mounted) {
+                              ToastHelper.error(context, failure.message);
+                            }
+                          },
+                          (conversationId) {
+                            if (!context.mounted) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChatScreen(
+                                  conversationId: conversationId,
+                                  otherUser: selectedUser,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      } catch (e) {
+                        if (context.mounted) {
+                          ToastHelper.error(
+                            context,
+                            'Failed to start chat: $e',
+                          );
+                        }
+                      }
+                    }
+                  },
                 ),
                 const Gap(8),
               ],
@@ -63,6 +121,8 @@ class MessagesScreen extends ConsumerWidget {
                       lastMessage: 'Loading message content...',
                       time: '12:00 PM',
                       unreadCount: 0,
+                      photoUrl: null,
+                      gender: 'male',
                       onTap: () {},
                     ),
                   ),
@@ -94,6 +154,8 @@ class MessagesScreen extends ConsumerWidget {
                       // Simple formatting
                       time: _formatTime(conversation.lastMessageTime),
                       unreadCount: myUnreadCount,
+                      photoUrl: otherUser.photoUrl,
+                      gender: otherUser.gender,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -130,6 +192,8 @@ class _ConversationTile extends StatelessWidget {
   final String lastMessage;
   final String time;
   final int unreadCount;
+  final String? photoUrl;
+  final String gender;
   final VoidCallback onTap;
 
   const _ConversationTile({
@@ -138,6 +202,8 @@ class _ConversationTile extends StatelessWidget {
     required this.time,
     required this.unreadCount,
     required this.onTap,
+    this.photoUrl,
+    this.gender = 'male',
   });
 
   @override
@@ -151,13 +217,48 @@ class _ConversationTile extends StatelessWidget {
         child: Row(
           children: [
             // Profile Picture
-            const CircleAvatar(
-              radius: 28,
-              backgroundColor: MessagesScreen.surface,
-              child: Icon(
-                LucideIcons.user,
-                color: MessagesScreen.primary,
-                size: 28,
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: MessagesScreen.primary.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+              ),
+              child: ClipOval(
+                child: photoUrl != null && photoUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: photoUrl!,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          width: 56,
+                          height: 56,
+                          color: MessagesScreen.surface,
+                          child: const Icon(
+                            LucideIcons.user,
+                            color: MessagesScreen.primary,
+                            size: 28,
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Image.asset(
+                          gender == 'female'
+                              ? 'assets/images/placeholder_female.png'
+                              : 'assets/images/placeholder_male.png',
+                          width: 56,
+                          height: 56,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Image.asset(
+                        gender == 'female'
+                            ? 'assets/images/placeholder_female.png'
+                            : 'assets/images/placeholder_male.png',
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                      ),
               ),
             ),
             const Gap(16),

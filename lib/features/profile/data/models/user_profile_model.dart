@@ -22,6 +22,7 @@ class UserProfileModel extends UserProfile {
     super.school,
     super.occupation,
     super.preferences,
+    super.gender,
     super.isEmailVerified,
   });
 
@@ -47,6 +48,7 @@ class UserProfileModel extends UserProfile {
       school: data['school'] as String?,
       occupation: data['occupation'] as String?,
       preferences: data['preferences'] as Map<String, dynamic>?,
+      gender: data['gender'] as String?,
       isEmailVerified: data['email_verified'] as bool?,
     );
   }
@@ -71,6 +73,7 @@ class UserProfileModel extends UserProfile {
       school: entity.school,
       occupation: entity.occupation,
       preferences: entity.preferences,
+      gender: entity.gender,
       isEmailVerified: entity.isEmailVerified,
     );
   }

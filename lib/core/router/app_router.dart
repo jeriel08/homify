@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/entities/user_entity.dart'; // For AccountType enum
-import 'package:homify/core/widgets/loading_screen.dart';
+import 'package:homify/core/presentation/widgets/loading_screen.dart';
+import 'package:homify/core/presentation/pages/not_found_page.dart';
 import 'package:homify/features/auth/presentation/pages/landing_page.dart';
 import 'package:homify/features/auth/presentation/pages/login_page.dart';
 import 'package:homify/features/auth/presentation/pages/registration_page.dart';
@@ -12,8 +13,10 @@ import 'package:homify/features/auth/presentation/pages/success_pages/tenant_suc
 import 'package:homify/features/auth/presentation/pages/success_pages/user_banned_screen.dart';
 import 'package:homify/features/auth/presentation/pages/tenant_onboarding_page.dart';
 import 'package:homify/features/auth/presentation/pages/forgot_password_page.dart';
+import 'package:homify/features/auth/presentation/pages/change_password_page.dart';
 import 'package:homify/features/home/presentation/pages/account_page.dart';
 import 'package:homify/features/home/presentation/pages/home_page.dart';
+import 'package:homify/features/home/presentation/pages/about_screen.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/properties/presentation/pages/add_property_page.dart';
 import 'package:homify/features/properties/presentation/pages/property_success_page.dart';
@@ -34,6 +37,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     refreshListenable: RouterRefreshNotifier(ref),
+    errorBuilder: (context, state) => const NotFoundPage(),
     redirect: (context, state) {
       try {
         final path = state.matchedLocation;
@@ -41,19 +45,20 @@ final routerProvider = Provider<GoRouter>((ref) {
 
         // 1. Load Auth State
         final authState = ref.read(authStateProvider);
+        debugPrint(
+          'Router: AuthState isLoading=${authState.isLoading}, hasValue=${authState.hasValue}, value=${authState.value}',
+        );
+
         if (authState.isLoading && !authState.hasValue) {
+          debugPrint('Router: AuthState is initial loading -> /loading');
           return '/loading';
         }
 
-        final firebaseUser = authState.when(
-          data: (user) => user,
-          loading: () => null,
-          error: (err, stack) => null,
-        );
+        final firebaseUser = authState.value;
 
         // 2. Guest Rules
         if (firebaseUser == null) {
-          debugPrint("Router: User logged out");
+          debugPrint("Router: User logged out (firebaseUser is null)");
           final publicRoutes = [
             '/',
             '/login',
@@ -63,18 +68,28 @@ final routerProvider = Provider<GoRouter>((ref) {
           ];
           final isAllowed = publicRoutes.any((route) => path.startsWith(route));
 
-          if (isAllowed) return null;
+          if (isAllowed) {
+            debugPrint('Router: Public route allowed -> null');
+            return null;
+          }
 
+          debugPrint('Router: Redirecting to landing -> /');
           return '/';
         }
 
         // 3. Load Firestore Data
         final userModelAsync = ref.read(currentUserProvider);
-        if (userModelAsync.isLoading) {
-          debugPrint('Router: Firestore Loading...');
+        debugPrint(
+          'Router: CurrentUser isLoading=${userModelAsync.isLoading}, hasValue=${userModelAsync.hasValue}',
+        );
+
+        if (userModelAsync.isLoading && !userModelAsync.hasValue) {
+          debugPrint('Router: Firestore Initial Loading -> /loading');
           return '/loading';
         }
+
         final userModel = userModelAsync.value;
+        debugPrint('Router: UserModel loaded: ${userModel?.accountType}');
 
         final isAuthVerified = firebaseUser.emailVerified;
         final isFirestoreVerified = userModel?.emailVerified ?? false;
@@ -149,7 +164,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/loading',
           '/forgot-password',
         ].contains(path);
-        if (isAuthPage) return '/home';
+
+        if (isAuthPage) {
+          debugPrint('Router: Authenticated user on auth page -> /home');
+          return '/home';
+        }
 
         return null;
       } catch (e) {
@@ -196,6 +215,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AddPropertyPage(),
       ),
       GoRoute(
+        path: '/add-property',
+        builder: (context, state) => const AddPropertyPage(),
+      ),
+      GoRoute(
         path: '/account',
         builder: (context, state) => const AccountPage(),
       ),
@@ -206,6 +229,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/change-password',
+        builder: (context, state) => const ChangePasswordPage(),
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AboutScreen(showAppBar: true),
       ),
       // ADMIN ROUTES
       GoRoute(

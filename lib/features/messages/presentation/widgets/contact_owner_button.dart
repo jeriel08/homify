@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:homify/core/entities/property_entity.dart'; // Or PropertyModel
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homify/features/messages/presentation/pages/chat_screen.dart';
 import 'package:homify/features/messages/presentation/providers/message_provider.dart';
@@ -25,19 +26,13 @@ class _ContactOwnerButtonState extends ConsumerState<ContactOwnerButton> {
       // 1. Get Current User
       final currentUser = ref.read(currentUserProvider).value;
       if (currentUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You must be logged in to send a message'),
-          ),
-        );
+        ToastHelper.warning(context, 'You must be logged in to send a message');
         return;
       }
 
       // Prevent talking to yourself
       if (currentUser.uid == widget.ownerUid) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You cannot message yourself')),
-        );
+        ToastHelper.warning(context, 'You cannot message yourself');
         return;
       }
 
@@ -57,9 +52,7 @@ class _ContactOwnerButtonState extends ConsumerState<ContactOwnerButton> {
       // 4. Navigate or Show Error
       result.fold(
         (failure) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(failure.message)));
+          ToastHelper.error(context, failure.message);
         },
         (conversationId) {
           if (!mounted) return;
@@ -76,9 +69,7 @@ class _ContactOwnerButtonState extends ConsumerState<ContactOwnerButton> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ToastHelper.error(context, 'Error: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

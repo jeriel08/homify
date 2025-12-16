@@ -129,28 +129,44 @@ class AdminDashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 const Gap(16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    QuickActionCard(
-                      label: "Review Properties",
-                      icon: LucideIcons.circleCheckBig,
-                      onTap: () {
-                        ref.read(bottomNavIndexProvider.notifier).state = 1;
-                      },
-                    ),
-                    QuickActionCard(
-                      label: "Manage Users",
-                      icon: LucideIcons.usersRound,
-                      onTap: () => context.push('/admin/all-users'),
-                    ),
-                    QuickActionCard(
-                      label: "Review Reports",
-                      icon: LucideIcons.flag,
-                      onTap: () => context.push('/admin/reports'),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    // 3 cards with spacing of 8 between them
+                    final cardWidth = (constraints.maxWidth - 16) / 3;
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        SizedBox(
+                          width: cardWidth,
+                          child: QuickActionCard(
+                            label: "Review Properties",
+                            icon: LucideIcons.circleCheckBig,
+                            onTap: () {
+                              ref.read(bottomNavIndexProvider.notifier).state =
+                                  1;
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: cardWidth,
+                          child: QuickActionCard(
+                            label: "Manage Users",
+                            icon: LucideIcons.usersRound,
+                            onTap: () => context.push('/admin/all-users'),
+                          ),
+                        ),
+                        SizedBox(
+                          width: cardWidth,
+                          child: QuickActionCard(
+                            label: "Review Reports",
+                            icon: LucideIcons.flag,
+                            onTap: () => context.push('/admin/reports'),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
 
                 const Gap(48),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 
@@ -10,6 +11,7 @@ class TenantPropertyCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onFavorite;
   final bool isFavorite;
+  final bool showFavorite;
 
   const TenantPropertyCard({
     super.key,
@@ -17,6 +19,7 @@ class TenantPropertyCard extends StatelessWidget {
     required this.onTap,
     required this.onFavorite,
     this.isFavorite = false,
+    this.showFavorite = true,
   });
 
   // Brand colors
@@ -61,10 +64,18 @@ class TenantPropertyCard extends StatelessWidget {
                       child: AspectRatio(
                         aspectRatio: 16 / 10,
                         child: property.imageUrls.isNotEmpty
-                            ? Image.network(
-                                property.imageUrls.first,
+                            ? CachedNetworkImage(
+                                imageUrl: property.imageUrls.first,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => Container(
+                                placeholder: (context, url) => Container(
+                                  color: surface.withValues(alpha: 0.3),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
                                   color: surface.withValues(alpha: 0.3),
                                   child: const Icon(
                                     LucideIcons.house,
@@ -182,7 +193,7 @@ class TenantPropertyCard extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                ' / ${property.rentChargeMethod.name == 'perUnit' ? 'unit' : 'bed'}',
+                                ' / month',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
@@ -191,45 +202,45 @@ class TenantPropertyCard extends StatelessWidget {
                       ),
                     ),
 
-                    // Heart Button
-                    Material(
-                      color: isFavorite
-                          ? Colors.red.withValues(alpha: 0.1)
-                          : surface.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(16),
-                      child: InkWell(
+                    // Heart Button (for authenticated users)
+                    if (showFavorite)
+                      Material(
+                        color: isFavorite
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : surface.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(16),
-                        onTap: onFavorite,
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          child: Icon(
-                            LucideIcons.heart,
-                            size: 24,
-                            color: isFavorite ? Colors.red : textSecondary,
-                            fill: isFavorite ? 1.0 : 0.0,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: onFavorite,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            child: Icon(
+                              LucideIcons.heart,
+                              size: 24,
+                              color: isFavorite ? Colors.red : textSecondary,
+                              fill: isFavorite ? 1.0 : 0.0,
+                            ),
+                          ),
+                        ),
+                      )
+                    // Arrow Button (for guests - indicates "view details")
+                    else
+                      Material(
+                        color: primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: onTap,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            child: const Icon(
+                              LucideIcons.chevronRight,
+                              size: 24,
+                              color: primary,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-
-                    const Gap(12),
-
-                    // Check it out Button
-                    ElevatedButton(
-                      onPressed: onTap,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: textPrimary,
-                        foregroundColor: Colors.white,
-                        // CRITICAL FIX: Override global theme infinite width
-                        minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text('Check it out'),
-                    ),
                   ],
                 ),
               ],

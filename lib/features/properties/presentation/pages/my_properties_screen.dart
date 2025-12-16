@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
-import 'package:homify/features/properties/presentation/widgets/owner_property_card.dart';
+import 'package:homify/features/properties/presentation/widgets/owner/owner_property_card.dart';
+import 'package:homify/features/properties/presentation/widgets/owner/owner_property_details_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MyPropertiesScreen extends ConsumerWidget {
@@ -44,16 +46,48 @@ class MyPropertiesScreen extends ConsumerWidget {
 
                     const Gap(24),
 
-                    const Text(
-                      'Your Listings',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    // 2. Property List Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Your Listings',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () => context.push('/add-property'),
+                          icon: const Icon(LucideIcons.plus, size: 18),
+                          label: const Text('Add New'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            minimumSize: const Size(
+                              100,
+                              40,
+                            ), // Ensure finite size
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
                     const Gap(16),
 
-                    // 2. Property List
+                    // 3. Property List
                     if (state.properties.isEmpty)
                       _buildEmptyState(context)
                     else
@@ -65,11 +99,15 @@ class MyPropertiesScreen extends ConsumerWidget {
                           final property = state.properties[index];
                           return OwnerPropertyCard(
                             property: property,
-                            onEdit: () {
-                              // Navigate to Edit Screen
-                            },
-                            onDelete: () {
-                              // Show Delete Confirmation Dialog
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) => OwnerPropertyDetailsSheet(
+                                  property: property,
+                                ),
+                              );
                             },
                           );
                         },
@@ -78,13 +116,6 @@ class MyPropertiesScreen extends ConsumerWidget {
                 ),
               ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Navigate to Add Property
-        },
-        icon: const Icon(LucideIcons.plus),
-        label: const Text('Add Property'),
-      ),
     );
   }
 

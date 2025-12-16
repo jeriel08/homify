@@ -2,13 +2,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:homify/core/widgets/loading_screen.dart';
+import 'package:homify/core/presentation/widgets/loading_screen.dart';
+import 'package:homify/core/utils/toast_helper.dart';
+import 'package:homify/core/widgets/logout_dialog.dart';
 import 'package:homify/features/auth/presentation/controllers/account_controller.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/core/entities/user_entity.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
+import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
 import 'package:lottie/lottie.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class AccountPage extends ConsumerWidget {
   const AccountPage({super.key});
@@ -20,12 +24,7 @@ class AccountPage extends ConsumerWidget {
     // Safe logout listener — only reacts when actually logging out
     ref.listen(logoutControllerProvider, (previous, next) {
       if (next.hasError && !next.isLoading) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error.toString()),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.error(context, next.error.toString());
       }
     });
 
@@ -50,7 +49,7 @@ class AccountPage extends ConsumerWidget {
         Widget? avatarChild;
 
         if (user.photoUrl != null && user.photoUrl!.isNotEmpty) {
-          avatarBackgroundImage = NetworkImage(user.photoUrl!);
+          avatarBackgroundImage = CachedNetworkImageProvider(user.photoUrl!);
           avatarChild = null;
         } else {
           if (user.gender == 'male') {
@@ -138,6 +137,8 @@ class AccountPage extends ConsumerWidget {
                                   style: textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey.shade700,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ],
                             ),
@@ -218,6 +219,71 @@ class AccountPage extends ConsumerWidget {
                 const SizedBox(height: 20),
               ],
 
+              // ───── ADMIN PANEL (ADMIN ONLY) ─────
+              if (user.accountType == AccountType.admin) ...[
+                const _SectionHeader(title: 'Admin Panel'),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _SettingsTile(
+                        icon: Icons.approval,
+                        title: 'Review Pending Properties',
+                        onTap: () {
+                          // Set Approvals tab (index 1) and go back to home
+                          ref.read(bottomNavIndexProvider.notifier).state = 1;
+                          context.go('/');
+                        },
+                      ),
+                      const Divider(height: 1),
+                      _SettingsTile(
+                        icon: Icons.group_outlined,
+                        title: 'Manage Users',
+                        onTap: () => context.push('/admin/all-users'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // ───── SECURITY SETTINGS SECTION ─────
+              const _SectionHeader(title: 'Security'),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _SettingsTile(
+                      icon: LucideIcons.lock,
+                      title: 'Change Password',
+                      onTap: () => context.push('/change-password'),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
               // ───── SETTINGS SECTION ─────
               const _SectionHeader(title: 'Settings'),
               Container(
@@ -243,52 +309,13 @@ class AccountPage extends ConsumerWidget {
                     ),
                     const Divider(height: 1),
                     _SettingsTile(
-                      icon: LucideIcons.circleQuestionMark,
-                      title: 'Help & Support',
-                      onTap: () {
-                        /* TODO: Navigate to help page */
-                      },
+                      icon: LucideIcons.info,
+                      title: 'About',
+                      onTap: () => context.push('/about'),
                     ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 20),
-
-              // ───── ADMIN PANEL (ADMIN ONLY) ─────
-              if (user.accountType == AccountType.admin) ...[
-                const _SectionHeader(title: 'Admin Panel'),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _SettingsTile(
-                        icon: Icons.approval,
-                        title: 'Review Pending Properties',
-                        onTap: () => context.push('/pending-properties'),
-                      ),
-                      const Divider(height: 1),
-                      _SettingsTile(
-                        icon: Icons.group_outlined,
-                        title: 'Manage Users',
-                        onTap: () {
-                          /* TODO: Navigate to user management */
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
 
               const SizedBox(height: 20),
 
@@ -307,32 +334,21 @@ class AccountPage extends ConsumerWidget {
                   onPressed: isLoading
                       ? null
                       : () async {
-                          final router = GoRouter.of(context);
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: const Text('Logout'),
-                              content: const Text(
-                                'Are you sure you want to logout?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => context.pop(false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => context.pop(true),
-                                  child: const Text('Logout'),
-                                ),
-                              ],
-                            ),
-                          );
+                          // final router = GoRouter.of(context); // Unused
+                          final confirm = await LogoutDialog.show(context);
                           if (confirm != true) return;
 
+                          // 1. Perform logout (updates Auth State)
                           await ref
                               .read(logoutControllerProvider.notifier)
                               .logout();
-                          router.go('/');
+
+                          // 2. The AppRouter listens toAuth State and will redirect automatically.
+                          // However, we check mounted just in case we need to do anything manual.
+                          if (context.mounted) {
+                            // Force navigation to landing page if router hasn't already
+                            context.go('/');
+                          }
                         },
                   child: isLoading
                       ? const SizedBox(
@@ -340,7 +356,7 @@ class AccountPage extends ConsumerWidget {
                           height: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
-                            color: Color(0xFF32190D),
+                            color: Colors.white,
                           ),
                         )
                       : const Row(

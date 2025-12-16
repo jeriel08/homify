@@ -125,4 +125,38 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('An unknown error occurred.');
     }
   }
+
+  @override
+  Future<void> reauthenticate(String email, String currentPassword) async {
+    try {
+      await remoteDataSource.reauthenticate(email, currentPassword);
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Auth Error: ${e.message}');
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await remoteDataSource.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Auth Error: ${e.message}');
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  @override
+  Future<List<UserEntity>> searchUsers(String query) async {
+    try {
+      final userModels = await remoteDataSource.searchUsers(query);
+      return userModels;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Auth Error: ${e.message}');
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }

@@ -1,6 +1,7 @@
 // lib/auth/registration/steps/step_name.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import '../../controllers/registration_controller.dart';
 import 'package:homify/core/theme/app_colors.dart';
 
@@ -144,12 +145,9 @@ class _NameStepState extends ConsumerState<_NameStep> {
                               setState(() => _triedNext = true);
                               final ok = await controller.next();
                               if (!ok && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Please fill out all required fields.',
-                                    ),
-                                  ),
+                                ToastHelper.warning(
+                                  context,
+                                  'Please fill out all required fields.',
                                 );
                               }
                             },

@@ -1,39 +1,89 @@
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/entities/user_entity.dart';
+import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
+import 'package:homify/core/theme/app_colors.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/providers/auth_providers.dart';
+import 'package:homify/features/profile/data/services/profile_photo_service.dart';
 import 'package:homify/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:homify/features/profile/domain/usecases/ban_user.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
-import 'package:homify/features/profile/presentation/widgets/ban_user_dialog.dart';
 import 'package:homify/features/profile/presentation/widgets/profile_header.dart';
 import 'package:homify/features/profile/presentation/widgets/profile_info_section.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   final String userId;
 
   const ProfileScreen({super.key, required this.userId});
 
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // Brand colors
   static const Color primary = Color(0xFF32190D);
-  static const Color surface = Color(0xFFF9E5C5);
   static const Color background = Color(0xFFFFFAF5);
 
+  final _photoService = ProfilePhotoService();
+  final _imagePicker = ImagePicker();
+  bool _isUploadingPhoto = false;
+  bool _isEditMode = false;
+
+  Future<void> _pickAndUploadPhoto() async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() => _isUploadingPhoto = true);
+
+      await _photoService.uploadProfilePhoto(
+        widget.userId,
+        File(pickedFile.path),
+      );
+
+      // Refresh the profile stream
+      ref.invalidate(userProfileStreamProvider(widget.userId));
+
+      if (mounted) {
+        ToastHelper.success(context, 'Profile photo updated!');
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastHelper.error(
+          context,
+          'Upload Failed',
+          subtitle: e.toString().replaceAll('Exception: ', ''),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingPhoto = false);
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(userProfileStreamProvider(userId));
+  Widget build(BuildContext context) {
+    final profileAsync = ref.watch(userProfileStreamProvider(widget.userId));
     final currentUserAsync = ref.watch(currentUserProvider);
     final currentUser = currentUserAsync.asData?.value;
 
-    final isOwnProfile = currentUser?.uid == userId;
+    final isOwnProfile = currentUser?.uid == widget.userId;
     final isAdmin = currentUser?.accountType == AccountType.admin;
 
     return Scaffold(
@@ -65,6 +115,7 @@ class ProfileScreen extends ConsumerWidget {
             SliverAppBar(
               backgroundColor: background,
               elevation: 0,
+              surfaceTintColor: Colors.transparent,
               pinned: false,
               floating: true,
               leading: IconButton(
@@ -72,13 +123,29 @@ class ProfileScreen extends ConsumerWidget {
                 onPressed: () => Navigator.of(context).pop(),
               ),
               actions: [
+                // Edit toggle for own profile
+                if (isOwnProfile)
+                  IconButton(
+                    icon: Icon(
+                      _isEditMode ? LucideIcons.check : LucideIcons.pencil,
+                      color: primary,
+                    ),
+                    tooltip: _isEditMode ? 'Done editing' : 'Edit profile',
+                    onPressed: () {
+                      setState(() => _isEditMode = !_isEditMode);
+                    },
+                  ),
+                // Report button for other profiles
                 if (!isOwnProfile)
                   IconButton(
                     icon: const Icon(LucideIcons.flag, color: primary),
                     onPressed: () {
                       context.push(
                         '/report',
-                        extra: {'targetId': userId, 'targetType': 'user'},
+                        extra: {
+                          'targetId': widget.userId,
+                          'targetType': 'user',
+                        },
                       );
                     },
                   ),
@@ -93,17 +160,20 @@ class ProfileScreen extends ConsumerWidget {
                   // Header
                   ProfileHeader(
                     profile: profile,
-                    showEditButton: isOwnProfile,
-                    onEditTap: () => context.push('/profile/edit/name/$userId'),
+                    showEditButton: isOwnProfile && _isEditMode,
+                    onEditTap: () =>
+                        context.push('/profile/edit/name/${widget.userId}'),
+                    onPhotoTap: _pickAndUploadPhoto,
+                    isUploadingPhoto: _isUploadingPhoto,
                   ),
                   const Gap(32),
 
                   // Personal Information
                   ProfileInfoSection(
                     title: 'Personal Information',
-                    showEditButton: isOwnProfile,
+                    showEditButton: isOwnProfile && _isEditMode,
                     onEditTap: () => context.push(
-                      '/profile/edit/personal-information/$userId',
+                      '/profile/edit/personal-information/${widget.userId}',
                     ),
                     rows: [
                       InfoRow(
@@ -111,11 +181,12 @@ class ProfileScreen extends ConsumerWidget {
                         value: profile.email,
                         icon: LucideIcons.mail,
                       ),
-                      InfoRow(
-                        label: 'Occupation',
-                        value: profile.displayOccupation,
-                        icon: LucideIcons.briefcase,
-                      ),
+                      if (profile.occupation != null)
+                        InfoRow(
+                          label: 'Occupation',
+                          value: profile.displayOccupation,
+                          icon: LucideIcons.briefcase,
+                        ),
                       if (profile.mobile != null)
                         InfoRow(
                           label: 'Mobile Number',
@@ -162,9 +233,10 @@ class ProfileScreen extends ConsumerWidget {
                     const Gap(24),
                     ProfileInfoSection(
                       title: 'Preferences',
-                      showEditButton: isOwnProfile,
-                      onEditTap: () =>
-                          context.push('/profile/edit/preferences/$userId'),
+                      showEditButton: isOwnProfile && _isEditMode,
+                      onEditTap: () => context.push(
+                        '/profile/edit/preferences/${widget.userId}',
+                      ),
                       rows: [
                         if (profile.preferences!['dealbreakers'] != null &&
                             (profile.preferences!['dealbreakers']
@@ -197,22 +269,74 @@ class ProfileScreen extends ConsumerWidget {
                       width: double.infinity,
                       child: FilledButton.icon(
                         onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => BanUserDialog(
-                              userName: profile.fullName,
-                              isBanned: profile.isBanned,
-                              onConfirm: () {
-                                _handleBanUnban(
-                                  context,
-                                  ref,
-                                  userId,
-                                  profile.isBanned,
-                                  currentUser!.uid,
-                                );
-                              },
-                            ),
-                          );
+                          if (profile.isBanned) {
+                            // Unban confirmation (simple dialog)
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Unban User?'),
+                                content: Text(
+                                  'Are you sure you want to unban ${profile.fullName}? They will regain access to the platform.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      _handleBanUnban(
+                                        context,
+                                        ref,
+                                        widget.userId,
+                                        profile.isBanned,
+                                        currentUser!.uid,
+                                        null,
+                                      );
+                                    },
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                    ),
+                                    child: const Text('Unban'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            // Ban confirmation (reason sheet)
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => ConfirmationReasonSheet(
+                                title: 'Ban User',
+                                subtitle:
+                                    'Why are you banning ${profile.fullName}? This action will sign them out immediately.',
+                                reasons: const [
+                                  'Violation of Terms of Service',
+                                  'Inappropriate Behavior',
+                                  'Spam / Fake Account',
+                                  'Fraudulent Activity',
+                                  'Other',
+                                ],
+                                confirmLabel: 'Ban User',
+                                confirmIcon: LucideIcons.shieldAlert,
+                                confirmColor: AppColors.error,
+                                onConfirm: (reason) {
+                                  Navigator.pop(context);
+                                  _handleBanUnban(
+                                    context,
+                                    ref,
+                                    widget.userId,
+                                    profile.isBanned,
+                                    currentUser!.uid,
+                                    reason,
+                                  );
+                                },
+                              ),
+                            );
+                          }
                         },
                         icon: Icon(
                           profile.isBanned
@@ -251,6 +375,7 @@ class ProfileScreen extends ConsumerWidget {
     String userId,
     bool isBanned,
     String adminId,
+    String? reason,
   ) async {
     try {
       if (isBanned) {
@@ -261,18 +386,11 @@ class ProfileScreen extends ConsumerWidget {
         result.fold(
           (failure) {
             if (context.mounted) {
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                builder: (context) => ToastCard(
-                  color: Colors.red,
-                  leading: const Icon(Icons.error_outline, color: Colors.white),
-                  title: Text(
-                    'Failed to unban user: ${failure.message}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.error(
+                context,
+                'Unban Failed',
+                subtitle: failure.message,
+              );
             }
           },
           (_) {
@@ -280,43 +398,26 @@ class ProfileScreen extends ConsumerWidget {
             ref.invalidate(userProfileProvider(userId));
 
             if (context.mounted) {
-              DelightToastBar(
-                snackbarDuration: const Duration(seconds: 3),
-                position: DelightSnackbarPosition.top,
-                builder: (context) => const ToastCard(
-                  color: Colors.green,
-                  leading: Icon(Icons.check_circle, color: Colors.white),
-                  title: Text(
-                    'User unbanned successfully',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.success(context, 'User unbanned successfully');
             }
           },
         );
       } else {
         // Ban user
+        if (reason == null) return;
         final banUseCase = ref.read(banUserUseCaseProvider);
         final result = await banUseCase(
-          BanUserParams(userId: userId, bannedBy: adminId),
+          BanUserParams(userId: userId, bannedBy: adminId, reason: reason),
         );
 
         result.fold(
           (failure) {
             if (context.mounted) {
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                builder: (context) => ToastCard(
-                  color: Colors.red,
-                  leading: const Icon(Icons.error_outline, color: Colors.white),
-                  title: Text(
-                    'Failed to ban user: ${failure.message}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.error(
+                context,
+                'Ban Failed',
+                subtitle: failure.message,
+              );
             }
           },
           (_) {
@@ -324,35 +425,14 @@ class ProfileScreen extends ConsumerWidget {
             ref.invalidate(userProfileProvider(userId));
 
             if (context.mounted) {
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                builder: (context) => const ToastCard(
-                  color: Colors.green,
-                  leading: Icon(Icons.check_circle, color: Colors.white),
-                  title: Text(
-                    'User banned successfully',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.success(context, 'User banned successfully');
             }
           },
         );
       }
     } catch (e) {
       if (context.mounted) {
-        DelightToastBar(
-          snackbarDuration: const Duration(seconds: 3),
-          builder: (context) => ToastCard(
-            color: Colors.red,
-            leading: const Icon(Icons.error_outline, color: Colors.white),
-            title: Text(
-              'An error occurred: $e',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.error(context, 'Error', subtitle: e.toString());
       }
     }
   }

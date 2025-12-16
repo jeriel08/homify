@@ -4,14 +4,17 @@ import 'package:homify/features/properties/domain/entities/property_entity.dart'
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
+import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PropertyDetailsSheet extends StatefulWidget {
   final PropertyEntity property;
   final VoidCallback onApprove;
-  final VoidCallback onReject;
+  final void Function(String reason) onReject;
   final bool showActions;
 
   const PropertyDetailsSheet({
@@ -23,7 +26,7 @@ class PropertyDetailsSheet extends StatefulWidget {
   });
 
   static void _defaultApprove() {}
-  static void _defaultReject() {}
+  static void _defaultReject(String reason) {}
 
   @override
   State<PropertyDetailsSheet> createState() => _PropertyDetailsSheetState();
@@ -135,21 +138,32 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(20),
-                                    child: Image.network(
-                                      widget.property.imageUrls[i],
+                                    child: CachedNetworkImage(
+                                      imageUrl: widget.property.imageUrls[i],
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) => Container(
+                                      placeholder: (context, url) => Container(
                                         color: surface.withValues(alpha: 0.3),
-                                        child: Center(
-                                          child: Icon(
-                                            LucideIcons.imageOff,
-                                            size: 60,
-                                            color: textSecondary.withValues(
-                                              alpha: 0.4,
-                                            ),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
                                           ),
                                         ),
                                       ),
+                                      errorWidget: (context, url, error) =>
+                                          Container(
+                                            color: surface.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                LucideIcons.imageOff,
+                                                size: 60,
+                                                color: textSecondary.withValues(
+                                                  alpha: 0.4,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -395,7 +409,7 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                                         ),
                                   ),
                                   Text(
-                                    ' / ${widget.property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                    ' / month',
                                     style: HomifyTypography.body3.copyWith(
                                       color: textSecondary,
                                     ),
@@ -470,6 +484,24 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
 
                   const Gap(24),
 
+                  // Owner Info
+                  Row(
+                    children: [
+                      Icon(LucideIcons.user, size: 20, color: primary),
+                      const Gap(8),
+                      Text(
+                        'Property Owner',
+                        style: HomifyTypography.semibold(
+                          HomifyTypography.heading6.copyWith(
+                            color: textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
+                  OwnerProfileCard(ownerUid: widget.property.ownerUid),
+                  const Gap(16),
                   ContactOwnerButton(ownerUid: widget.property.ownerUid),
 
                   const Gap(24),
@@ -576,8 +608,36 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () {
-                              widget.onReject();
-                              Navigator.pop(context);
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (sheetContext) => ConfirmationReasonSheet(
+                                  title: 'Reject Property',
+                                  subtitle:
+                                      'Please select a reason for rejection:',
+                                  reasons: const [
+                                    'Incomplete or unclear property information',
+                                    'Poor quality images',
+                                    'Suspicious or misleading listing',
+                                    'Property appears to be a duplicate',
+                                    'Inappropriate content',
+                                    'Other',
+                                  ],
+                                  confirmLabel: 'Reject Property',
+                                  confirmIcon: LucideIcons.x,
+                                  confirmColor: Colors.red,
+                                  onConfirm: (reason) {
+                                    Navigator.pop(
+                                      sheetContext,
+                                    ); // Close reason sheet
+                                    Navigator.pop(
+                                      context,
+                                    ); // Close details sheet
+                                    widget.onReject(reason);
+                                  },
+                                ),
+                              );
                             },
                             icon: const Icon(LucideIcons.x, size: 20),
                             label: const Text('Reject'),
@@ -668,5 +728,115 @@ class _PropertyDetailsSheetState extends State<PropertyDetailsSheet> {
         .split(' ')
         .map((e) => e[0].toUpperCase() + e.substring(1))
         .join(' ');
+  }
+}
+
+/// Owner profile card that fetches and displays owner info
+class OwnerProfileCard extends StatelessWidget {
+  final String ownerUid;
+
+  const OwnerProfileCard({super.key, required this.ownerUid});
+
+  static const Color primary = Color(0xFFE05725);
+  static const Color surface = Color(0xFFF9E5C5);
+  static const Color textPrimary = Color(0xFF32190D);
+  static const Color textSecondary = Color(0xFF6B4F3C);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(ownerUid)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: surface, width: 2),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: surface, width: 2),
+            ),
+            child: Text(
+              'Owner information unavailable',
+              style: HomifyTypography.body3.copyWith(color: textSecondary),
+            ),
+          );
+        }
+
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+        final firstName = data['first_name'] as String? ?? '';
+        final lastName = data['last_name'] as String? ?? '';
+        final fullName = '$firstName $lastName'.trim();
+        final photoUrl = data['photo_url'] as String?;
+        final gender = data['gender'] as String?;
+        final isMale = gender?.toLowerCase() == 'male';
+        final placeholder = isMale
+            ? 'assets/images/placeholder_male.png'
+            : 'assets/images/placeholder_female.png';
+
+        return InkWell(
+          onTap: () => context.push('/profile/$ownerUid'),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: surface, width: 2),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(photoUrl)
+                      : AssetImage(placeholder) as ImageProvider,
+                ),
+                const Gap(12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        fullName.isNotEmpty ? fullName : 'Owner',
+                        style: HomifyTypography.semibold(
+                          HomifyTypography.body2.copyWith(color: textPrimary),
+                        ),
+                      ),
+                      Text(
+                        'View Profile',
+                        style: HomifyTypography.medium(
+                          HomifyTypography.label3.copyWith(color: primary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  LucideIcons.chevronRight,
+                  color: textSecondary.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

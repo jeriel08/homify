@@ -4,6 +4,7 @@ class UserEntity {
   final String uid;
   final AccountType accountType;
   final String firstName;
+  final String? middleName;
   final String lastName;
   final String birthday; // "YYYY-MM-DD"
   final String gender; // "male" | "female" | "other"
@@ -16,13 +17,20 @@ class UserEntity {
   final bool isBanned;
   final DateTime? bannedAt;
   final String? bannedBy; // Admin UID who banned the user
+  final Map<String, dynamic>? preferences;
 
-  String get fullName => '$firstName $lastName';
+  String get fullName {
+    if (middleName != null && middleName!.isNotEmpty) {
+      return '$firstName $middleName $lastName';
+    }
+    return '$firstName $lastName';
+  }
 
   const UserEntity({
     required this.uid,
     required this.accountType,
     required this.firstName,
+    this.middleName,
     required this.lastName,
     required this.birthday,
     required this.gender,
@@ -35,5 +43,6 @@ class UserEntity {
     this.bannedAt,
     this.bannedBy,
     this.photoUrl,
+    this.preferences,
   });
 }

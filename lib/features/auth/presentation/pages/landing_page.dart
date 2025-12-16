@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:homify/core/services/location_service.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/controllers/google_sign_in_controller.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:homify/core/theme/app_colors.dart';
@@ -29,12 +30,9 @@ class _LandingPageState extends ConsumerState<LandingPage> {
     if (!mounted) return;
 
     if (!granted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Location access needed for nearby searches. Enable in settings?',
-          ),
-        ),
+      ToastHelper.warning(
+        context,
+        'Location access needed for nearby searches. Enable in settings?',
       );
     }
   }
@@ -51,12 +49,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
       next,
     ) {
       if (next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastHelper.error(context, next.errorMessage!);
         ref.read(googleSignInControllerProvider.notifier).clearError();
       }
     });
