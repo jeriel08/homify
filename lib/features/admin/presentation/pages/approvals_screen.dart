@@ -1,9 +1,8 @@
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
-import 'package:homify/core/utils/show_awesome_snackbar.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/admin/presentation/providers/pending_properties_provider.dart';
 import 'package:homify/features/admin/presentation/providers/property_verification_provider.dart';
 import 'package:homify/features/admin/presentation/widgets/filter_chips_row.dart';
@@ -166,35 +165,35 @@ class _ApprovalsScreenState extends ConsumerState<ApprovalsScreen> {
         onApprove: () async {
           final result = await verify(property.id, true);
           result.fold(
-            (_) => showAwesomeSnackbar(
-              context: context,
-              title: 'Failed',
-              message: 'Could not approve property',
-              contentType: ContentType.failure,
+            (_) => ToastHelper.error(
+              context,
+              'Failed',
+              subtitle: 'Could not approve property',
             ),
-            (_) => showAwesomeSnackbar(
-              context: context,
-              title: 'Success!',
-              message: 'Property approved successfully',
-              contentType: ContentType.success,
+            (_) => ToastHelper.success(
+              context,
+              'Success!',
+              subtitle: 'Property approved successfully',
             ),
           );
           // if (context.mounted) Navigator.of(context).pop();
         },
-        onReject: () async {
-          final result = await verify(property.id, false);
+        onReject: (reason) async {
+          final result = await verify(
+            property.id,
+            false,
+            rejectionReason: reason,
+          );
           result.fold(
-            (_) => showAwesomeSnackbar(
-              context: context,
-              title: 'Failed',
-              message: 'Could not reject property',
-              contentType: ContentType.failure,
+            (_) => ToastHelper.error(
+              context,
+              'Failed',
+              subtitle: 'Could not reject property',
             ),
-            (_) => showAwesomeSnackbar(
-              context: context,
-              title: 'Rejected',
-              message: 'Property has been rejected',
-              contentType: ContentType.warning,
+            (_) => ToastHelper.warning(
+              context,
+              'Rejected',
+              subtitle: 'Property has been rejected',
             ),
           );
           // if (context.mounted) Navigator.of(context).pop();

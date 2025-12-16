@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/controllers/tenant_onboarding_controller.dart';
 
 import 'package:homify/core/theme/app_colors.dart';
@@ -34,10 +35,9 @@ class _TenantOnboardingPageState extends ConsumerState<TenantOnboardingPage> {
       if (success) {
         // Force navigation to success page
         context.go('/tenant-success');
-      } else if (state.error != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
+        return; // Prevent any further code execution after navigation
+      } else if (mounted && state.error != null) {
+        ToastHelper.error(context, 'Error: ${state.error}');
       }
     }
   }

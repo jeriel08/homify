@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/core/theme/app_colors.dart';
+import 'package:homify/core/utils/toast_helper.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
 import 'package:homify/features/home/presentation/pages/search_property_page.dart';
+import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:homify/features/home/presentation/providers/tenant_home_provider.dart';
 import 'package:homify/features/home/presentation/widgets/property_carousel.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
@@ -44,6 +47,8 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(tenantHomeProvider);
+    final userRole = ref.watch(userRoleProvider);
+    final isGuest = userRole == AppUserRole.guest;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -80,28 +85,33 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
                           ],
                         ),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
+                          horizontal: 16,
+                          vertical: 14,
                         ),
                         child: Row(
                           children: [
                             const Icon(
                               LucideIcons.search,
                               color: AppColors.accent,
+                              size: 20,
                             ),
                             const Gap(12),
-                            Text(
-                              'Search for a property...',
-                              style: TextStyle(
-                                color: Colors.grey[400],
-                                fontSize: 16,
+                            Expanded(
+                              child: Text(
+                                'Search for a property...',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  fontSize: 15,
+                                ),
                               ),
                             ),
                           ],
@@ -167,6 +177,7 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
                                     .displayedRecommendedProperties
                                     .last, // Use last property as template
                                 isFavorite: false,
+                                showFavorite: !isGuest,
                                 onFavorite: () {},
                                 onTap: () {},
                               ),
@@ -176,12 +187,26 @@ class _TenantHomeScreenState extends ConsumerState<TenantHomeScreen> {
 
                         final property =
                             state.displayedRecommendedProperties[index];
+
+                        final isFavorite = ref
+                            .watch(favoritesProvider)
+                            .contains(property.id);
+
                         return TenantPropertyCard(
                           property: property,
-                          isFavorite:
-                              false, // TODO: Hook up to riverpod provider
+                          isFavorite: isFavorite,
+                          showFavorite: !isGuest,
                           onFavorite: () {
-                            // TODO: Toggle favorite logic
+                            ref
+                                .read(favoritesProvider.notifier)
+                                .toggle(property);
+
+                            ToastHelper.info(
+                              context,
+                              isFavorite
+                                  ? 'Removed from favorites'
+                                  : 'Added to favorites',
+                            );
                           },
                           onTap: () => _showPropertyDetails(property),
                         );

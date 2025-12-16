@@ -3,13 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:homify/features/home/presentation/providers/favorites_provider.dart';
 import 'package:homify/core/theme/typography.dart';
 import 'package:homify/features/home/presentation/providers/navigation_provider.dart';
+import 'package:homify/features/home/presentation/providers/explorer_provider.dart';
 import 'package:homify/features/messages/presentation/widgets/contact_owner_button.dart';
 import 'package:homify/features/profile/presentation/providers/profile_provider.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:homify/features/properties/presentation/widgets/reviews/review_list.dart';
+import 'package:homify/features/auth/presentation/providers/user_role_provider.dart';
+import 'package:homify/core/widgets/login_required_dialog.dart';
 
 class TenantPropertyDetailsSheet extends ConsumerStatefulWidget {
   final PropertyEntity property;
@@ -46,6 +51,9 @@ class _TenantPropertyDetailsSheetState
 
     final property = widget.property;
     final ownerAsync = ref.watch(userProfileProvider(property.ownerUid));
+    final userRole = ref.watch(userRoleProvider);
+    final isGuest = userRole == AppUserRole.guest;
+    final isAdmin = userRole == AppUserRole.admin;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -399,7 +407,7 @@ class _TenantPropertyDetailsSheetState
                                         ),
                                   ),
                                   Text(
-                                    ' / ${property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                    ' / month',
                                     style: HomifyTypography.body3.copyWith(
                                       color: textSecondary,
                                     ),
@@ -567,6 +575,11 @@ class _TenantPropertyDetailsSheetState
                     const Gap(24),
                   ],
 
+                  // Divider
+                  Container(height: 1, color: surface.withValues(alpha: 0.5)),
+
+                  const Gap(24),
+
                   // Owner Info
                   Row(
                     children: [
@@ -585,7 +598,11 @@ class _TenantPropertyDetailsSheetState
                   const Gap(12),
                   InkWell(
                     onTap: () {
-                      context.push('/profile/${property.ownerUid}');
+                      if (isGuest) {
+                        _showLoginRequiredDialog(context);
+                      } else {
+                        context.push('/profile/${property.ownerUid}');
+                      }
                     },
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
@@ -663,9 +680,9 @@ class _TenantPropertyDetailsSheetState
                     ),
                   ),
                   const Gap(16),
-                  ContactOwnerButton(ownerUid: property.ownerUid),
+                  if (!isGuest) ContactOwnerButton(ownerUid: property.ownerUid),
 
-                  const Gap(20),
+                  const Gap(24),
 
                   // Report Issue Button
                   Center(
@@ -695,68 +712,109 @@ class _TenantPropertyDetailsSheetState
                     ),
                   ),
                   const Gap(20),
+
+                  // Divider
+                  Container(height: 1, color: surface.withValues(alpha: 0.5)),
+
+                  const Gap(24),
+
+                  // Reviews
+                  ReviewList(propertyId: property.id, canWriteReview: !isGuest),
+
+                  const Gap(20),
                 ],
               ),
             ),
 
             // Bottom Action Bar
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // Favorite Button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: surface.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(16),
+            if (!isAdmin)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
                     ),
-                    child: IconButton(
-                      onPressed: () {
-                        // TODO: Implement favorite toggle
-                      },
-                      icon: const Icon(LucideIcons.heart),
-                      color: textPrimary,
-                      padding: const EdgeInsets.all(16),
-                    ),
-                  ),
-                  const Gap(12),
-                  // Show Direction Button
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context); // Close sheet
-                        // Switch to Explore tab (Index 1)
-                        ref.read(bottomNavIndexProvider.notifier).state = 1;
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                        textStyle: HomifyTypography.semibold(
-                          HomifyTypography.label1,
-                        ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Favorite Button (hidden for guests) - Admin check handled by parent container
+                    if (!isGuest)
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final favoritesState = ref.watch(favoritesProvider);
+                          final isFavorite = favoritesState.contains(
+                            widget.property.id,
+                          );
+
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: isFavorite
+                                  ? Colors.red.withValues(alpha: 0.1)
+                                  : surface.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                ref
+                                    .read(favoritesProvider.notifier)
+                                    .toggle(widget.property);
+                              },
+                              icon: Icon(
+                                LucideIcons.heart,
+                                fill: isFavorite ? 1.0 : 0.0,
+                              ),
+                              color: isFavorite ? Colors.red : textPrimary,
+                              padding: const EdgeInsets.all(16),
+                            ),
+                          );
+                        },
                       ),
-                      icon: const Icon(LucideIcons.map),
-                      label: const Text('Show Direction'),
+                    if (!isGuest) const Gap(12),
+                    // Show Direction Button
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          debugPrint('TenantSheet: Show Direction clicked');
+                          // Trigger navigation in explorer
+                          ref
+                              .read(exploreProvider.notifier)
+                              .triggerNavigation(widget.property);
+
+                          // 1. Close the Bottom Sheet
+                          Navigator.pop(context);
+
+                          // 2. Clear imperative stack (closes ChatScreen, etc.)
+                          Navigator.of(
+                            context,
+                          ).popUntil((route) => route.isFirst);
+
+                          // 3. Switch to Explore Tab
+                          ref.read(bottomNavIndexProvider.notifier).state = 1;
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                          textStyle: HomifyTypography.semibold(
+                            HomifyTypography.label1,
+                          ),
+                        ),
+                        icon: const Icon(LucideIcons.map),
+                        label: const Text('Show Direction'),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -769,5 +827,9 @@ class _TenantPropertyDetailsSheetState
         .split(' ')
         .map((e) => e[0].toUpperCase() + e.substring(1))
         .join(' ');
+  }
+
+  void _showLoginRequiredDialog(BuildContext context) {
+    LoginRequiredDialog.show(context, closeSheet: true);
   }
 }

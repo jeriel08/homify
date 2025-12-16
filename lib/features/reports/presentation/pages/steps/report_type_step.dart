@@ -52,7 +52,7 @@ class ReportTypeStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +63,7 @@ class ReportTypeStep extends StatelessWidget {
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
           ...ReportType.values.map((type) {
             final isSelected = selectedType == type;
             return Padding(
@@ -118,6 +118,8 @@ class ReportTypeStep extends StatelessWidget {
               ),
             );
           }),
+          // Extra bottom padding for scrolling clearance
+          const SizedBox(height: 20),
         ],
       ),
     );

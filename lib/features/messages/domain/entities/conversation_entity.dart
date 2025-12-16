@@ -4,6 +4,7 @@ class ConversationEntity {
   final String lastMessage;
   final DateTime lastMessageTime;
   final Map<String, int> unreadCounts; // Key: UserID, Value: Count
+  final Map<String, String> themePreferences; // Key: UserID, Value: Theme name
 
   const ConversationEntity({
     required this.id,
@@ -11,5 +12,6 @@ class ConversationEntity {
     required this.lastMessage,
     required this.lastMessageTime,
     required this.unreadCounts,
+    this.themePreferences = const {},
   });
 }

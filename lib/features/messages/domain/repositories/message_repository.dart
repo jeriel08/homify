@@ -17,6 +17,13 @@ abstract class MessageRepository {
     required String content,
   });
 
+  /// Send an image message
+  Future<Either<Failure, void>> sendImageMessage({
+    required String conversationId,
+    required String senderId,
+    required String imagePath,
+  });
+
   /// Creates a new conversation or returns the existing ID if one exists.
   /// We use a unique ID strategy: "userA_userB" (sorted alphabetically)
   Future<Either<Failure, String>> startConversation({
@@ -29,4 +36,19 @@ abstract class MessageRepository {
     String conversationId,
     String userId,
   );
+
+  /// Toggle or set a reaction (emoji) on a message for a specific user
+  Future<Either<Failure, void>> toggleReaction({
+    required String conversationId,
+    required String messageId,
+    required String userId,
+    required String emoji,
+  });
+
+  /// Set the theme preference for a user in a conversation
+  Future<Either<Failure, void>> setConversationTheme({
+    required String conversationId,
+    required String userId,
+    required String themeName,
+  });
 }

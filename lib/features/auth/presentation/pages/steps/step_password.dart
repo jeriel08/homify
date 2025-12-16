@@ -1,9 +1,11 @@
 // lib/auth/registration/steps/step_password.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:homify/core/theme/app_colors.dart';
+import 'package:gap/gap.dart';
 
 RegistrationStep stepPassword() {
   return RegistrationStep(
@@ -16,10 +18,15 @@ RegistrationStep stepPassword() {
       if (pass != confirm) return false;
       final hasLetter = RegExp(r'[A-Za-z]').hasMatch(pass);
       final hasNumber = RegExp(r'\d').hasMatch(pass);
-      return pass.length >= 8 && hasLetter && hasNumber;
+      final hasSpecial = RegExp(
+        r'[!@#$%^&*()_+\-=\[\]{};:\x27",.<>?/\\|`~]',
+      ).hasMatch(pass);
+      return pass.length >= 8 && hasLetter && hasNumber && hasSpecial;
     },
   );
 }
+
+enum PasswordStrength { weak, medium, strong }
 
 class _PasswordStep extends ConsumerStatefulWidget {
   const _PasswordStep();
@@ -62,17 +69,39 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
     }
   }
 
+  // Password requirement checks
+  bool get _hasMinLength => _passCtrl.text.length >= 8;
+  bool get _hasLetter => RegExp(r'[A-Za-z]').hasMatch(_passCtrl.text);
+  bool get _hasNumber => RegExp(r'\d').hasMatch(_passCtrl.text);
+  bool get _hasSpecial => RegExp(
+    r'[!@#$%^&*()_+\-=\[\]{};:\x27",.<>?/\\|`~]',
+  ).hasMatch(_passCtrl.text);
+
+  PasswordStrength get _passwordStrength {
+    final pass = _passCtrl.text;
+    if (pass.isEmpty) return PasswordStrength.weak;
+
+    int score = 0;
+    if (_hasMinLength) score++;
+    if (_hasLetter) score++;
+    if (_hasNumber) score++;
+    if (_hasSpecial) score++;
+
+    if (score >= 4) return PasswordStrength.strong;
+    if (score >= 3) return PasswordStrength.medium;
+    return PasswordStrength.weak;
+  }
+
   String? _getPasswordError() {
     final pass = _passCtrl.text;
 
     if (!_triedNext && pass.isEmpty) return null;
 
     if (pass.isEmpty) return "Password is required";
-    if (pass.length < 8) return "Use at least 8 characters";
-    if (!RegExp(r'[A-Za-z]').hasMatch(pass)) {
-      return "Include at least one letter";
-    }
-    if (!RegExp(r'\d').hasMatch(pass)) return "Include at least one number";
+    if (!_hasMinLength) return "Use at least 8 characters";
+    if (!_hasLetter) return "Include at least one letter";
+    if (!_hasNumber) return "Include at least one number";
+    if (!_hasSpecial) return "Include at least one special character";
     return null;
   }
 
@@ -85,7 +114,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
     if (!_triedNext && confirm.isEmpty) return null;
 
     if (confirm.isEmpty) return "Please confirm your password";
-    if (pass != confirm) return "Passwords don’t match";
+    if (pass != confirm) return "Passwords don't match";
     return null;
   }
 
@@ -114,7 +143,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
             const SizedBox(height: 4),
 
             Text(
-              "Use at least 8 characters with a mix of letters and numbers.",
+              "Use at least 8 characters with letters, numbers, and special characters.",
               style: Theme.of(
                 context,
               ).textTheme.labelMedium?.copyWith(color: Colors.grey.shade700),
@@ -215,6 +244,15 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
               },
             ),
 
+            const SizedBox(height: 16),
+
+            // Password Strength Indicator
+            if (_passCtrl.text.isNotEmpty) ...[
+              _buildPasswordStrengthIndicator(),
+              const SizedBox(height: 16),
+              _buildRequirementsList(),
+            ],
+
             const SizedBox(height: 20),
 
             // Buttons
@@ -243,9 +281,7 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
                                       _getPasswordError() ??
                                       _getConfirmError() ??
                                       "Please fix password issues";
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(SnackBar(content: Text(msg)));
+                                  ToastHelper.warning(context, msg);
                                 }
                               },
                         style: ElevatedButton.styleFrom(
@@ -300,6 +336,118 @@ class _PasswordStepState extends ConsumerState<_PasswordStep> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPasswordStrengthIndicator() {
+    final strength = _passwordStrength;
+
+    Color color;
+    String label;
+    double progress;
+
+    switch (strength) {
+      case PasswordStrength.weak:
+        color = Colors.red;
+        label = 'Weak';
+        progress = 0.33;
+        break;
+      case PasswordStrength.medium:
+        color = Colors.orange;
+        label = 'Medium';
+        progress = 0.66;
+        break;
+      case PasswordStrength.strong:
+        color = Colors.green;
+        label = 'Strong';
+        progress = 1.0;
+        break;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Password Strength',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const Gap(6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRequirementsList() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildRequirementItem('At least 8 characters', _hasMinLength),
+          const Gap(8),
+          _buildRequirementItem('Contains a letter', _hasLetter),
+          const Gap(8),
+          _buildRequirementItem('Contains a number', _hasNumber),
+          const Gap(8),
+          _buildRequirementItem(
+            'Contains a special character (!@#\$...)',
+            _hasSpecial,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequirementItem(String text, bool isMet) {
+    return Row(
+      children: [
+        Icon(
+          isMet ? LucideIcons.circleCheck : LucideIcons.circle,
+          size: 16,
+          color: isMet
+              ? Colors.green
+              : AppColors.primary.withValues(alpha: 0.5),
+        ),
+        const Gap(8),
+        Text(
+          text,
+          style: TextStyle(
+            color: isMet ? Colors.green.shade700 : AppColors.primary,
+            fontSize: 13,
+            fontWeight: isMet ? FontWeight.w500 : FontWeight.normal,
+          ),
+        ),
+      ],
     );
   }
 }

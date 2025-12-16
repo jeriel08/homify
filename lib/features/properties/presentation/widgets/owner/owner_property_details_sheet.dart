@@ -3,16 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/core/theme/typography.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/presentation/widgets/property_address_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:homify/features/properties/presentation/pages/edit_property_page.dart';
 import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:homify/core/presentation/widgets/confirmation_reason_sheet.dart';
+import 'package:homify/features/properties/presentation/widgets/reviews/review_list.dart';
 
 class OwnerPropertyDetailsSheet extends StatefulWidget {
   final PropertyEntity property;
@@ -308,6 +307,121 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
 
                   const Gap(24),
 
+                  // Rejection Info Alert (only shown when rejected)
+                  if (widget.property.status == PropertyStatus.rejected) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                LucideIcons.circleAlert,
+                                color: Colors.red.shade700,
+                                size: 22,
+                              ),
+                              const Gap(10),
+                              Text(
+                                'Property Rejected',
+                                style: HomifyTypography.semibold(
+                                  HomifyTypography.body1.copyWith(
+                                    color: Colors.red.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (widget.property.rejectionReason != null) ...[
+                            const Gap(12),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Reason:',
+                                    style: HomifyTypography.medium(
+                                      HomifyTypography.label3.copyWith(
+                                        color: textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  const Gap(4),
+                                  Text(
+                                    widget.property.rejectionReason!,
+                                    style: HomifyTypography.medium(
+                                      HomifyTypography.body2.copyWith(
+                                        color: textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const Gap(16),
+                          // Comply & Resubmit Button
+                          Consumer(
+                            builder: (context, ref, child) {
+                              return SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await ref
+                                        .read(ownerDashboardProvider.notifier)
+                                        .complyProperty(widget.property.id);
+
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      ToastHelper.success(
+                                        context,
+                                        'Property submitted for re-approval',
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(
+                                    LucideIcons.refreshCcw,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Comply & Resubmit'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primary,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    textStyle: HomifyTypography.semibold(
+                                      HomifyTypography.label2,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Gap(24),
+                  ],
+
                   // Property type badge
                   Align(
                     alignment: Alignment.centerLeft,
@@ -407,7 +521,7 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
                                         ),
                                   ),
                                   Text(
-                                    ' / ${widget.property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                    ' / month',
                                     style: HomifyTypography.body3.copyWith(
                                       color: textSecondary,
                                     ),
@@ -573,7 +687,22 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
                           .toList(),
                     ),
                     const Gap(24),
+                    const Gap(24),
                   ],
+
+                  // Reviews
+                  ReviewList(
+                    propertyId: widget.property.id,
+                    canWriteReview:
+                        false, // Owners can't review their own property
+                  ),
+
+                  const Gap(24),
+
+                  // Divider
+                  Container(height: 1, color: surface.withValues(alpha: 0.5)),
+
+                  const Gap(24),
 
                   const Gap(8),
 
@@ -703,52 +832,15 @@ class _OwnerPropertyDetailsSheetState extends State<OwnerPropertyDetailsSheet> {
 
             if (context.mounted) {
               Navigator.pop(context); // Close details sheet
-
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                autoDismiss: true,
-                builder: (context) => const ToastCard(
-                  color: Colors.green,
-                  leading: Icon(
-                    Icons.check_circle,
-                    size: 28,
-                    color: Colors.white,
-                  ),
-                  title: Text(
-                    'Property deleted successfully',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.success(context, 'Property deleted successfully');
             }
           } catch (e) {
             if (context.mounted) {
-              DelightToastBar(
-                position: DelightSnackbarPosition.top,
-                snackbarDuration: const Duration(seconds: 3),
-                autoDismiss: true,
-                builder: (context) => ToastCard(
-                  color: Colors.red,
-                  leading: const Icon(
-                    Icons.error_outline,
-                    size: 28,
-                    color: Colors.white,
-                  ),
-                  title: Text(
-                    'Failed to delete property: $e',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ).show(context);
+              ToastHelper.error(
+                context,
+                'Delete Failed',
+                subtitle: e.toString(),
+              );
             }
           }
         },

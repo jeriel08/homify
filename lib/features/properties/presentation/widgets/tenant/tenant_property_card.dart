@@ -11,6 +11,7 @@ class TenantPropertyCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onFavorite;
   final bool isFavorite;
+  final bool showFavorite;
 
   const TenantPropertyCard({
     super.key,
@@ -18,6 +19,7 @@ class TenantPropertyCard extends StatelessWidget {
     required this.onTap,
     required this.onFavorite,
     this.isFavorite = false,
+    this.showFavorite = true,
   });
 
   // Brand colors
@@ -191,7 +193,7 @@ class TenantPropertyCard extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                ' / ${property.rentChargeMethod.name == 'perUnit' ? 'unit' : 'bed'}',
+                                ' / month',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
@@ -200,26 +202,45 @@ class TenantPropertyCard extends StatelessWidget {
                       ),
                     ),
 
-                    // Heart Button
-                    Material(
-                      color: isFavorite
-                          ? Colors.red.withValues(alpha: 0.1)
-                          : surface.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(16),
-                      child: InkWell(
+                    // Heart Button (for authenticated users)
+                    if (showFavorite)
+                      Material(
+                        color: isFavorite
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : surface.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(16),
-                        onTap: onFavorite,
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          child: Icon(
-                            LucideIcons.heart,
-                            size: 24,
-                            color: isFavorite ? Colors.red : textSecondary,
-                            fill: isFavorite ? 1.0 : 0.0,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: onFavorite,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            child: Icon(
+                              LucideIcons.heart,
+                              size: 24,
+                              color: isFavorite ? Colors.red : textSecondary,
+                              fill: isFavorite ? 1.0 : 0.0,
+                            ),
+                          ),
+                        ),
+                      )
+                    // Arrow Button (for guests - indicates "view details")
+                    else
+                      Material(
+                        color: primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: onTap,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            child: const Icon(
+                              LucideIcons.chevronRight,
+                              size: 24,
+                              color: primary,
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ],

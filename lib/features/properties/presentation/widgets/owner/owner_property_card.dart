@@ -281,7 +281,7 @@ class OwnerPropertyCard extends StatelessWidget {
                                     ),
                               ),
                               Text(
-                                ' / ${property.rentChargeMethod == RentChargeMethod.perUnit ? 'unit' : 'bed'}',
+                                ' / month',
                                 style: HomifyTypography.body3.copyWith(
                                   color: textSecondary,
                                 ),
@@ -326,33 +326,55 @@ class OwnerPropertyCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge(BuildContext context, bool isApproved) {
+    // Determine status from the property.status enum for better accuracy
+    final status = property.status;
+
+    Color bgColor;
+    Color borderColor;
+    Color iconColor;
+    IconData icon;
+    String label;
+
+    switch (status) {
+      case PropertyStatus.approved:
+        bgColor = Colors.green.withValues(alpha: 0.15);
+        borderColor = Colors.green.withValues(alpha: 0.3);
+        iconColor = Colors.green;
+        icon = LucideIcons.circleCheck;
+        label = 'Live';
+        break;
+      case PropertyStatus.rejected:
+        bgColor = Colors.red.withValues(alpha: 0.15);
+        borderColor = Colors.red.withValues(alpha: 0.3);
+        iconColor = Colors.red;
+        icon = LucideIcons.circleX;
+        label = 'Rejected';
+        break;
+      case PropertyStatus.pending:
+        bgColor = Colors.orange.withValues(alpha: 0.15);
+        borderColor = Colors.orange.withValues(alpha: 0.3);
+        iconColor = Colors.orange;
+        icon = LucideIcons.clock;
+        label = 'Pending';
+        break;
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isApproved
-            ? Colors.green.withValues(alpha: 0.15)
-            : Colors.orange.withValues(alpha: 0.15),
+        color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isApproved
-              ? Colors.green.withValues(alpha: 0.3)
-              : Colors.orange.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            isApproved ? LucideIcons.circleCheck : LucideIcons.clock,
-            size: 12,
-            color: isApproved ? Colors.green : Colors.orange,
-          ),
+          Icon(icon, size: 12, color: iconColor),
           const Gap(4),
           Text(
-            isApproved ? 'Live' : 'Pending',
+            label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: isApproved ? Colors.green : Colors.orange,
+              color: iconColor,
               fontWeight: FontWeight.w600,
             ),
           ),

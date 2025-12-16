@@ -1,6 +1,7 @@
 // lib/auth/registration/steps/step_property_type.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_controller.dart';
 import 'package:homify/features/properties/presentation/controllers/add_property_state.dart';
@@ -175,12 +176,9 @@ class _PropertyTypeStepState extends ConsumerState<_PropertyTypeStep> {
                               }
                               final ok = await controller.next();
                               if (!ok && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Please select a property type.',
-                                    ),
-                                  ),
+                                ToastHelper.warning(
+                                  context,
+                                  'Please select a property type.',
                                 );
                               }
                             },

@@ -1,6 +1,7 @@
 // lib/auth/registration/steps/step_gender.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/controllers/registration_controller.dart';
 import 'package:homify/core/theme/app_colors.dart';
 
@@ -173,10 +174,9 @@ class _GenderStepState extends ConsumerState<_GenderStep> {
 
                               final ok = await controller.next();
                               if (!ok && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please select a gender.'),
-                                  ),
+                                ToastHelper.warning(
+                                  context,
+                                  'Please select a gender.',
                                 );
                               }
                             },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -144,7 +145,10 @@ class _BannedUsersScreenState extends ConsumerState<BannedUsersScreen> {
                     CircleAvatar(
                       radius: 24,
                       backgroundColor: Colors.red.withValues(alpha: 0.1),
-                      backgroundImage: AssetImage(imageAsset),
+                      backgroundImage:
+                          user.photoUrl != null && user.photoUrl!.isNotEmpty
+                          ? CachedNetworkImageProvider(user.photoUrl!)
+                          : AssetImage(imageAsset),
                     ),
                     const Gap(16),
                     Expanded(

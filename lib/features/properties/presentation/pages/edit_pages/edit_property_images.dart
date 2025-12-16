@@ -1,15 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homify/core/utils/toast_helper.dart';
 import 'package:homify/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:homify/features/properties/domain/entities/property_entity.dart';
 import 'package:homify/features/properties/presentation/providers/owner_dashboard_provider.dart';
 import 'package:homify/features/properties/properties_providers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 
 class EditPropertyImages extends ConsumerStatefulWidget {
   final PropertyEntity property;
@@ -41,23 +39,7 @@ class _EditPropertyImagesState extends ConsumerState<EditPropertyImages> {
   Future<void> _addImage() async {
     if (_imageUrls.length >= 10) {
       if (mounted) {
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => const ToastCard(
-            color: Colors.orange,
-            leading: Icon(Icons.warning, size: 28, color: Colors.white),
-            title: Text(
-              'Maximum 10 images allowed',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.warning(context, 'Maximum 10 images allowed');
       }
       return;
     }
@@ -86,48 +68,12 @@ class _EditPropertyImagesState extends ConsumerState<EditPropertyImages> {
           _isUploading = false;
         });
 
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => const ToastCard(
-            color: Colors.green,
-            leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
-            title: Text(
-              'Image uploaded successfully',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.success(context, 'Image uploaded successfully');
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isUploading = false);
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => ToastCard(
-            color: Colors.red,
-            leading: const Icon(
-              Icons.error_outline,
-              size: 28,
-              color: Colors.white,
-            ),
-            title: Text(
-              'Failed to upload image: $e',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.error(context, 'Upload Failed', subtitle: e.toString());
       }
     }
   }
@@ -135,23 +81,7 @@ class _EditPropertyImagesState extends ConsumerState<EditPropertyImages> {
   Future<void> _save() async {
     if (_imageUrls.isEmpty) {
       if (mounted) {
-        DelightToastBar(
-          position: DelightSnackbarPosition.top,
-          snackbarDuration: const Duration(seconds: 3),
-          autoDismiss: true,
-          builder: (context) => const ToastCard(
-            color: Colors.orange,
-            leading: Icon(Icons.warning, size: 28, color: Colors.white),
-            title: Text(
-              'Please add at least one image',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ).show(context);
+        ToastHelper.warning(context, 'Please add at least one image');
       }
       return;
     }
@@ -167,23 +97,7 @@ class _EditPropertyImagesState extends ConsumerState<EditPropertyImages> {
     if (mounted) {
       setState(() => _isSaving = false);
       Navigator.pop(context);
-      DelightToastBar(
-        position: DelightSnackbarPosition.top,
-        snackbarDuration: const Duration(seconds: 3),
-        autoDismiss: true,
-        builder: (context) => const ToastCard(
-          color: Colors.green,
-          leading: Icon(Icons.check_circle, size: 28, color: Colors.white),
-          title: Text(
-            'Images updated',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ).show(context);
+      ToastHelper.success(context, 'Images updated');
     }
   }
 

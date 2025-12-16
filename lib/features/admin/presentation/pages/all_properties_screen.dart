@@ -209,7 +209,7 @@ class _AllPropertiesScreenState extends ConsumerState<AllPropertiesScreen> {
         // Hide actions if property is already approved (verified)
         showActions: !propertyWithUser.property.isVerified,
         onApprove: () {},
-        onReject: () {},
+        onReject: (reason) {},
       ),
     );
   }

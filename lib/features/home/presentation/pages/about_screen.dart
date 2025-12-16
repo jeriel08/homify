@@ -3,30 +3,53 @@ import 'package:homify/core/theme/app_colors.dart';
 import 'package:gap/gap.dart';
 
 class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key});
+  /// When true, shows an AppBar with back button (for authenticated users).
+  /// When false, displays without AppBar (for guest bottom nav usage).
+  final bool showAppBar;
+
+  const AboutScreen({super.key, this.showAppBar = false});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: showAppBar
+          ? AppBar(
+              title: Text(
+                'About',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF32190D),
+                ),
+              ),
+              centerTitle: true,
+              backgroundColor: const Color(0xFFF9E5C5),
+              foregroundColor: const Color(0xFF32190D),
+              elevation: 6,
+              surfaceTintColor: Colors.transparent,
+              shadowColor: Colors.black.withValues(alpha: 0.2),
+            )
+          : null,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           24,
           24,
           24,
-          100,
-        ), // Bottom padding for nav bar
+          showAppBar ? 24 : 100, // Less bottom padding when AppBar is shown
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              'About Homify',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
+            if (!showAppBar) ...[
+              Text(
+                'About Homify',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const Gap(20),
+              const Gap(20),
+            ],
 
             // Main Content Card
             Container(

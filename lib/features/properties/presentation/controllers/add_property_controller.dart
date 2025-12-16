@@ -12,7 +12,7 @@ import 'package:homify/features/properties/properties_providers.dart';
 // Import Steps
 import 'package:homify/features/properties/presentation/pages/steps/step_property_info.dart';
 import 'package:homify/features/properties/presentation/pages/steps/step_property_type.dart';
-import 'package:homify/features/properties/presentation/pages/steps/step_rent_method.dart';
+
 import 'package:homify/features/properties/presentation/pages/steps/step_rent_amount.dart';
 import 'package:homify/features/properties/presentation/pages/steps/step_amenities.dart';
 import 'package:homify/features/properties/presentation/pages/steps/step_location.dart';
@@ -29,7 +29,6 @@ class AddPropertyController extends StateNotifier<AddPropertyState> {
     final propertySteps = <PropertyStep>[
       stepPropertyInfo(),
       stepPropertyType(),
-      stepRentMethod(),
       stepRentAmount(),
       stepAmenities(),
       stepLocation(),
@@ -82,9 +81,7 @@ class AddPropertyController extends StateNotifier<AddPropertyState> {
         type: PropertyType.values.firstWhere(
           (e) => e.name == (data['property_type'] as String),
         ),
-        rentChargeMethod: RentChargeMethod.values.firstWhere(
-          (e) => e.name == (data['rent_charge_method'] as String),
-        ),
+        rentChargeMethod: RentChargeMethod.perMonth,
         rentAmount: (data['rent_amount'] as num).toDouble(),
         amenities: List<String>.from(data['amenities'] ?? []),
         latitude: (data['latitude'] as num).toDouble(),
