@@ -45,6 +45,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
 
   // Selected marker state for highlighting
   String? _selectedMarkerId;
+  double? _sheetInitialSize;
 
   // Brand colors
   static const Color primary = Color(0xFFE05725);
@@ -250,6 +251,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
             setState(() {
               _showBottomSheet = true;
               _selectedForBottomSheet = property;
+              _sheetInitialSize = null; // Default expanded for manual tap
             });
             ref.read(bottomNavVisibilityProvider.notifier).state = false;
           },
@@ -289,6 +291,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
                 setState(() {
                   _showBottomSheet = true;
                   _selectedForBottomSheet = property;
+                  _sheetInitialSize = null; // Default expanded for manual tap
                 });
                 ref.read(bottomNavVisibilityProvider.notifier).state = false;
               },
@@ -331,6 +334,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
           next.targetProperty != null) {
         final target = next.targetProperty!;
 
+        debugPrint(
+          'ExploreScreen: Listener - targetProperty change detected: ${target.name}',
+        );
         // 1. Move camera to property
         _mapController?.animateCamera(
           CameraUpdate.newLatLngZoom(
@@ -339,9 +345,23 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
           ),
         );
 
-        // 2. Select marker and show info window
-        setState(() => _selectedMarkerId = target.id);
+        // 2. Select marker and show bottom sheet collapsed
+        const double headerHeight = 160.0;
+        final screenHeight = MediaQuery.of(context).size.height;
+        final double minChildSize = (headerHeight / screenHeight).clamp(
+          0.1,
+          0.5,
+        );
 
+        setState(() {
+          _selectedMarkerId = target.id;
+          _showBottomSheet = true;
+          _selectedForBottomSheet = target;
+          _sheetInitialSize = minChildSize;
+        });
+        ref.read(bottomNavVisibilityProvider.notifier).state = false;
+
+        // Also show info window for completeness
         if (_infoWindowController.addInfoWindow != null) {
           _infoWindowController.addInfoWindow!(
             PropertyInfoCard(
@@ -351,6 +371,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
                 setState(() {
                   _showBottomSheet = true;
                   _selectedForBottomSheet = target;
+                  _sheetInitialSize = null; // Expand on tap
                 });
                 ref.read(bottomNavVisibilityProvider.notifier).state = false;
               },
@@ -368,6 +389,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
       if (next.targetProperty != null &&
           next.polylines.isNotEmpty &&
           next.polylines != previous?.polylines) {
+        debugPrint(
+          'ExploreScreen: Listener - Polylines updated. Count: ${next.polylines.length}',
+        );
         // Zoom to fit the route
         if (next.polylines.isNotEmpty) {
           final points = next.polylines.first.points;
@@ -410,7 +434,26 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
 
               // Handle pending navigation on map create
               final state = ref.read(exploreProvider);
+              debugPrint(
+                'ExploreScreen: onMapCreated. TargetProperty: ${state.targetProperty?.name}',
+              );
               if (state.targetProperty != null) {
+                // Ensure marker is selected and sheet shown collapsed
+                const double headerHeight = 160.0;
+                final screenHeight = MediaQuery.of(context).size.height;
+                final double minChildSize = (headerHeight / screenHeight).clamp(
+                  0.1,
+                  0.5,
+                );
+
+                setState(() {
+                  _selectedMarkerId = state.targetProperty!.id;
+                  _showBottomSheet = true;
+                  _selectedForBottomSheet = state.targetProperty;
+                  _sheetInitialSize = minChildSize;
+                });
+                ref.read(bottomNavVisibilityProvider.notifier).state = false;
+
                 Future.delayed(const Duration(milliseconds: 500), () {
                   if (mounted) {
                     if (state.polylines.isNotEmpty) {
@@ -447,6 +490,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
                 _routePolylines = {}; // Clear route when tapping away
                 _selectedMarkerId = null; // Reset marker selection
               });
+              // Clear provider state (polylines from navigation)
+              ref.read(exploreProvider.notifier).clearSelectedProperty();
+
               FocusScope.of(context).unfocus();
               ref.read(bottomNavVisibilityProvider.notifier).state = true;
             },
@@ -518,12 +564,16 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
           if (_showBottomSheet && _selectedForBottomSheet != null)
             ExplorePropertyDetailsSheet(
               property: _selectedForBottomSheet!,
+              initialChildSize: _sheetInitialSize,
               onClose: () {
                 setState(() {
                   _showBottomSheet = false;
                   _selectedForBottomSheet = null;
                   _routePolylines = {}; // Clear route when closing
                 });
+                // Clear provider state (polylines from navigation)
+                ref.read(exploreProvider.notifier).clearSelectedProperty();
+
                 ref.read(bottomNavVisibilityProvider.notifier).state = true;
               },
               onDirectionTap: _handleDirectionTap,

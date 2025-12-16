@@ -779,13 +779,21 @@ class _TenantPropertyDetailsSheetState
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
+                          debugPrint('TenantSheet: Show Direction clicked');
                           // Trigger navigation in explorer
                           ref
                               .read(exploreProvider.notifier)
                               .triggerNavigation(widget.property);
 
-                          Navigator.pop(context); // Close sheet
-                          // Switch to Explore tab (Index 1)
+                          // 1. Close the Bottom Sheet
+                          Navigator.pop(context);
+
+                          // 2. Clear imperative stack (closes ChatScreen, etc.)
+                          Navigator.of(
+                            context,
+                          ).popUntil((route) => route.isFirst);
+
+                          // 3. Switch to Explore Tab
                           ref.read(bottomNavIndexProvider.notifier).state = 1;
                         },
                         style: ElevatedButton.styleFrom(

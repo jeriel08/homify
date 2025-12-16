@@ -18,12 +18,14 @@ class ExplorePropertyDetailsSheet extends ConsumerStatefulWidget {
   final PropertyEntity property;
   final VoidCallback? onClose;
   final VoidCallback? onDirectionTap;
+  final double? initialChildSize;
 
   const ExplorePropertyDetailsSheet({
     super.key,
     required this.property,
     this.onClose,
     this.onDirectionTap,
+    this.initialChildSize,
   });
 
   @override
@@ -97,7 +99,7 @@ class _ExplorePropertyDetailsSheetState
       },
       child: DraggableScrollableSheet(
         controller: _sheetController,
-        initialChildSize: 0.92,
+        initialChildSize: widget.initialChildSize ?? 0.92,
         minChildSize: minChildSize,
         maxChildSize: (maxHeight / screenHeight).clamp(0.5, 0.98),
         snap: true,

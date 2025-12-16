@@ -140,6 +140,9 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 
   // Called when user wants to navigate to a property from another screen
   Future<void> triggerNavigation(PropertyEntity property) async {
+    debugPrint(
+      'ExploreNotifier: triggerNavigation called for ${property.name}',
+    );
     // 1. Set the target property
     state = state.copyWith(targetProperty: property);
     // 2. Calculate route
@@ -166,6 +169,7 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
             .toList();
 
         _setPolyline(polylineCoordinates);
+        debugPrint('ExploreNotifier: Route found, polyline set.');
         return;
       }
     } catch (e) {
@@ -190,16 +194,20 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
     );
 
     if (mounted) {
+      debugPrint('ExploreNotifier: Setting polylines in state.');
       state = state.copyWith(polylines: {polyline});
+    } else {
+      debugPrint('ExploreNotifier: Not mounted, cannot set polylines.');
     }
   }
 }
 
 // 3. Define the Provider
-final exploreProvider =
-    StateNotifierProvider.autoDispose<ExploreNotifier, ExploreState>((ref) {
-      final repository = ref.watch(propertyRepositoryProvider);
-      return ExploreNotifier(
-        getVerifiedProperties: GetVerifiedProperties(repository),
-      );
-    });
+final exploreProvider = StateNotifierProvider<ExploreNotifier, ExploreState>((
+  ref,
+) {
+  final repository = ref.watch(propertyRepositoryProvider);
+  return ExploreNotifier(
+    getVerifiedProperties: GetVerifiedProperties(repository),
+  );
+});
